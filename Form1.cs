@@ -32,5 +32,11 @@ namespace Email_Client_01
         {
 
         }
+
+        private void logInToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Form3 log_in = new Form3();
+            log_in.Show();
+        }
     }
 }

@@ -44,6 +44,7 @@
             this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
+            this.logInToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -56,7 +57,8 @@
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.croup7MailToolStripMenuItem,
             this.sendToolStripMenuItem,
-            this.inboxToolStripMenuItem});
+            this.inboxToolStripMenuItem,
+            this.logInToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(191, 750);
@@ -87,38 +89,38 @@
             this.trashcanToolStripMenuItem1});
             this.inboxToolStripMenuItem.Name = "inboxToolStripMenuItem";
             this.inboxToolStripMenuItem.Size = new System.Drawing.Size(178, 36);
-            this.inboxToolStripMenuItem.Text = "E-Mail";
+            this.inboxToolStripMenuItem.Text = "E-Mails";
             this.inboxToolStripMenuItem.Click += new System.EventHandler(this.inboxToolStripMenuItem_Click);
             // 
             // inboxToolStripMenuItem1
             // 
             this.inboxToolStripMenuItem1.Name = "inboxToolStripMenuItem1";
-            this.inboxToolStripMenuItem1.Size = new System.Drawing.Size(270, 40);
+            this.inboxToolStripMenuItem1.Size = new System.Drawing.Size(228, 40);
             this.inboxToolStripMenuItem1.Text = "Inbox";
             this.inboxToolStripMenuItem1.Click += new System.EventHandler(this.inboxToolStripMenuItem1_Click);
             // 
             // draftsToolStripMenuItem
             // 
             this.draftsToolStripMenuItem.Name = "draftsToolStripMenuItem";
-            this.draftsToolStripMenuItem.Size = new System.Drawing.Size(270, 40);
+            this.draftsToolStripMenuItem.Size = new System.Drawing.Size(228, 40);
             this.draftsToolStripMenuItem.Text = "Drafts";
             // 
             // sentMailsToolStripMenuItem
             // 
             this.sentMailsToolStripMenuItem.Name = "sentMailsToolStripMenuItem";
-            this.sentMailsToolStripMenuItem.Size = new System.Drawing.Size(270, 40);
+            this.sentMailsToolStripMenuItem.Size = new System.Drawing.Size(228, 40);
             this.sentMailsToolStripMenuItem.Text = "Sent mails";
             // 
             // spamToolStripMenuItem
             // 
             this.spamToolStripMenuItem.Name = "spamToolStripMenuItem";
-            this.spamToolStripMenuItem.Size = new System.Drawing.Size(270, 40);
+            this.spamToolStripMenuItem.Size = new System.Drawing.Size(228, 40);
             this.spamToolStripMenuItem.Text = "Spam";
             // 
             // trashcanToolStripMenuItem1
             // 
             this.trashcanToolStripMenuItem1.Name = "trashcanToolStripMenuItem1";
-            this.trashcanToolStripMenuItem1.Size = new System.Drawing.Size(270, 40);
+            this.trashcanToolStripMenuItem1.Size = new System.Drawing.Size(228, 40);
             this.trashcanToolStripMenuItem1.Text = "Trashcan";
             // 
             // toolStrip1
@@ -173,6 +175,13 @@
             this.toolStripButton3.Size = new System.Drawing.Size(34, 28);
             this.toolStripButton3.Text = "toolStripButton3";
             // 
+            // logInToolStripMenuItem
+            // 
+            this.logInToolStripMenuItem.Name = "logInToolStripMenuItem";
+            this.logInToolStripMenuItem.Size = new System.Drawing.Size(178, 36);
+            this.logInToolStripMenuItem.Text = "Log in";
+            this.logInToolStripMenuItem.Click += new System.EventHandler(this.logInToolStripMenuItem_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
@@ -209,5 +218,6 @@
         private ToolStripMenuItem sentMailsToolStripMenuItem;
         private ToolStripMenuItem spamToolStripMenuItem;
         private ToolStripMenuItem trashcanToolStripMenuItem1;
+        private ToolStripMenuItem logInToolStripMenuItem;
     }
 }

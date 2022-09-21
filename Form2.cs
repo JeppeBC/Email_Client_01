@@ -32,7 +32,7 @@ namespace Email_Client_01
         private void button2_Click(object sender, EventArgs e)
         {
             this.TopMost= false;
-            Process.Start("explorer.exe", @"C:\Desktop");
+            Process.Start("explorer.exe", @"C:\User");
         }
 
         private void richTextBox1_TextChanged(object sender, EventArgs e)
