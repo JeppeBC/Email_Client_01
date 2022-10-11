@@ -6,37 +6,32 @@ namespace Email_Client_01
         {
             InitializeComponent();
         }
-              
-        private void croup7MailToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void sendToolStripMenuItem_Click(object sender, EventArgs e)
+                     
+        private void SendNewMail(object sender, EventArgs e)
         {
             Form2 send_mail = new Form2();
             send_mail.Show();
         }
 
-        private void inboxToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            
-        }
-
-        private void trashcanToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("Deleted mails");
-        }
-
-        private void inboxToolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void logInToolStripMenuItem_Click(object sender, EventArgs e)
+        private void LogIn(object sender, EventArgs e)
         {
             Form3 log_in = new Form3();
             log_in.Show();
+        }
+
+        private void Prime_Mail_Homepage(object sender, EventArgs e)
+        {
+            // return to home page
+        }
+
+        private void Inbox_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Emails_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

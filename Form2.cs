@@ -23,50 +23,50 @@ namespace Email_Client_01
             this.TopMost = true;
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            // send email from "richTextBox_1" to "richTextBox_2" with subject "richTextBox_3", and message "richTextBox_4".
-            MessageBox.Show("Email sent");
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            this.TopMost= false;
-            Process.Start("explorer.exe", @"C:\User");
-        }
-
         private void richTextBox1_TextChanged(object sender, EventArgs e)
         {
             
         }
-
-        private void richTextBox1_Click(object sender, EventArgs e)
+            
+        private void richTextBox2_TextChanged(object sender, EventArgs e)
+        {
+            
+        }
+               
+        private void From_Click(object sender, EventArgs e)
         {
             richTextBox1.ResetText();
             richTextBox1.ForeColor = System.Drawing.Color.Black;
         }
 
-        private void richTextBox2_TextChanged(object sender, EventArgs e)
-        {
-            
-        }
-
-        private void richTextBox2_Click(object sender, EventArgs e)
+        private void To_Click(object sender, EventArgs e)
         {
             richTextBox2.ResetText();
             richTextBox2.ForeColor = System.Drawing.Color.Black;
         }
 
-        private void richTextBox3_Click(object sender, EventArgs e)
+        private void Subject_Click(object sender, EventArgs e)
         {
             richTextBox3.ResetText();
             richTextBox3.ForeColor = System.Drawing.Color.Black;
         }
 
-        private void richTextBox4_click(object sender, EventArgs e)
+        private void Mail_click(object sender, EventArgs e)
         {
             richTextBox4.ResetText();
             richTextBox4.ForeColor = System.Drawing.Color.Black;
+        }
+
+        private void Attach_file(object sender, EventArgs e)
+        {
+            this.TopMost = false;
+            Process.Start("explorer.exe", @"C:\User");
+        }
+
+        private void Send_mail(object sender, EventArgs e)
+        {
+            // send email from "richTextBox_1" to "richTextBox_2" with subject "richTextBox_3", and message "richTextBox_4".
+            MessageBox.Show("Email sent");
         }
     }
 }

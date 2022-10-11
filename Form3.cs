@@ -26,20 +26,20 @@ namespace Email_Client_01
         {
 
         }
-
-        private void textBox1_Click(object sender, EventArgs e)
+                
+        private void EmailAddress_Click(object sender, EventArgs e)
         {
             textBox1.ResetText();
             textBox1.ForeColor = System.Drawing.Color.Black;
         }
 
-        private void textBox2_Click(object sender, EventArgs e)
+        private void Password_Click(object sender, EventArgs e)
         {
             textBox2.ResetText();
             textBox2.ForeColor = System.Drawing.Color.Black;
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void LogIn_button(object sender, EventArgs e)
         {
             MessageBox.Show("Log in");
         }
