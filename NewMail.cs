@@ -11,9 +11,9 @@ using System.Windows.Forms;
 
 namespace Email_Client_01
 {   
-    public partial class Form2 : Form
+    public partial class NewMail : Form
     {
-        public Form2()
+        public NewMail()
         {
             InitializeComponent();
         }
@@ -25,7 +25,7 @@ namespace Email_Client_01
 
         private void richTextBox1_TextChanged(object sender, EventArgs e)
         {
-            
+            // read from username
         }
             
         private void richTextBox2_TextChanged(object sender, EventArgs e)
@@ -67,6 +67,11 @@ namespace Email_Client_01
         {
             // send email from "richTextBox_1" to "richTextBox_2" with subject "richTextBox_3", and message "richTextBox_4".
             MessageBox.Show("Email sent");
+        }
+
+        private void Exit_button(object sender, EventArgs e)
+        {
+            this.Close();            
         }
     }
 }

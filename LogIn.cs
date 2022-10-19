@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace Email_Client_01
 {
-    public partial class Form3 : Form
+    public partial class LogIn : Form
     {
-        public Form3()
+        public LogIn()
         {
             InitializeComponent();
         }
@@ -41,7 +41,13 @@ namespace Email_Client_01
 
         private void LogIn_button(object sender, EventArgs e)
         {
-            MessageBox.Show("Log in");
+            Inboxes Inbox = new Inboxes();
+            Inbox.Show();
+        }
+
+        private void Exit_button(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }
