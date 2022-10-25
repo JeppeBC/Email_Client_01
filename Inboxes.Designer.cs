@@ -186,7 +186,7 @@
             this.Inbox.ItemHeight = 25;
             this.Inbox.Location = new System.Drawing.Point(205, 79);
             this.Inbox.Name = "Inbox";
-            this.Inbox.Size = new System.Drawing.Size(892, 554);
+            this.Inbox.Size = new System.Drawing.Size(905, 529);
             this.Inbox.TabIndex = 6;
             this.Inbox.SelectedIndexChanged += new System.EventHandler(this.Inbox_SelectedIndexChanged);
             // 
