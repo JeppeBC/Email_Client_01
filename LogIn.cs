@@ -49,5 +49,10 @@ namespace Email_Client_01
         {
             this.Close();
         }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

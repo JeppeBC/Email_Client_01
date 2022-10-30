@@ -38,12 +38,14 @@
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
+            this.label4 = new System.Windows.Forms.Label();
+            this.richTextBox5 = new System.Windows.Forms.RichTextBox();
             this.SuspendLayout();
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(17, 15);
+            this.label1.Location = new System.Drawing.Point(17, 9);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(58, 25);
@@ -53,7 +55,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(17, 90);
+            this.label2.Location = new System.Drawing.Point(17, 73);
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(34, 25);
@@ -63,7 +65,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(17, 165);
+            this.label3.Location = new System.Drawing.Point(17, 208);
             this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(74, 25);
@@ -74,10 +76,10 @@
             // 
             this.richTextBox1.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.richTextBox1.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox1.Location = new System.Drawing.Point(17, 45);
+            this.richTextBox1.Location = new System.Drawing.Point(17, 39);
             this.richTextBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(1107, 37);
+            this.richTextBox1.Size = new System.Drawing.Size(1107, 36);
             this.richTextBox1.TabIndex = 1;
             this.richTextBox1.Text = "";
             this.richTextBox1.Click += new System.EventHandler(this.From_Click);
@@ -87,10 +89,10 @@
             // 
             this.richTextBox2.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.richTextBox2.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox2.Location = new System.Drawing.Point(17, 120);
+            this.richTextBox2.Location = new System.Drawing.Point(17, 103);
             this.richTextBox2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.richTextBox2.Name = "richTextBox2";
-            this.richTextBox2.Size = new System.Drawing.Size(1107, 37);
+            this.richTextBox2.Size = new System.Drawing.Size(1107, 31);
             this.richTextBox2.TabIndex = 2;
             this.richTextBox2.Text = "";
             this.richTextBox2.Click += new System.EventHandler(this.To_Click);
@@ -100,7 +102,7 @@
             // 
             this.richTextBox3.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.richTextBox3.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox3.Location = new System.Drawing.Point(17, 195);
+            this.richTextBox3.Location = new System.Drawing.Point(17, 238);
             this.richTextBox3.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.richTextBox3.Name = "richTextBox3";
             this.richTextBox3.Size = new System.Drawing.Size(1107, 37);
@@ -112,10 +114,10 @@
             // 
             this.richTextBox4.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.richTextBox4.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox4.Location = new System.Drawing.Point(17, 270);
+            this.richTextBox4.Location = new System.Drawing.Point(19, 285);
             this.richTextBox4.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.richTextBox4.Name = "richTextBox4";
-            this.richTextBox4.Size = new System.Drawing.Size(1107, 424);
+            this.richTextBox4.Size = new System.Drawing.Size(1107, 412);
             this.richTextBox4.TabIndex = 4;
             this.richTextBox4.Text = "Write your message here";
             this.richTextBox4.Click += new System.EventHandler(this.Mail_click);
@@ -153,12 +155,35 @@
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.Exit_button);
             // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(17, 139);
+            this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(35, 25);
+            this.label4.TabIndex = 10;
+            this.label4.Text = "Cc:";
+            // 
+            // richTextBox5
+            // 
+            this.richTextBox5.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.richTextBox5.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.richTextBox5.Location = new System.Drawing.Point(17, 169);
+            this.richTextBox5.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.richTextBox5.Name = "richTextBox5";
+            this.richTextBox5.Size = new System.Drawing.Size(1107, 34);
+            this.richTextBox5.TabIndex = 11;
+            this.richTextBox5.Text = "";
+            // 
             // NewMail
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.ClientSize = new System.Drawing.Size(1143, 750);
+            this.Controls.Add(this.richTextBox5);
+            this.Controls.Add(this.label4);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
@@ -190,5 +215,7 @@
         private Button button1;
         private Button button2;
         private Button button3;
+        private Label label4;
+        private RichTextBox richTextBox5;
     }
 }

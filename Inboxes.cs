@@ -16,25 +16,9 @@ namespace Email_Client_01
             this.TopMost = true;
         }
 
-        private void SendNewMail(object sender, EventArgs e)
-        {
-            NewMail send_mail = new NewMail();
-            send_mail.Show();
-        }
-
         private void Prime_Mail_Homepage(object sender, EventArgs e)
         {
             // return to home page
-        }
-
-        private void Inbox_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void Emails_Click(object sender, EventArgs e)
-        {
-
         }
 
         private void Inbox_SelectedIndexChanged(object sender, EventArgs e)
@@ -55,6 +39,17 @@ namespace Email_Client_01
         private void RefreshPage_Click(object sender, EventArgs e)
         {
             // refresh elements in inbox
+        }
+
+        private void Compose_Click(object sender, EventArgs e)
+        {
+            NewMail send_mail = new NewMail();
+            send_mail.Show();
+        }
+
+        private void Folders_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // folders should be read in here (flags), det var sådan andreas havde det
         }
     }
 }
