@@ -14,6 +14,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Update="Properties\Credentials.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Credentials.settings</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +30,17 @@
 
   <ItemGroup>
     <Folder Include="Attachments\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MailKit" Version="3.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Properties\Credentials.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Credentials.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
 
 </Project>

@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿
+using MailKit.Net.Smtp;
 
 namespace Email_Client_01
 {
@@ -15,6 +8,15 @@ namespace Email_Client_01
         public LogIn()
         {
             InitializeComponent();
+
+            if (Properties.Credentials.Default.username != null)
+            {
+                textBox1.Text = Properties.Credentials.Default.username;
+            }
+            if (Properties.Credentials.Default.password != null)
+            {
+                textBox2.Text = Properties.Credentials.Default.password;
+            }
         }
 
         private void Form3_Load(object sender, EventArgs e)
@@ -41,8 +43,52 @@ namespace Email_Client_01
 
         private void LogIn_button(object sender, EventArgs e)
         {
-            Inboxes Inbox = new Inboxes();
-            Inbox.Show();
+
+            if (checkBox1.Checked)
+            {
+                Properties.Credentials.Default.username = textBox1.Text;
+                Properties.Credentials.Default.password = textBox2.Text;
+                Properties.Credentials.Default.Save();
+            }
+
+            if (!checkBox1.Checked)
+            {
+                Properties.Credentials.Default.username = "";
+                Properties.Credentials.Default.password = "";
+                Properties.Credentials.Default.Save();
+            }
+
+            string username = textBox1.Text;
+            string password = textBox2.Text;
+            Utility.username = username;
+            Utility.password = password;
+
+            using (var client = new SmtpClient())
+            {
+                try
+                {
+                    this.Cursor = Cursors.WaitCursor;
+                    string mail = username.Substring(username.LastIndexOf("@") + 1);
+
+                    client.Connect("smtp." + mail, 465, true);
+
+                    client.Authenticate(username, password);
+
+                    new Inboxes().Show();
+                    /*Inboxes.show();*/
+                    this.Hide();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                finally
+                {
+                    client.Disconnect(true);
+                    client.Dispose();
+                    this.Cursor=Cursors.Default;
+                }
+            }
         }
 
         private void Exit_button(object sender, EventArgs e)
