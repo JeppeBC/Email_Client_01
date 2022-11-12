@@ -2,6 +2,7 @@
 using MailKit.Net.Smtp;
 using System.Runtime.InteropServices; // for the known folder stuff.
 using System.Text;
+using System.Text.RegularExpressions;
 /*using Newtonsoft.Json;*/
 
 
@@ -71,33 +72,18 @@ namespace Email_Client_01
                 [KnownFolder.SavedGames] = new("4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4"),
                 [KnownFolder.SavedSearches] = new("7D1D3A04-DEBB-4115-95CF-2F29DA2920DA")
             };
-
+          
             public static string GetPath(KnownFolder knownFolder)
             {
                 return SHGetKnownFolderPath(_guids[knownFolder], 0);
             }
 
+            
             [DllImport("shell32",
                 CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = false)]
             private static extern string SHGetKnownFolderPath(
                 [MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags,
                 nint hToken = 0);
         }
-
-
-        public string MakeBold(string text, string[] splitwords)
-        {
-            string returnValue = text;
-            foreach (var word in splitwords)
-            {
-                returnValue = returnValue.Replace(word, @"\b" + word + @"\b0");
-            }
-            var finalString = new StringBuilder();
-            finalString.Append(@"{\rtf1\ansi");
-            finalString.Append(returnValue);
-            finalString.Append(@"}");
-            return finalString.ToString();
-        }
-
     }
 }

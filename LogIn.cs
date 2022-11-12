@@ -80,8 +80,8 @@ namespace Email_Client_01
                     client.Authenticate(username, password);
 
                     
-                    Inboxes.GetInstance.Show(); 
-                    this.Hide();
+                    Inboxes.GetInstance.Show();
+                    this.Hide(); // #TODO CLOSE THIS FORM INSTEAD
                 }
                 catch (Exception ex)
                 {

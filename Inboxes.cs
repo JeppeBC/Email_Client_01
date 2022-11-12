@@ -275,12 +275,18 @@ namespace Email_Client_01
                     var messageId = (((ListBox)sender).SelectedIndex); // 2 parenthesis warns about missing ';' for some reason.
                     var messageItem = messageSummaries[messageSummaries.Count - messageId - 1];
 
+
                     // Add "Seen" flag to the message
                     var folder = await client.GetFolderAsync(messageItem.Folder.ToString());
                     await folder.OpenAsync(FolderAccess.ReadWrite);
                     await folder.AddFlagsAsync(messageItem.UniqueId, MessageFlags.Seen, true);
 
-                    
+
+                    // Mutate the message in the listbox, so it no longer says unread
+                    // TODO
+                    Inbox.Items[messageId] = FormatInboxMessageText(messageSummaries[messageSummaries.Count - messageId - 1]);
+                    MessageBox.Show(FormatInboxMessageText(messageSummaries[messageSummaries.Count - messageId - 1]));
+
                     // Get the MimeMessage from id:
                     MimeMessage msg = folder.GetMessage(messageItem.UniqueId);
 
@@ -542,6 +548,7 @@ namespace Email_Client_01
         private void Inbox_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             ReadMessage(sender, e);
+            
         }
 
          IMailFolder GetTrashFolder(ImapClient client, CancellationToken cancellationToken)
@@ -616,6 +623,23 @@ namespace Email_Client_01
                     client?.Dispose();
                     this.Cursor = Cursors.Default;
                 }
+            }
+        }
+
+        private void Inbox_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            //base.OnDrawItem(e);
+            e.DrawBackground();
+            e.DrawFocusRectangle();
+            if (e.Index < 0)
+                return;
+            String item = Inbox.Items[e.Index].ToString();
+            int indexOfChar = item.IndexOf(':');
+            e.Graphics.DrawString(item.Substring(0, indexOfChar), new Font(Font, FontStyle.Bold), new SolidBrush(ForeColor), e.Bounds.X, e.Bounds.Y);
+            if (item.Length > indexOfChar)
+            {
+                int pos = TextRenderer.MeasureText(item.Substring(0, indexOfChar), new Font(Font, FontStyle.Bold)).Width;
+                e.Graphics.DrawString(item.Substring(indexOfChar), new Font(Font, FontStyle.Italic), new SolidBrush(Color.Black), pos, e.Bounds.Y);
             }
         }
     }

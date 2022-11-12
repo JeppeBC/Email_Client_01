@@ -26,6 +26,8 @@
         ///  Required method for Designer support - do not modify
         ///  the contents of this method with the code editor.
         /// </summary>
+        /// 
+
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Inboxes));
@@ -61,10 +63,10 @@
             this.toolStripSeparator1,
             this.RefreshButton,
             this.MoveToTrashButton});
-            this.toolStrip1.Location = new System.Drawing.Point(459, 29);
+            this.toolStrip1.Location = new System.Drawing.Point(552, 29);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 6, 0);
-            this.toolStrip1.Size = new System.Drawing.Size(416, 57);
+            this.toolStrip1.Size = new System.Drawing.Size(323, 37);
             this.toolStrip1.TabIndex = 5;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -74,14 +76,14 @@
             this.DeleteButton.Image = ((System.Drawing.Image)(resources.GetObject("DeleteButton.Image")));
             this.DeleteButton.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
             this.DeleteButton.Name = "DeleteButton";
-            this.DeleteButton.Size = new System.Drawing.Size(69, 48);
+            this.DeleteButton.Size = new System.Drawing.Size(69, 28);
             this.DeleteButton.Text = "toolStripButton1";
             this.DeleteButton.Click += new System.EventHandler(this.DeleteButton_click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 57);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 37);
             // 
             // ToggleFlagButton
             // 
@@ -89,14 +91,14 @@
             this.ToggleFlagButton.Image = ((System.Drawing.Image)(resources.GetObject("ToggleFlagButton.Image")));
             this.ToggleFlagButton.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
             this.ToggleFlagButton.Name = "ToggleFlagButton";
-            this.ToggleFlagButton.Size = new System.Drawing.Size(69, 48);
+            this.ToggleFlagButton.Size = new System.Drawing.Size(69, 28);
             this.ToggleFlagButton.Text = "toolStripButton2";
             this.ToggleFlagButton.Click += new System.EventHandler(this.ToggleFlagButton_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 57);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 37);
             // 
             // RefreshButton
             // 
@@ -104,7 +106,7 @@
             this.RefreshButton.Image = ((System.Drawing.Image)(resources.GetObject("RefreshButton.Image")));
             this.RefreshButton.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
             this.RefreshButton.Name = "RefreshButton";
-            this.RefreshButton.Size = new System.Drawing.Size(69, 48);
+            this.RefreshButton.Size = new System.Drawing.Size(69, 28);
             this.RefreshButton.Text = "RefreshButton";
             this.RefreshButton.Click += new System.EventHandler(this.RefreshPage_Click);
             // 
@@ -114,13 +116,14 @@
             this.MoveToTrashButton.Image = ((System.Drawing.Image)(resources.GetObject("MoveToTrashButton.Image")));
             this.MoveToTrashButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.MoveToTrashButton.Name = "MoveToTrashButton";
-            this.MoveToTrashButton.Size = new System.Drawing.Size(69, 48);
+            this.MoveToTrashButton.Size = new System.Drawing.Size(69, 28);
             this.MoveToTrashButton.Text = "Moves selected item to trash folder";
             this.MoveToTrashButton.Click += new System.EventHandler(this.MoveToTrashButton_Click);
             // 
             // Inbox
             // 
             this.Inbox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
+            this.Inbox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.Inbox.FormattingEnabled = true;
             this.Inbox.ItemHeight = 48;
             this.Inbox.Location = new System.Drawing.Point(411, 173);
@@ -128,6 +131,7 @@
             this.Inbox.Name = "Inbox";
             this.Inbox.Size = new System.Drawing.Size(1835, 1060);
             this.Inbox.TabIndex = 6;
+            this.Inbox.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.Inbox_DrawItem);
             this.Inbox.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.Inbox_MouseDoubleClick);
             // 
             // label2

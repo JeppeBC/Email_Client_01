@@ -143,12 +143,40 @@ namespace Email_Client_01
             }
         }
 
+
+        private string FilterString(string s)
+        {
+            // we expect strings of the form "Alias" <MailAddress>
+            // and want to return only MailAddress
+
+            // remove the text between quotations and " chars. 
+            int startQuotation = s.IndexOf('"');
+            int endQuoatation = s.IndexOf('"', startQuotation + 1);
+            string result = s.Remove(startQuotation, endQuoatation - startQuotation + 1);
+            
+            // Remove the '<' chars
+            result = result.Replace('<', ' ');
+            result = result.Replace('>', ' ');
+
+
+            // remove the whitespaces;
+            MessageBox.Show(result.Trim());
+            return result.Trim();
+        }
+
         private bool validateRecipientArray(string[] recipients)
         {
+
+            // if we reply to a mail an internet address is inserted i.e. of the form 
+            // "Alias" <MailAddress>, ....
+
+
             foreach (string recipient in recipients)
             {
                 string r = recipient.Replace(",", "");
-                r = r.Trim();
+
+                r = FilterString(r);
+
                 if(!EmailValidator.Validate(r))
                 {
                     return false;
