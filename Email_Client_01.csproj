@@ -6,7 +6,12 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>prime.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="prime.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
@@ -35,6 +40,7 @@
   <ItemGroup>
     <PackageReference Include="EmailValidation" Version="1.0.8" />
     <PackageReference Include="MailKit" Version="3.4.2" />
+    <PackageReference Include="ScottPlot.WinForms" Version="4.1.59" />
   </ItemGroup>
 
   <ItemGroup>

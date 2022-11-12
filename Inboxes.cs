@@ -618,5 +618,11 @@ namespace Email_Client_01
                 }
             }
         }
+
+        private void metrics_button_Click(object sender, EventArgs e)
+        {
+            metrics Metrics_Form = new metrics();
+            Metrics_Form.Show();
+        }
     }
 }
