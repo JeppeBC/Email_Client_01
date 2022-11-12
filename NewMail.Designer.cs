@@ -28,10 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.richTextBox2 = new System.Windows.Forms.RichTextBox();
             this.richTextBox3 = new System.Windows.Forms.RichTextBox();
             this.richTextBox4 = new System.Windows.Forms.RichTextBox();
@@ -40,22 +38,15 @@
             this.button3 = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.richTextBox5 = new System.Windows.Forms.RichTextBox();
+            this.AttachmentsListBox = new System.Windows.Forms.ListBox();
+            this.AttachmentLabel = new System.Windows.Forms.Label();
+            this.RemoveAttachmentButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(34, 17);
-            this.label1.Margin = new System.Windows.Forms.Padding(8, 0, 8, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(111, 48);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "From:";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(34, 140);
+            this.label2.Location = new System.Drawing.Point(34, 12);
             this.label2.Margin = new System.Windows.Forms.Padding(8, 0, 8, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(64, 48);
@@ -65,47 +56,36 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(34, 399);
+            this.label3.Location = new System.Drawing.Point(34, 262);
             this.label3.Margin = new System.Windows.Forms.Padding(8, 0, 8, 0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(145, 48);
             this.label3.TabIndex = 7;
             this.label3.Text = "Subject:";
             // 
-            // richTextBox1
-            // 
-            this.richTextBox1.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.richTextBox1.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox1.Location = new System.Drawing.Point(34, 75);
-            this.richTextBox1.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(2210, 65);
-            this.richTextBox1.TabIndex = 1;
-            this.richTextBox1.Text = "";
-            this.richTextBox1.Click += new System.EventHandler(this.From_Click);
-            this.richTextBox1.TextChanged += new System.EventHandler(this.richTextBox1_TextChanged);
-            // 
             // richTextBox2
             // 
             this.richTextBox2.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.richTextBox2.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox2.Location = new System.Drawing.Point(34, 198);
+            this.richTextBox2.Location = new System.Drawing.Point(34, 66);
             this.richTextBox2.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
             this.richTextBox2.Name = "richTextBox2";
-            this.richTextBox2.Size = new System.Drawing.Size(2210, 56);
+            this.richTextBox2.Size = new System.Drawing.Size(1871, 56);
             this.richTextBox2.TabIndex = 2;
             this.richTextBox2.Text = "";
             this.richTextBox2.Click += new System.EventHandler(this.To_Click);
             this.richTextBox2.TextChanged += new System.EventHandler(this.richTextBox2_TextChanged);
+            this.richTextBox2.MouseHover += new System.EventHandler(this.richTextBox2_MouseHover);
+            this.richTextBox2.Validating += new System.ComponentModel.CancelEventHandler(this.richTextBox2_Validating);
             // 
             // richTextBox3
             // 
             this.richTextBox3.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.richTextBox3.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox3.Location = new System.Drawing.Point(34, 457);
+            this.richTextBox3.Location = new System.Drawing.Point(34, 320);
             this.richTextBox3.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
             this.richTextBox3.Name = "richTextBox3";
-            this.richTextBox3.Size = new System.Drawing.Size(2210, 67);
+            this.richTextBox3.Size = new System.Drawing.Size(1871, 67);
             this.richTextBox3.TabIndex = 3;
             this.richTextBox3.Text = "";
             this.richTextBox3.Click += new System.EventHandler(this.Subject_Click);
@@ -115,10 +95,10 @@
             // 
             this.richTextBox4.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.richTextBox4.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox4.Location = new System.Drawing.Point(38, 547);
+            this.richTextBox4.Location = new System.Drawing.Point(38, 418);
             this.richTextBox4.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
             this.richTextBox4.Name = "richTextBox4";
-            this.richTextBox4.Size = new System.Drawing.Size(2210, 787);
+            this.richTextBox4.Size = new System.Drawing.Size(1867, 919);
             this.richTextBox4.TabIndex = 4;
             this.richTextBox4.Text = "Write your message here";
             this.richTextBox4.Click += new System.EventHandler(this.Mail_click);
@@ -160,7 +140,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(34, 267);
+            this.label4.Location = new System.Drawing.Point(34, 130);
             this.label4.Margin = new System.Windows.Forms.Padding(8, 0, 8, 0);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(67, 48);
@@ -171,12 +151,46 @@
             // 
             this.richTextBox5.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.richTextBox5.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox5.Location = new System.Drawing.Point(34, 324);
+            this.richTextBox5.Location = new System.Drawing.Point(34, 187);
             this.richTextBox5.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
             this.richTextBox5.Name = "richTextBox5";
-            this.richTextBox5.Size = new System.Drawing.Size(2210, 62);
+            this.richTextBox5.Size = new System.Drawing.Size(1871, 62);
             this.richTextBox5.TabIndex = 11;
             this.richTextBox5.Text = "";
+            this.richTextBox5.TextChanged += new System.EventHandler(this.richTextBox5_TextChanged);
+            this.richTextBox5.Validating += new System.ComponentModel.CancelEventHandler(this.richTextBox5_Validating);
+            // 
+            // AttachmentsListBox
+            // 
+            this.AttachmentsListBox.FormattingEnabled = true;
+            this.AttachmentsListBox.ItemHeight = 48;
+            this.AttachmentsListBox.Location = new System.Drawing.Point(1953, 549);
+            this.AttachmentsListBox.Name = "AttachmentsListBox";
+            this.AttachmentsListBox.Size = new System.Drawing.Size(266, 484);
+            this.AttachmentsListBox.TabIndex = 12;
+            this.AttachmentsListBox.Visible = false;
+            // 
+            // AttachmentLabel
+            // 
+            this.AttachmentLabel.AutoSize = true;
+            this.AttachmentLabel.Location = new System.Drawing.Point(1953, 475);
+            this.AttachmentLabel.Name = "AttachmentLabel";
+            this.AttachmentLabel.Size = new System.Drawing.Size(227, 48);
+            this.AttachmentLabel.TabIndex = 13;
+            this.AttachmentLabel.Text = "Attachments:";
+            this.AttachmentLabel.Visible = false;
+            this.AttachmentLabel.Click += new System.EventHandler(this.label1_Click);
+            // 
+            // RemoveAttachmentButton
+            // 
+            this.RemoveAttachmentButton.Location = new System.Drawing.Point(1977, 1074);
+            this.RemoveAttachmentButton.Name = "RemoveAttachmentButton";
+            this.RemoveAttachmentButton.Size = new System.Drawing.Size(213, 153);
+            this.RemoveAttachmentButton.TabIndex = 14;
+            this.RemoveAttachmentButton.Text = "Remove Attachment";
+            this.RemoveAttachmentButton.UseVisualStyleBackColor = true;
+            this.RemoveAttachmentButton.Visible = false;
+            this.RemoveAttachmentButton.Click += new System.EventHandler(this.RemoveAttachmentButton_Click);
             // 
             // NewMail
             // 
@@ -184,6 +198,9 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.ClientSize = new System.Drawing.Size(2286, 1440);
+            this.Controls.Add(this.RemoveAttachmentButton);
+            this.Controls.Add(this.AttachmentLabel);
+            this.Controls.Add(this.AttachmentsListBox);
             this.Controls.Add(this.richTextBox5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.button3);
@@ -192,10 +209,8 @@
             this.Controls.Add(this.richTextBox4);
             this.Controls.Add(this.richTextBox3);
             this.Controls.Add(this.richTextBox2);
-            this.Controls.Add(this.richTextBox1);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.label1);
             this.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
             this.Name = "NewMail";
             this.Text = "New Email";
@@ -206,11 +221,8 @@
         }
 
         #endregion
-
-        private Label label1;
         private Label label2;
         private Label label3;
-        private RichTextBox richTextBox1;
         private RichTextBox richTextBox2;
         private RichTextBox richTextBox3;
         private RichTextBox richTextBox4;
@@ -219,5 +231,8 @@
         private Button button3;
         private Label label4;
         private RichTextBox richTextBox5;
+        private ListBox AttachmentsListBox;
+        private Label AttachmentLabel;
+        private Button RemoveAttachmentButton;
     }
 }

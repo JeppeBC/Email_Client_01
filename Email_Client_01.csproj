@@ -33,6 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="EmailValidation" Version="1.0.8" />
     <PackageReference Include="MailKit" Version="3.4.2" />
   </ItemGroup>
 

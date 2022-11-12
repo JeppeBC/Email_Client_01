@@ -1,22 +1,31 @@
 ﻿
 using MailKit.Net.Smtp;
+using System.ComponentModel;
 
 namespace Email_Client_01
 {
     public partial class LogIn : Form
     {
-        public LogIn()
+        private static LogIn instance = null!;
+        private LogIn()
         {
             InitializeComponent();
 
             if (Properties.Credentials.Default.username != null)
             {
-                textBox1.Text = Properties.Credentials.Default.username;
+                EmailTextBox.Text = Properties.Credentials.Default.username;
             }
             if (Properties.Credentials.Default.password != null)
             {
-                textBox2.Text = Properties.Credentials.Default.password;
+                PasswordTextBox.Text = Properties.Credentials.Default.password;
             }
+        }
+
+
+        public static LogIn GetInstance
+        {
+            // coalescing operator, return first non-null value; 
+            get { return instance ??= new LogIn(); } 
         }
 
         private void Form3_Load(object sender, EventArgs e)
@@ -24,42 +33,38 @@ namespace Email_Client_01
             this.TopMost = true;
         }
 
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
                 
         private void EmailAddress_Click(object sender, EventArgs e)
         {
-            textBox1.ResetText();
-            textBox1.ForeColor = System.Drawing.Color.Black;
+            EmailTextBox.ResetText();
+            EmailTextBox.ForeColor = System.Drawing.Color.Black;
         }
 
         private void Password_Click(object sender, EventArgs e)
         {
-            textBox2.ResetText();
-            textBox2.ForeColor = System.Drawing.Color.Black;
+            PasswordTextBox.ResetText();
+            PasswordTextBox.ForeColor = System.Drawing.Color.Black;
         }
 
         private void LogIn_button(object sender, EventArgs e)
         {
 
-            if (checkBox1.Checked)
+            if (RememberMeCheckBox.Checked)
             {
-                Properties.Credentials.Default.username = textBox1.Text;
-                Properties.Credentials.Default.password = textBox2.Text;
+                Properties.Credentials.Default.username = EmailTextBox.Text;
+                Properties.Credentials.Default.password = PasswordTextBox.Text;
                 Properties.Credentials.Default.Save();
             }
 
-            if (!checkBox1.Checked)
+            if (!RememberMeCheckBox.Checked)
             {
                 Properties.Credentials.Default.username = "";
                 Properties.Credentials.Default.password = "";
                 Properties.Credentials.Default.Save();
             }
 
-            string username = textBox1.Text;
-            string password = textBox2.Text;
+            string username = EmailTextBox.Text;
+            string password = PasswordTextBox.Text;
             Utility.username = username;
             Utility.password = password;
 
@@ -74,8 +79,8 @@ namespace Email_Client_01
 
                     client.Authenticate(username, password);
 
-                    new Inboxes().Show();
-                    /*Inboxes.show();*/
+                    
+                    Inboxes.GetInstance.Show(); 
                     this.Hide();
                 }
                 catch (Exception ex)
@@ -96,9 +101,51 @@ namespace Email_Client_01
             this.Close();
         }
 
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
-        {
 
+        private async Task DoWork(BackgroundWorker w, DoWorkEventArgs e)
+        {
+            
+        }
+
+        private void InitializeBackgroundWorker()
+        {
+            backgroundWorker1.DoWork += new DoWorkEventHandler(backgroundWorker1_DoWork);
+            backgroundWorker1.RunWorkerCompleted += new RunWorkerCompletedEventHandler(backgroundWorker1_RunWorkerCompleted);
+            backgroundWorker1.ProgressChanged += new ProgressChangedEventHandler(backgroundWorker1_ProgressChanged);
+        }
+        private void backgroundWorker1_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
+            // Get the BackgroundWorker that raised this event.
+            BackgroundWorker worker = sender as BackgroundWorker;
+
+            // Assign the result of the computation to the Result property of the DoWorkEventArgs
+            // object. This is will be available to the RunWorkerCompleted eventhandler.
+            e.Result = DoWork(worker, e);
+
+        }
+
+        private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            // not sure if we need this 
+        }
+
+        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Error == null)
+            {
+                MessageBox.Show("Error");
+            }
+            else if (e.Cancelled)
+            {
+                MessageBox.Show("Cancelled");
+            }
+            else
+            {
+                // start a different thread?
+                MessageBox.Show("Completed");
+            }
+
+            
         }
     }
 }

@@ -17,14 +17,40 @@ namespace Email_Client_01
 
         private void InitializeMessage()
         {
-            textBox1.Text = message.From.ToString();
+            FromTextBox.Text = message.From.ToString();
 
-            //TODO: NEED TO CHECK IF THIS IS NULL
-            textBox2.Text = message.Subject;
+            SubjectTextBox.Text = message.Subject;
 
 
-            // TODO: ADD HTML BODY HERE TO SHOW IMAGES AND SUCH?? LOW PRIO
-            richTextBox1.Text = message.TextBody;
+            // TODO: ADD HTML BODY HERE TO SHOW IMAGES AND SUCH?? LOW PRIO?
+            MessageTextBox.Text = message.TextBody;
+
+            ToTextBox.Text = message.To.ToString(); 
+
+            if(message.Cc.Any())
+            {
+                CCLabel.Visible = true;
+                CCTextBox.Visible = true;
+                CCTextBox.Text = message.Cc.ToString();
+            }
+
+            DateTextBox.Text = message.Date.ToString();
+
+
+            if(message.Attachments.Any())
+            {
+                AttachmentsLabel.Visible = true;
+                AttachmentListBox.Visible = true;
+                DownloadAttachmentButton.Visible = true;
+
+                foreach(var attachment in message.Attachments)
+                {
+                    var filename = attachment.ContentDisposition?.FileName ?? attachment.ContentType.Name;
+                    AttachmentListBox.Items.Add(filename);
+                }
+            }
+
+
 
             // TODO ADD CC:
 /*            ccRecipientsTb.Text = message.Envelope.Cc.ToString();*/
@@ -121,6 +147,79 @@ namespace Email_Client_01
         private void button1_Click(object sender, EventArgs e)
         {
             this.Close();
+        }
+
+        private void DownloadAttachmentButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Get the attachment index
+                var idx = AttachmentListBox.SelectedIndex;
+                var filename = AttachmentListBox.SelectedItem.ToString();
+
+                // Utility.GetDownloadsPath is windows specific? see the implementation
+                var downloadFolderPath = Utility.KnownFolders.GetPath(Utility.KnownFolder.Downloads);
+                var path = Path.Combine(downloadFolderPath, filename);
+
+                using (var stream = File.Create(path))
+                {
+                    var attachment = message.Attachments.ElementAt(idx);
+                    if (attachment is MessagePart)
+                    {
+                        var part = (MessagePart)attachment;
+                        part.Message.WriteTo(stream);
+                    }
+                    else
+                    {
+                        var part = (MimePart)attachment;
+                        part.Content.DecodeTo(stream);
+                    }
+                }
+                MessageBox.Show(filename + " was saved successfully to the downloads folder!");
+            }
+            catch
+            {
+                MessageBox.Show("No Attachment selected!");
+            }
+        }
+
+        private void DownloadAllAttachmentsButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var downloadFolderPath = Utility.KnownFolders.GetPath(Utility.KnownFolder.Downloads);
+                for (int i = 0; i < AttachmentListBox.Items.Count; i++)
+                {
+                    var attachment = message.Attachments.ElementAt(i);
+                    var filename = AttachmentListBox.Items[i].ToString(); // listbox items are filenames
+                    var path = Path.Combine(downloadFolderPath, filename);
+
+                    using (var stream = File.Create(path))
+                    {
+                        if (attachment is MessagePart)
+                        {
+                            var part = (MessagePart)attachment;
+                            part.Message.WriteTo(stream);
+                        }
+                        else
+                        {
+                            var part = (MimePart)attachment;
+                            part.Content.DecodeTo(stream);
+                        }
+                    }
+                }
+                MessageBox.Show("Files were successfully downloaded and placed in downloads folder!");
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
+        }
+
+        private void TrashButton_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

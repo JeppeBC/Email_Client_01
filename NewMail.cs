@@ -11,25 +11,304 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using EmailValidation; // package
 
 namespace Email_Client_01
 {
+    public partial class NewMail : Form
+    {
+        List<string> attachmentPaths;
+        public NewMail()
+        {
+            InitializeComponent();
+            attachmentPaths = new();
+
+        }
+
+        public NewMail(MimeMessage msg)
+        {
+
+            InitializeComponent();
+            attachmentPaths = new();
+            
+
+            richTextBox2.Text = msg.To.ToString();
+            richTextBox3.Text = msg.Subject;
+            richTextBox4.Text = msg.TextBody;
+            richTextBox5.Text = msg.Cc.ToString();
+        }
+
+        private void Form2_Load(object sender, EventArgs e)
+        {
+        }
+
+        private void richTextBox2_MouseHover(object sender, EventArgs e)
+        {
+            
+            ToolTip tooltip = new ToolTip();
+            tooltip.InitialDelay = 150;
+
+            tooltip.SetToolTip(richTextBox2, "Separate recipients with ','");
+        }
+
+        private void To_Click(object sender, EventArgs e)
+        {
+            richTextBox2.ForeColor = System.Drawing.Color.Black;
+        }
+
+        private void Subject_Click(object sender, EventArgs e)
+        {
+            richTextBox3.ForeColor = System.Drawing.Color.Black;
+        }
+
+        private void Mail_click(object sender, EventArgs e)
+        {
+            richTextBox4.ForeColor = System.Drawing.Color.Black;
+        }
+
+        private void Attach_file(object sender, EventArgs e)
+        {
+            using (OpenFileDialog fileDialog = new OpenFileDialog())
+            {
+                fileDialog.InitialDirectory = "c:\\";
+                fileDialog.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
+                fileDialog.FilterIndex = 2;
+                fileDialog.RestoreDirectory = true;
+
+                if (fileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string fileSelected = fileDialog.FileName;
+
+                    // add it to the mime message
+                    attachmentPaths.Add(fileSelected);
+
+                    // add to listbox and show the listbox if it is currently hidden.
+                    AttachmentLabel.Visible = true;
+                    AttachmentsListBox.Visible = true;
+                    RemoveAttachmentButton.Visible = true;
+
+                    // Shorten the file name to not include directories
+                    string fileSelectedShort = fileSelected.Substring(fileSelected.LastIndexOf('\\') + 1) + " ";
+                    AttachmentsListBox.Items.Add(fileSelectedShort);
+                }
+            }
+        }
+
+
+
+
+        private string[]? GetRecipients()
+        {
+            if (string.IsNullOrEmpty(richTextBox2.Text))
+            {
+                MessageBox.Show("No recipient!");
+                return null;
+            }
+
+            else
+            {
+                return richTextBox2.Text.Split(",");
+            }
+        }
+
+        private string[]? GetCCs()
+        {
+            if (string.IsNullOrEmpty(richTextBox5.Text))
+            {
+                return null; 
+            }
+            else
+            {
+                return richTextBox5.Text.Split(",");
+            }
+        }
+        private string? GetSubject()
+        {
+            if(string.IsNullOrEmpty(richTextBox3.Text))
+            {
+                DialogResult result = MessageBox.Show("No subject. Do you want to send the email anyway?", "Fault", MessageBoxButtons.YesNo);
+                if (result == DialogResult.No)
+                {
+                    return null;
+                }
+                else if(result == DialogResult.Yes)
+                {
+                    return "<no subject>";
+                }
+                return null;
+            }
+            else
+            {
+                return richTextBox3.Text;
+            }
+        }
+
+        private bool validateRecipientArray(string[] recipients)
+        {
+            foreach (string recipient in recipients)
+            {
+                string r = recipient.Replace(",", "");
+                r = r.Trim();
+                if(!EmailValidator.Validate(r))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
+
+        private void Send_mail(object sender, EventArgs e)
+        {
+
+            this.Cursor = Cursors.WaitCursor;
+
+            var To = GetRecipients();
+            var CC = GetCCs();
+            
+            var Subject = GetSubject();
+/*                richTextBox3.Text;*/
+            var Content = richTextBox4.Text;
+
+
+            Email email = new Email(To, CC, Subject, Content, attachmentPaths);
+
+
+            var s = new EmailSender();
+            s.sendEmail(email);
+
+            this.Close();
+        }
+
+        private void Exit_button(object sender, EventArgs e)
+        {
+            this.Close();            
+        }
+
+        private void richTextBox4_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void richTextBox3_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void NewMail_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void richTextBox2_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void richTextBox5_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void richTextBox2_Validating(object sender, CancelEventArgs e)
+        {
+            string[] recipients = richTextBox2.Text.Split(",");
+            bool valid = validateRecipientArray(recipients);
+            button1.Enabled = valid;
+
+            if (!valid)
+            {
+                richTextBox2.ForeColor = Color.Red;
+
+            }
+
+            else
+            {
+                richTextBox2.ForeColor = Color.Green;
+            }
+        }
+
+
+        // CC validation does not work for some reason, #TODO
+        private void richTextBox5_Validating(object sender, CancelEventArgs e)
+        {
+            string[] cc = richTextBox5.Text.Split(",");
+            bool valid = validateRecipientArray(cc);
+            if (!valid)
+            {
+                richTextBox5.ForeColor = Color.Red;
+            }
+            else
+            {
+                richTextBox2.ForeColor = Color.Green;
+            }
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void RemoveAttachmentButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Remove the attachment from the listbox
+                var idx = AttachmentsListBox.SelectedIndex;
+                AttachmentsListBox.Items.RemoveAt(idx);
+
+                // Remove the attachment from the list to be constructed as mime message
+                attachmentPaths.RemoveAt(idx);
+            }
+            catch
+            {
+                MessageBox.Show("No Attachment selected!");
+            }
+
+            // if no more attachments hide the listbox, label and button
+            if(attachmentPaths.Count <= 0)
+            {
+                RemoveAttachmentButton.Visible = false;
+                AttachmentLabel.Visible = false;
+                AttachmentsListBox.Visible = false;
+            }
+        }
+    }
+
     public class Email
     {
         public List<MailboxAddress> To { get; set; }
+
+        public List<MailboxAddress> CC { get; set; }
         public string Subject { get; set; }
 
         public string Content { get; set; }
 
         public List<string> Attachments { get; set; }
 
-        public Email(IEnumerable<string> to, string subject, string content, List<string> attachments)
+        public Email(string[] to, string[]? cc, string subject, string content, List<string> attachments)
 
         {
-
             To = new List<MailboxAddress>();
             // username and address, #TODO currently we do not have aliases but extend this once we do
-            To.AddRange(to.Select(x => new MailboxAddress(x, x)));
+
+            foreach(var recipient in to)
+            {
+                To.Add(MailboxAddress.Parse(recipient));
+            }
+
+            
+            CC = new List<MailboxAddress>();
+            if(!(cc == null))
+            {
+                foreach (var c in cc)
+                {
+                    CC.Add(MailboxAddress.Parse(c));
+                }
+            }
+
+
 
             Subject = subject;
             Content = content;
@@ -96,145 +375,7 @@ namespace Email_Client_01
                 }
             }
         }
+
     }
 
-
-    public partial class NewMail : Form
-    {
-        List<string> attachmentPaths;
-        public NewMail()
-        {
-            InitializeComponent();
-            attachmentPaths = new();
-
-        }
-
-        public NewMail(MimeMessage msg)
-        {
-
-            InitializeComponent();
-            attachmentPaths = new();
-            
-
-            richTextBox2.Text = msg.To.ToString();
-            richTextBox3.Text = msg.Subject;
-            richTextBox4.Text = msg.TextBody;
-            richTextBox5.Text = msg.Cc.ToString();
-        }
-
-        private void Form2_Load(object sender, EventArgs e)
-        {
-        }
-
-        private void richTextBox1_TextChanged(object sender, EventArgs e)
-        {
-            // read from username
-        }
-            
-        private void richTextBox2_TextChanged(object sender, EventArgs e)
-        {
-            
-        }
-               
-        private void From_Click(object sender, EventArgs e)
-        {
-            richTextBox1.ResetText();
-            richTextBox1.ForeColor = System.Drawing.Color.Black;
-        }
-
-        private void To_Click(object sender, EventArgs e)
-        {
-            richTextBox2.ForeColor = System.Drawing.Color.Black;
-        }
-
-        private void Subject_Click(object sender, EventArgs e)
-        {
-            richTextBox3.ForeColor = System.Drawing.Color.Black;
-        }
-
-        private void Mail_click(object sender, EventArgs e)
-        {
-            richTextBox4.ForeColor = System.Drawing.Color.Black;
-        }
-
-        private void Attach_file(object sender, EventArgs e)
-        {
-            using (OpenFileDialog fileDialog = new OpenFileDialog())
-            {
-                fileDialog.InitialDirectory = "c:\\";
-                fileDialog.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
-                fileDialog.FilterIndex = 2;
-                fileDialog.RestoreDirectory = true;
-
-                if (fileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    string fileSelected = fileDialog.FileName;
-                    attachmentPaths.Add(fileSelected);
-                    MessageBox.Show("File added succesfuly");
-                }
-            }
-        }
-
-
-        private static String RemoveQuatations(string s)
-        {
-            var rs = s.Split(new[] { '"' }).ToList();
-            return String.Join("\"\"", rs.Where(_ => rs.IndexOf(_) % 2 == 0));
-        }
-
-
-        private List<string> GetRecipients()
-        {
-            string recipientsTextBox = richTextBox2.Text;
-            // "John Doe" <John.Doe@gmail.com>, ...
-
-            recipientsTextBox = RemoveQuatations(recipientsTextBox);
-            // "" <John.Doe@gmail.com>, ...
-
-
-            // remove specific chars and whitespace
-            recipientsTextBox = recipientsTextBox.Trim(new char[] { '"', ' ', '<', '>' });
-            // John.Doe@gmail.com, ...
-
-            string[] recipients = recipientsTextBox.Split(',');
-
-
-            return new List<string>(recipients);
-        }
-
-
-
-        private void Send_mail(object sender, EventArgs e)
-        {
-
-            this.Cursor = Cursors.WaitCursor;
-
-            var To = GetRecipients();
-            var Subject = richTextBox3.Text;
-            var Content = richTextBox4.Text;
-
-            Email email = new Email(To, Subject, Content, attachmentPaths);
-
-
-            var s = new EmailSender();
-            s.sendEmail(email);
-
-            this.Close();
-        }
-
-        private void Exit_button(object sender, EventArgs e)
-        {
-            this.Close();            
-        }
-
-        private void richTextBox4_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void richTextBox3_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-    }
 }

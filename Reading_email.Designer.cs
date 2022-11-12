@@ -28,42 +28,53 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.FromTextBox = new System.Windows.Forms.TextBox();
+            this.SubjectTextBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.MessageTextBox = new System.Windows.Forms.RichTextBox();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
             this.button5 = new System.Windows.Forms.Button();
             this.button6 = new System.Windows.Forms.Button();
+            this.DateTextBox = new System.Windows.Forms.TextBox();
+            this.DateLabel = new System.Windows.Forms.Label();
+            this.CCTextBox = new System.Windows.Forms.TextBox();
+            this.ToTextBox = new System.Windows.Forms.TextBox();
+            this.CCLabel = new System.Windows.Forms.Label();
+            this.ToLabel = new System.Windows.Forms.Label();
+            this.AttachmentListBox = new System.Windows.Forms.ListBox();
+            this.AttachmentsLabel = new System.Windows.Forms.Label();
+            this.DownloadAttachmentButton = new System.Windows.Forms.Button();
+            this.DownloadAllAttachmentsButton = new System.Windows.Forms.Button();
+            this.TrashButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
-            // textBox1
+            // FromTextBox
             // 
-            this.textBox1.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.textBox1.Location = new System.Drawing.Point(49, 64);
-            this.textBox1.Margin = new System.Windows.Forms.Padding(6);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(2281, 55);
-            this.textBox1.TabIndex = 0;
+            this.FromTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.FromTextBox.Location = new System.Drawing.Point(49, 57);
+            this.FromTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this.FromTextBox.Name = "FromTextBox";
+            this.FromTextBox.Size = new System.Drawing.Size(1684, 55);
+            this.FromTextBox.TabIndex = 0;
             // 
-            // textBox2
+            // SubjectTextBox
             // 
-            this.textBox2.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.textBox2.Location = new System.Drawing.Point(49, 230);
-            this.textBox2.Margin = new System.Windows.Forms.Padding(6);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(2281, 55);
-            this.textBox2.TabIndex = 1;
+            this.SubjectTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.SubjectTextBox.Location = new System.Drawing.Point(49, 274);
+            this.SubjectTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this.SubjectTextBox.Name = "SubjectTextBox";
+            this.SubjectTextBox.Size = new System.Drawing.Size(1684, 55);
+            this.SubjectTextBox.TabIndex = 1;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(49, 10);
+            this.label1.Location = new System.Drawing.Point(49, 3);
             this.label1.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(111, 48);
@@ -73,7 +84,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(49, 176);
+            this.label2.Location = new System.Drawing.Point(49, 220);
             this.label2.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(145, 48);
@@ -83,7 +94,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(49, 310);
+            this.label3.Location = new System.Drawing.Point(49, 330);
             this.label3.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(167, 48);
@@ -91,16 +102,16 @@
             this.label3.Text = "Message:";
             this.label3.Click += new System.EventHandler(this.label3_Click);
             // 
-            // richTextBox1
+            // MessageTextBox
             // 
-            this.richTextBox1.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.richTextBox1.Location = new System.Drawing.Point(49, 365);
-            this.richTextBox1.Margin = new System.Windows.Forms.Padding(6);
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(2281, 724);
-            this.richTextBox1.TabIndex = 5;
-            this.richTextBox1.Text = "";
-            this.richTextBox1.TextChanged += new System.EventHandler(this.richTextBox1_TextChanged);
+            this.MessageTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.MessageTextBox.Location = new System.Drawing.Point(49, 385);
+            this.MessageTextBox.Margin = new System.Windows.Forms.Padding(6);
+            this.MessageTextBox.Name = "MessageTextBox";
+            this.MessageTextBox.Size = new System.Drawing.Size(1684, 724);
+            this.MessageTextBox.TabIndex = 5;
+            this.MessageTextBox.Text = "";
+            this.MessageTextBox.TextChanged += new System.EventHandler(this.richTextBox1_TextChanged);
             // 
             // button1
             // 
@@ -157,7 +168,7 @@
             // 
             // button6
             // 
-            this.button6.Location = new System.Drawing.Point(1511, 1139);
+            this.button6.Location = new System.Drawing.Point(1327, 1139);
             this.button6.Margin = new System.Windows.Forms.Padding(6);
             this.button6.Name = "button6";
             this.button6.Size = new System.Drawing.Size(317, 112);
@@ -165,24 +176,136 @@
             this.button6.Text = "Mark as unread";
             this.button6.UseVisualStyleBackColor = true;
             // 
+            // DateTextBox
+            // 
+            this.DateTextBox.Location = new System.Drawing.Point(1801, 57);
+            this.DateTextBox.Name = "DateTextBox";
+            this.DateTextBox.Size = new System.Drawing.Size(504, 55);
+            this.DateTextBox.TabIndex = 12;
+            // 
+            // DateLabel
+            // 
+            this.DateLabel.AutoSize = true;
+            this.DateLabel.Location = new System.Drawing.Point(1801, 8);
+            this.DateLabel.Name = "DateLabel";
+            this.DateLabel.Size = new System.Drawing.Size(102, 48);
+            this.DateLabel.TabIndex = 13;
+            this.DateLabel.Text = "Date:";
+            // 
+            // CCTextBox
+            // 
+            this.CCTextBox.Location = new System.Drawing.Point(1801, 162);
+            this.CCTextBox.Name = "CCTextBox";
+            this.CCTextBox.Size = new System.Drawing.Size(507, 55);
+            this.CCTextBox.TabIndex = 14;
+            this.CCTextBox.Visible = false;
+            // 
+            // ToTextBox
+            // 
+            this.ToTextBox.Location = new System.Drawing.Point(49, 162);
+            this.ToTextBox.Name = "ToTextBox";
+            this.ToTextBox.Size = new System.Drawing.Size(1684, 55);
+            this.ToTextBox.TabIndex = 15;
+            // 
+            // CCLabel
+            // 
+            this.CCLabel.AutoSize = true;
+            this.CCLabel.Location = new System.Drawing.Point(1801, 115);
+            this.CCLabel.Name = "CCLabel";
+            this.CCLabel.Size = new System.Drawing.Size(86, 48);
+            this.CCLabel.TabIndex = 16;
+            this.CCLabel.Text = "CCs:";
+            this.CCLabel.Visible = false;
+            // 
+            // ToLabel
+            // 
+            this.ToLabel.AutoSize = true;
+            this.ToLabel.Location = new System.Drawing.Point(49, 111);
+            this.ToLabel.Name = "ToLabel";
+            this.ToLabel.Size = new System.Drawing.Size(64, 48);
+            this.ToLabel.TabIndex = 17;
+            this.ToLabel.Text = "To:";
+            // 
+            // AttachmentListBox
+            // 
+            this.AttachmentListBox.FormattingEnabled = true;
+            this.AttachmentListBox.ItemHeight = 48;
+            this.AttachmentListBox.Location = new System.Drawing.Point(1801, 385);
+            this.AttachmentListBox.Name = "AttachmentListBox";
+            this.AttachmentListBox.Size = new System.Drawing.Size(507, 532);
+            this.AttachmentListBox.TabIndex = 18;
+            this.AttachmentListBox.Visible = false;
+            // 
+            // AttachmentsLabel
+            // 
+            this.AttachmentsLabel.AutoSize = true;
+            this.AttachmentsLabel.Location = new System.Drawing.Point(1801, 334);
+            this.AttachmentsLabel.Name = "AttachmentsLabel";
+            this.AttachmentsLabel.Size = new System.Drawing.Size(227, 48);
+            this.AttachmentsLabel.TabIndex = 19;
+            this.AttachmentsLabel.Text = "Attachments:";
+            this.AttachmentsLabel.Visible = false;
+            // 
+            // DownloadAttachmentButton
+            // 
+            this.DownloadAttachmentButton.Location = new System.Drawing.Point(1801, 936);
+            this.DownloadAttachmentButton.Name = "DownloadAttachmentButton";
+            this.DownloadAttachmentButton.Size = new System.Drawing.Size(507, 69);
+            this.DownloadAttachmentButton.TabIndex = 20;
+            this.DownloadAttachmentButton.Text = "Download Attachment";
+            this.DownloadAttachmentButton.UseVisualStyleBackColor = true;
+            this.DownloadAttachmentButton.Visible = false;
+            this.DownloadAttachmentButton.Click += new System.EventHandler(this.DownloadAttachmentButton_Click);
+            // 
+            // DownloadAllAttachmentsButton
+            // 
+            this.DownloadAllAttachmentsButton.Location = new System.Drawing.Point(1801, 1021);
+            this.DownloadAllAttachmentsButton.Name = "DownloadAllAttachmentsButton";
+            this.DownloadAllAttachmentsButton.Size = new System.Drawing.Size(504, 69);
+            this.DownloadAllAttachmentsButton.TabIndex = 21;
+            this.DownloadAllAttachmentsButton.Text = "Download All Attachments";
+            this.DownloadAllAttachmentsButton.UseVisualStyleBackColor = true;
+            this.DownloadAllAttachmentsButton.Click += new System.EventHandler(this.DownloadAllAttachmentsButton_Click);
+            // 
+            // TrashButton
+            // 
+            this.TrashButton.Location = new System.Drawing.Point(1653, 1140);
+            this.TrashButton.Name = "TrashButton";
+            this.TrashButton.Size = new System.Drawing.Size(178, 111);
+            this.TrashButton.TabIndex = 22;
+            this.TrashButton.Text = "Trash";
+            this.TrashButton.UseVisualStyleBackColor = true;
+            this.TrashButton.Click += new System.EventHandler(this.TrashButton_Click);
+            // 
             // Reading_email
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(20F, 48F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.ClientSize = new System.Drawing.Size(2369, 1286);
+            this.Controls.Add(this.TrashButton);
+            this.Controls.Add(this.DownloadAllAttachmentsButton);
+            this.Controls.Add(this.DownloadAttachmentButton);
+            this.Controls.Add(this.AttachmentsLabel);
+            this.Controls.Add(this.AttachmentListBox);
+            this.Controls.Add(this.ToLabel);
+            this.Controls.Add(this.CCLabel);
+            this.Controls.Add(this.ToTextBox);
+            this.Controls.Add(this.CCTextBox);
+            this.Controls.Add(this.DateLabel);
+            this.Controls.Add(this.DateTextBox);
             this.Controls.Add(this.button6);
             this.Controls.Add(this.button5);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
-            this.Controls.Add(this.richTextBox1);
+            this.Controls.Add(this.MessageTextBox);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.textBox2);
-            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.SubjectTextBox);
+            this.Controls.Add(this.FromTextBox);
             this.Margin = new System.Windows.Forms.Padding(6);
             this.Name = "Reading_email";
             this.Text = "Read Email";
@@ -193,17 +316,28 @@
 
         #endregion
 
-        private TextBox textBox1;
-        private TextBox textBox2;
+        private TextBox FromTextBox;
+        private TextBox SubjectTextBox;
         private Label label1;
         private Label label2;
         private Label label3;
-        private RichTextBox richTextBox1;
+        private RichTextBox MessageTextBox;
         private Button button1;
         private Button button2;
         private Button button3;
         private Button button4;
         private Button button5;
         private Button button6;
+        private TextBox DateTextBox;
+        private Label DateLabel;
+        private TextBox CCTextBox;
+        private TextBox ToTextBox;
+        private Label CCLabel;
+        private Label ToLabel;
+        private ListBox AttachmentListBox;
+        private Label AttachmentsLabel;
+        private Button DownloadAttachmentButton;
+        private Button DownloadAllAttachmentsButton;
+        private Button TrashButton;
     }
 }
