@@ -46,20 +46,20 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(34, 12);
-            this.label2.Margin = new System.Windows.Forms.Padding(8, 0, 8, 0);
+            this.label2.Location = new System.Drawing.Point(17, 6);
+            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(64, 48);
+            this.label2.Size = new System.Drawing.Size(34, 25);
             this.label2.TabIndex = 8;
             this.label2.Text = "To:";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(34, 262);
-            this.label3.Margin = new System.Windows.Forms.Padding(8, 0, 8, 0);
+            this.label3.Location = new System.Drawing.Point(17, 136);
+            this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(145, 48);
+            this.label3.Size = new System.Drawing.Size(74, 25);
             this.label3.TabIndex = 7;
             this.label3.Text = "Subject:";
             // 
@@ -67,10 +67,10 @@
             // 
             this.richTextBox2.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.richTextBox2.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox2.Location = new System.Drawing.Point(34, 66);
-            this.richTextBox2.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
+            this.richTextBox2.Location = new System.Drawing.Point(17, 34);
+            this.richTextBox2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.richTextBox2.Name = "richTextBox2";
-            this.richTextBox2.Size = new System.Drawing.Size(1871, 56);
+            this.richTextBox2.Size = new System.Drawing.Size(938, 31);
             this.richTextBox2.TabIndex = 2;
             this.richTextBox2.Text = "";
             this.richTextBox2.Click += new System.EventHandler(this.To_Click);
@@ -82,10 +82,10 @@
             // 
             this.richTextBox3.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.richTextBox3.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox3.Location = new System.Drawing.Point(34, 320);
-            this.richTextBox3.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
+            this.richTextBox3.Location = new System.Drawing.Point(17, 167);
+            this.richTextBox3.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.richTextBox3.Name = "richTextBox3";
-            this.richTextBox3.Size = new System.Drawing.Size(1871, 67);
+            this.richTextBox3.Size = new System.Drawing.Size(938, 37);
             this.richTextBox3.TabIndex = 3;
             this.richTextBox3.Text = "";
             this.richTextBox3.Click += new System.EventHandler(this.Subject_Click);
@@ -95,10 +95,10 @@
             // 
             this.richTextBox4.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.richTextBox4.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox4.Location = new System.Drawing.Point(38, 418);
-            this.richTextBox4.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
+            this.richTextBox4.Location = new System.Drawing.Point(19, 218);
+            this.richTextBox4.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.richTextBox4.Name = "richTextBox4";
-            this.richTextBox4.Size = new System.Drawing.Size(1867, 919);
+            this.richTextBox4.Size = new System.Drawing.Size(936, 481);
             this.richTextBox4.TabIndex = 4;
             this.richTextBox4.Text = "Write your message here";
             this.richTextBox4.Click += new System.EventHandler(this.Mail_click);
@@ -106,10 +106,10 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(2038, 1357);
-            this.button1.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
+            this.button1.Location = new System.Drawing.Point(1019, 707);
+            this.button1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(214, 73);
+            this.button1.Size = new System.Drawing.Size(107, 38);
             this.button1.TabIndex = 6;
             this.button1.Text = "Send";
             this.button1.UseVisualStyleBackColor = true;
@@ -117,10 +117,10 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(34, 1357);
-            this.button2.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
+            this.button2.Location = new System.Drawing.Point(17, 707);
+            this.button2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(214, 73);
+            this.button2.Size = new System.Drawing.Size(107, 38);
             this.button2.TabIndex = 5;
             this.button2.Text = "Attach file";
             this.button2.UseVisualStyleBackColor = true;
@@ -128,10 +128,10 @@
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(1808, 1357);
-            this.button3.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
+            this.button3.Location = new System.Drawing.Point(904, 707);
+            this.button3.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(214, 73);
+            this.button3.Size = new System.Drawing.Size(107, 38);
             this.button3.TabIndex = 9;
             this.button3.Text = "Exit";
             this.button3.UseVisualStyleBackColor = true;
@@ -140,10 +140,10 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(34, 130);
-            this.label4.Margin = new System.Windows.Forms.Padding(8, 0, 8, 0);
+            this.label4.Location = new System.Drawing.Point(17, 68);
+            this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(67, 48);
+            this.label4.Size = new System.Drawing.Size(35, 25);
             this.label4.TabIndex = 10;
             this.label4.Text = "Cc:";
             // 
@@ -151,10 +151,10 @@
             // 
             this.richTextBox5.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.richTextBox5.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox5.Location = new System.Drawing.Point(34, 187);
-            this.richTextBox5.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
+            this.richTextBox5.Location = new System.Drawing.Point(17, 97);
+            this.richTextBox5.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.richTextBox5.Name = "richTextBox5";
-            this.richTextBox5.Size = new System.Drawing.Size(1871, 62);
+            this.richTextBox5.Size = new System.Drawing.Size(938, 34);
             this.richTextBox5.TabIndex = 11;
             this.richTextBox5.Text = "";
             this.richTextBox5.TextChanged += new System.EventHandler(this.richTextBox5_TextChanged);
@@ -162,20 +162,23 @@
             // 
             // AttachmentsListBox
             // 
+            this.AttachmentsListBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.AttachmentsListBox.FormattingEnabled = true;
-            this.AttachmentsListBox.ItemHeight = 48;
-            this.AttachmentsListBox.Location = new System.Drawing.Point(1953, 549);
+            this.AttachmentsListBox.ItemHeight = 25;
+            this.AttachmentsListBox.Location = new System.Drawing.Point(976, 286);
+            this.AttachmentsListBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.AttachmentsListBox.Name = "AttachmentsListBox";
-            this.AttachmentsListBox.Size = new System.Drawing.Size(266, 484);
+            this.AttachmentsListBox.Size = new System.Drawing.Size(135, 254);
             this.AttachmentsListBox.TabIndex = 12;
             this.AttachmentsListBox.Visible = false;
             // 
             // AttachmentLabel
             // 
             this.AttachmentLabel.AutoSize = true;
-            this.AttachmentLabel.Location = new System.Drawing.Point(1953, 475);
+            this.AttachmentLabel.Location = new System.Drawing.Point(976, 247);
+            this.AttachmentLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.AttachmentLabel.Name = "AttachmentLabel";
-            this.AttachmentLabel.Size = new System.Drawing.Size(227, 48);
+            this.AttachmentLabel.Size = new System.Drawing.Size(116, 25);
             this.AttachmentLabel.TabIndex = 13;
             this.AttachmentLabel.Text = "Attachments:";
             this.AttachmentLabel.Visible = false;
@@ -183,9 +186,10 @@
             // 
             // RemoveAttachmentButton
             // 
-            this.RemoveAttachmentButton.Location = new System.Drawing.Point(1977, 1074);
+            this.RemoveAttachmentButton.Location = new System.Drawing.Point(988, 559);
+            this.RemoveAttachmentButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.RemoveAttachmentButton.Name = "RemoveAttachmentButton";
-            this.RemoveAttachmentButton.Size = new System.Drawing.Size(213, 153);
+            this.RemoveAttachmentButton.Size = new System.Drawing.Size(106, 80);
             this.RemoveAttachmentButton.TabIndex = 14;
             this.RemoveAttachmentButton.Text = "Remove Attachment";
             this.RemoveAttachmentButton.UseVisualStyleBackColor = true;
@@ -194,10 +198,10 @@
             // 
             // NewMail
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(20F, 48F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
-            this.ClientSize = new System.Drawing.Size(2286, 1440);
+            this.ClientSize = new System.Drawing.Size(1134, 752);
             this.Controls.Add(this.RemoveAttachmentButton);
             this.Controls.Add(this.AttachmentLabel);
             this.Controls.Add(this.AttachmentsListBox);
@@ -211,7 +215,7 @@
             this.Controls.Add(this.richTextBox2);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
-            this.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "NewMail";
             this.Text = "New Email";
             this.Load += new System.EventHandler(this.Form2_Load);

@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <Folder Include="Attachments\" />
+    <Folder Include="Properties\DataSources\" />
   </ItemGroup>
 
   <ItemGroup>

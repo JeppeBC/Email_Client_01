@@ -3,6 +3,7 @@ using MailKit.Net.Imap;
 using MailKit.Search;
 using MimeKit;
 using System;
+using System.Data;
 using System.DirectoryServices;
 using System.Windows.Forms;
 using System.Xml.Linq;
@@ -241,7 +242,7 @@ namespace Email_Client_01
                         messageSummaries = messages;
                         foreach (var item in messages.Reverse())
                         {
-                            Inbox.Items.Add(FormatInboxMessageText(item));
+                           Inbox.Items.Add(FormatInboxMessageText(item));
                         }
                     }
 
@@ -275,6 +276,8 @@ namespace Email_Client_01
                     var messageId = (((ListBox)sender).SelectedIndex); // 2 parenthesis warns about missing ';' for some reason.
                     var messageItem = messageSummaries[messageSummaries.Count - messageId - 1];
 
+                    MessageBox.Show(messageItem.NormalizedSubject);
+
                     // Add "Seen" flag to the message
                     var folder = await client.GetFolderAsync(messageItem.Folder.ToString());
                     await folder.OpenAsync(FolderAccess.ReadWrite);
@@ -303,7 +306,8 @@ namespace Email_Client_01
 
 
         private void Form1_Load(object sender, EventArgs e)
-        {
+        {   
+         
         }
 
         private void Prime_Mail_Homepage(object sender, EventArgs e)
@@ -618,5 +622,29 @@ namespace Email_Client_01
                 }
             }
         }
+
+        private void PriorityClicked(object sender, EventArgs e)
+        {
+            // Take selected email and selected priority
+            Object Selecteditem = PrioritySelecter.SelectedItem;
+
+            var msgIndex = Inbox.SelectedIndex;
+            Object PriorityMsg = Inbox.Items[msgIndex];
+
+            // Display the selected mail in listbox "Priority" as "priority + subject of email"
+            Priority.Items.Add(Selecteditem.ToString() + ": " + PriorityMsg.ToString());
+
+            Priority.Sorted = true;
+        }
+
+        private void Priority_DoubleClick(object sender, EventArgs e)
+        {
+
+            ReadMessage(sender, e);
+
+            //Object msgIndex = Priority.SelectedIndex;
+            //Priority.Items.Remove(msgIndex);
+        }
+
     }
 }
