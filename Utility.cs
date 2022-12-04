@@ -18,6 +18,7 @@ namespace Email_Client_01
         public static readonly int ImapPort = 993;
 
 
+
         public static async Task<ImapClient> GetImapClient()
         {
             var client = new ImapClient();
@@ -26,6 +27,19 @@ namespace Email_Client_01
             await client.AuthenticateAsync(username, password);
 
             return client;
+        }
+
+        public static async Task ReconnectAsync(ImapClient client)
+        {
+            // if somehow not connected or authenticated, try again
+            if (!client.IsConnected)
+            {
+                await client.ConnectAsync(ImapServer, ImapPort, MailKit.Security.SecureSocketOptions.Auto);
+            }
+            if (!client.IsAuthenticated)
+            {
+                await client.AuthenticateAsync(username, password);
+            }
         }
 
         public static async Task<SmtpClient> GetSmtpClient()

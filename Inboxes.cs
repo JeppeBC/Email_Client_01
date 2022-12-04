@@ -22,164 +22,144 @@ namespace Email_Client_01
     public partial class Inboxes : Form
     {
         IList<IMessageSummary> messageSummaries = null!;
-/*        IList<IMailFolder> folders = null!;*/
+        IList<IMailFolder> folders = null!;
 
         List<string> folderNames = new();
         List<string> filterNames = new();
         private static Inboxes instance = null!;
         private bool clicked = false; // for double clicks handling
+        ImapClient client;
+        bool loadingFolders = false;
+        int filterCount = 0;
+
+
 
         // private construtor as we employ singleton pattern
-        private Inboxes()
+        private Inboxes(ImapClient client)
         {
+            this.client = client;
+            
             InitializeComponent();
-
             // todo change this to the idle, active and ui threads. Add checks that this connection does not break / expire
             RetrieveFolders();
 
         }
 
+
         // singleton pattern
-        public static Inboxes GetInstance
+        public static Inboxes GetInstance(ImapClient client)
         {
             // coalescing operator, return first non-null value; 
-            get { return instance ??= new Inboxes(); }
+            return instance ??= new Inboxes(client);
         }
 
         // retrives all the folder names and add to the listbox
         private async void RetrieveFolders()
         {
             this.Cursor = Cursors.WaitCursor;
-            using (var client = await Utility.GetImapClient())
+            loadingFolders = true;
+            try
             {
-                try
+                // Load in the folders from imap into a list
+                folders = await client.GetFoldersAsync(new FolderNamespace('.', ""));
+
+                // storing folders in a dictionary.
+                Dictionary<string, string> foldersMap = new Dictionary<string, string>();
+
+
+                var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
+
+                // if file does not exist
+                if (!File.Exists(filepath))
                 {
+                    // create the file
+                    File.Create(filepath).Close();
+                }
 
-                    // Load in the folders from imap into a list
-                    var folders = await client.GetFoldersAsync(new FolderNamespace('.', ""));
-
-
-                    // storing folders in a dictionary.
-                    Dictionary<string, string> foldersMap = new Dictionary<string, string>();
-
-
-                    var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
-                    // if file does not exist
-                    if (!File.Exists(filepath))
-                    {
-                        // create the file
-                        File.Create(filepath).Close();
-                    }
-
-                    // Read the entire file and De-serialize to list of filters
-                    var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
+                // Read the entire file and De-serialize to list of filters
+                var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
 
 
-                    foreach (var filter in FilterList)
-                    {
-                        foreach (var folder in folders)
-                        {
-
-                            if (!folder.Exists) continue;
-                            foreach (var f in folders)
-                            {
-                                if (!f.Exists) continue;
-                                if (f == folder)
-                                    continue;
-
-                                // Folder.fullnames are of the form "[Gmail]/Spam", we only want the part after '/'
-                                var folderName = f.FullName.Substring(f.FullName.LastIndexOf("/") + 1);
-                                if (filter.DestinationFolder == folderName)
-                                {
-                                    var query = GetSearchQueryFromFilter(filter);
-                                    await folder.OpenAsync(FolderAccess.ReadWrite);
-                                    foreach (var uid in folder.Search(query))
-                                    {
-                                        await folder.MoveToAsync(uid, f);
-                                    }
-                                    break;
-                                }
-
-                            }
-                        }
-                    }
-
-
+                foreach (var filter in FilterList)
+                {
                     foreach (var folder in folders)
                     {
-                        if (folder.Exists)
+
+                        if (!folder.Exists) continue;
+                        foreach (var f in folders)
                         {
-                            int unreadCount = 0;
+                            if (!f.Exists) continue;
+                            if (f == folder)
+                                continue;
 
-                            // counting number of unread messages, the time this takes is noticeable #TODO
-                            folder.Open(FolderAccess.ReadOnly);
-
-
-                            foreach(var uid in folder.Search(MailKit.Search.SearchQuery.NotSeen))
+                            // Folder.fullnames are of the form "[Gmail]/Spam", we only want the part after '/'
+                            var folderName = f.FullName.Substring(f.FullName.LastIndexOf("/") + 1);
+                            if (filter.DestinationFolder == folderName)
                             {
-                                unreadCount++;
+                                var query = GetSearchQueryFromFilter(filter);
+                                await folder.OpenAsync(FolderAccess.ReadWrite);
+                                foreach (var uid in folder.Search(query))
+                                {
+                                    await folder.MoveToAsync(uid, f);
+                                }
+                                break;
                             }
-                        
-                            var folderName = folder.FullName.Substring(folder.FullName.LastIndexOf("/") + 1);
-                            folderNames.Add(folderName); // for bookkeeping without spinning up a client 
-                            folderName += " (" + unreadCount + ")";
-                            foldersMap.Add(key: folder.FullName, value: folderName); // add to dictionary. 
-                            folder.Close();
+
                         }
                     }
-
-                    // Designating a data source for the listbox. 
-                    Folders.DataSource = new BindingSource(foldersMap, null);
-
-                    // The value and keys
-                    Folders.DisplayMember = "Value";
-                    Folders.ValueMember = "Key";
-
-
-                    RetrieveMessagesFromFolder(client.Inbox);
                 }
-                catch (Exception ex)
+
+                foreach (var folder in folders)
+                {
+                    if (folder.Exists)
+                    {
+                        int unreadCount = 0;
+
+                        // counting number of unread messages, the time this takes is noticeable #TODO
+                        folder.Open(FolderAccess.ReadOnly);
+
+
+                        foreach (var uid in folder.Search(MailKit.Search.SearchQuery.NotSeen))
+                        {
+                            unreadCount++;
+                        }
+
+                        var folderName = folder.FullName.Substring(folder.FullName.LastIndexOf("/") + 1);
+                        folderNames.Add(folderName); // for bookkeeping without spinning up a client 
+                        folderName += " (" + unreadCount + ")";
+                        foldersMap.Add(key: folder.FullName, value: folderName); // add to dictionary. 
+                        folder.Close();
+                    }
+                }
+
+                // Designating a data source for the listbox. 
+                Folders.DataSource = new BindingSource(foldersMap, null);
+
+                // The value and keys
+                Folders.DisplayMember = "Value";
+                Folders.ValueMember = "Key";
+
+                loadingFolders = false;
+                RetrieveMessagesFromFolder();
+            }
+            catch (Exception ex)
+            {
+                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
+                if (ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
                 {
                     MessageBox.Show(ex.Message);
                 }
-                finally
-                {
-                    await client.DisconnectAsync(true);
-                    client.Dispose();
-                    this.Cursor = Cursors.Default;
-                }
-
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
             }
         }
 
-
-
-/*
-         // apply filter to the open folder
-                            foreach(var filter in FilterList)
-                            {
-                                if(filter.DestinationFolder == folder.FullName)
-                                {
-                                    // do filtering. 
-                                    var query = GetSearchQueryFromFilter(filter);
-                                    foreach(var uid in folder.Search(MailKit.Search.SearchQuery.GMailRawSearch("qwerty")))
-                                    {
-                                        MessageBox.Show(uid.ToString());
-                                        // find the destination folder of the filter.
-                                        foreach (var f in folders)
-                                        {
-                                            if (f.FullName == filter.DestinationFolder)
-                                            {
-                                                MessageBox.Show("test");
-                                                await f.OpenAsync(FolderAccess.ReadWrite);
-        await f.MoveToAsync(uid, f);
-        await f.CloseAsync();
-                                                break;
-                                            }
-}
-                                    }
-                                }*/
-                           
 
         private MailKit.Search.SearchQuery? GetSearchQueryFromFilter(Filter filter)
         {
@@ -243,7 +223,7 @@ namespace Email_Client_01
         private string getSubject(IMessageSummary item)
         {
             string subject = "";
-            if(item.Envelope.Subject != null)
+            if (item.Envelope.Subject != null)
             {
                 subject += item.Envelope.Subject;
             }
@@ -260,7 +240,7 @@ namespace Email_Client_01
         private string GetSender(IMessageSummary item)
         {
             // if an alias is present, i.e. the name and not the actual mailaddress, then return that
-            if (!string.IsNullOrEmpty(item.Envelope.Sender[0].Name))
+            if (item.Envelope.Sender.Count > 0 && !string.IsNullOrEmpty(item.Envelope.Sender[0].Name))
                 return item.Envelope.Sender[0].Name;
             // else check for the first actual mail address of the sender(s), if non found return empty string;
             return item.Envelope.From.Mailboxes.FirstOrDefault()?.Address ?? "";
@@ -281,16 +261,15 @@ namespace Email_Client_01
             return "(DRAFT) " + getSubject(item);
         }
 
-       
+
         public static void RefreshCurrentFolder()
         {
             instance.RetrieveMessagesFromFolder();
         }
 
-        private async Task<IMailFolder> GetCurrentFolder(ImapClient client)
+        private IMailFolder GetCurrentFolder()
         {
-            var folder = await client.GetFolderAsync(Folders.SelectedValue.ToString());
-            return folder;
+            return client.GetFolder(Folders.SelectedValue.ToString());
         }
 
 
@@ -301,55 +280,59 @@ namespace Email_Client_01
             Inbox.Items.Clear();
 
             this.Cursor = Cursors.WaitCursor;
-            using (var client = await Utility.GetImapClient())
+            try
             {
-                try
+                Inbox.Items.Clear();
+
+                var folder = GetCurrentFolder();
+                await folder.OpenAsync(FolderAccess.ReadOnly);
+
+                var messages = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                messageSummaries = messages;
+
+                if (messages.Count <= 0)
                 {
-                    Inbox.Items.Clear();
-
-                    var folder = await GetCurrentFolder(client);
-                    await folder.OpenAsync(FolderAccess.ReadOnly);
-
-
-                    var messages = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
-                    messageSummaries = messages;
-
-                    if (messages.Count <= 0)
-                    {
-                        Inbox.Items.Add("This folder is empty!");
-                    }
-                    else if(folder.Attributes.HasFlag(FolderAttributes.Drafts))
-                    {
-                        foreach (var item in messages.Reverse())
-                        {
-                            // Remove messages not flagged as draft.
-                            if (!item.Flags.Value.HasFlag(MessageFlags.Draft))
-                            {
-                                folder.AddFlags(item.UniqueId, MessageFlags.Draft, true);
-                                folder.Expunge();
-                            }
-                            Inbox.Items.Add(FormatDraftInboxText(item));
-                        }
-                    }
-                    else
-                    {
-                        foreach (var item in messages.Reverse())
-                        {
-                            Inbox.Items.Add(FormatInboxMessageText(item));
-                        }
-                    }
-
+                    Inbox.Items.Add("This folder is empty!");
                 }
-                catch (Exception ex)
+                else if (folder.Attributes.HasFlag(FolderAttributes.Drafts))
+                {
+                    await folder.OpenAsync(FolderAccess.ReadWrite);
+                    foreach (var item in messages.Reverse())
+                    {
+                        // Remove messages not flagged as draft.
+                        if (!item.Flags.Value.HasFlag(MessageFlags.Draft))
+                        {
+                            folder.AddFlags(item.UniqueId, MessageFlags.Draft, true);
+                            folder.Expunge();
+                        }
+                        Inbox.Items.Add(FormatDraftInboxText(item));
+                    }
+                    await folder.CloseAsync();
+                }
+                else
+                {
+                    foreach (var item in messages.Reverse())
+                    {
+                       Inbox.Items.Add(FormatInboxMessageText(item));
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
+                if (ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
                 {
                     MessageBox.Show(ex.Message);
                 }
-                finally
-                {
-                    client?.DisconnectAsync(true);
-                    client?.Dispose();
-                    this.Cursor = Cursors.Default;
-                }
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
             }
         }
 
@@ -363,43 +346,44 @@ namespace Email_Client_01
             var messageItem = messageSummaries[messageSummaries.Count - messageId - 1];
 
             this.Cursor = Cursors.WaitCursor;
-            using (var client = await Utility.GetImapClient())
+            try
             {
-                try
+                // Add "Seen" flag to the message
+                var folder = await client.GetFolderAsync(messageItem.Folder.ToString());
+                await folder.OpenAsync(FolderAccess.ReadWrite);
+                await folder.AddFlagsAsync(messageItem.UniqueId, MessageFlags.Seen, true);
+
+                // Mutate the message in the listbox, so it no longer says unread
+                // TODO
+
+                // Get the MimeMessage from id:
+                MimeMessage msg = folder.GetMessage(messageItem.UniqueId);
+
+                //if the message is draft, open as draft!
+                if (folder.Attributes.HasFlag(FolderAttributes.Drafts))
                 {
-                    // Add "Seen" flag to the message
-                    var folder = await client.GetFolderAsync(messageItem.Folder.ToString());
-                    await folder.OpenAsync(FolderAccess.ReadWrite);
-                    await folder.AddFlagsAsync(messageItem.UniqueId, MessageFlags.Seen, true);
-
-                    // Mutate the message in the listbox, so it no longer says unread
-                    // TODO
-
-                    // Get the MimeMessage from id:
-                    MimeMessage msg = folder.GetMessage(messageItem.UniqueId);
-
-                    //if the message is draft, open as draft!
-                    if (folder.Attributes.HasFlag(FolderAttributes.Drafts))
-                    {
-                        new NewMail(msg, isDraft: true).Show();
-                    }
-                    else
-                    {
-                        new Reading_email(msg).Show();
-                    }
+                    new NewMail(msg, isDraft: true).Show();
                 }
-                catch (Exception ex)
+                else
+                {
+                    new Reading_email(msg, client).Show();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
+                if (ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
                 {
                     MessageBox.Show(ex.Message);
                 }
-                finally
-                {
-                    client?.DisconnectAsync(true);
-                    client?.Dispose();
-                    this.Cursor = Cursors.Default;
-                }
-
-
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
             }
         }
 
@@ -410,12 +394,12 @@ namespace Email_Client_01
 
 
         // delete element from inbox (does not put in trashfolder, deletes entirely)
-        
+
         private async void DeleteButton_click(object sender, EventArgs e)
         {
             var msgIndex = Inbox.SelectedIndex;
             // quick check so we do not waste unnecessary time to establish an imap connection in case of errors.
-            if(msgIndex < 0 || msgIndex > Inbox.Items.Count)
+            if (msgIndex < 0 || msgIndex > Inbox.Items.Count)
             {
                 MessageBox.Show("No email is selected for deletion.");
                 return;
@@ -429,39 +413,41 @@ namespace Email_Client_01
                 return;
 
             this.Cursor = Cursors.WaitCursor;
-            using (var client = await Utility.GetImapClient())
+            try
             {
-                try
+                var folder = await client.GetFolderAsync(msg.Folder.ToString());
+                await folder.OpenAsync(FolderAccess.ReadWrite);
+                await folder.AddFlagsAsync(msg.UniqueId, MessageFlags.Deleted, true);
+                await folder.ExpungeAsync();
+                RefreshCurrentFolder();
+            }
+            catch (Exception ex)
+            {
+                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
+                if (ex is ImapProtocolException || ex is IOException)
                 {
-                    var folder = await client.GetFolderAsync(msg.Folder.ToString());
-                    await folder.OpenAsync(FolderAccess.ReadWrite);
-                    await folder.AddFlagsAsync(msg.UniqueId, MessageFlags.Deleted, true);
-                    await folder.ExpungeAsync();
-                    RefreshCurrentFolder();
+                    await Utility.ReconnectAsync(client);
                 }
-                catch(Exception ex)
+                else
                 {
                     MessageBox.Show(ex.Message);
                 }
-                finally
-                {
-                    client?.DisconnectAsync(true);
-                    client?.Dispose();
-                    this.Cursor = Cursors.Default;
-
-                }
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
             }
         }
 
         private void RefreshPage_Click(object sender, EventArgs e)
         {
             // #TODO make this only refresh the current folder to save time?
-            RetrieveFolders();  
+            RetrieveFolders();
         }
 
         private void Compose_Click(object sender, EventArgs e)
         {
-            NewMail send_mail = new NewMail();
+            NewMail send_mail = new NewMail(client);
             send_mail.Show();
         }
 
@@ -469,7 +455,10 @@ namespace Email_Client_01
         // TODO CAN WE RENAME THIS WINDOW FORMS SPECIFIC METHOD?
         private void Folders_SelectedIndexChanged(object sender, EventArgs e)
         {
-            RetrieveMessagesFromFolder(sender, e);
+            if(!loadingFolders)
+            {
+                RetrieveMessagesFromFolder(sender, e);
+            }
         }
 
 
@@ -481,38 +470,40 @@ namespace Email_Client_01
             var message = messageSummaries[messageSummaries.Count - 1 - messageIndex];
 
             this.Cursor = Cursors.WaitCursor;
-            using (var client = await Utility.GetImapClient())
+            try
             {
-                try
+
+                var folder = await client.GetFolderAsync(message.Folder.ToString());
+                await folder.OpenAsync(FolderAccess.ReadWrite);
+
+                // toggle the flag
+                if (message.Flags.Value.HasFlag(MessageFlags.Flagged))
                 {
-
-                    var folder = await client.GetFolderAsync(message.Folder.ToString());
-                    await folder.OpenAsync(FolderAccess.ReadWrite);
-
-                    // toggle the flag
-                    if (message.Flags.Value.HasFlag(MessageFlags.Flagged))
-                    {
-                        await folder.RemoveFlagsAsync(message.UniqueId, MessageFlags.Flagged, false); 
-                    }
-                    else
-                    {
-                        await folder.AddFlagsAsync(message.UniqueId, MessageFlags.Flagged, false);
-                    }
-
-                    RefreshCurrentFolder();
+                    await folder.RemoveFlagsAsync(message.UniqueId, MessageFlags.Flagged, false);
                 }
-                catch(Exception ex)
+                else
+                {
+                    await folder.AddFlagsAsync(message.UniqueId, MessageFlags.Flagged, false);
+                }
+
+                RefreshCurrentFolder();
+            }
+            catch (Exception ex)
+            {
+                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
+                if (ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
                 {
                     MessageBox.Show(ex.Message);
                 }
-                finally
-                {
-                    client?.DisconnectAsync(true);
-                    client?.Dispose();
-                    this.Cursor = Cursors.Default;
-                }
             }
-                
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
         }
 
 
@@ -520,68 +511,70 @@ namespace Email_Client_01
         private async void search(string searchQuery)
         {
             this.Cursor = Cursors.WaitCursor;
-            using(var client = await Utility.GetImapClient())
+            try
             {
-                try
+                var folder = GetCurrentFolder();
+
+                folder.Open(FolderAccess.ReadWrite);
+                IList<UniqueId> uids = null!;
+
+                // TODO make this work on tokens in strings too, i.e. "test" should catch "testing" and not just "RE:test" or "xxx test yyy" 
+                if (SearchSenderCheck.Checked && SearchSubjectCheck.Checked && SearchContentCheck.Checked)
                 {
-                    var folder = await GetCurrentFolder(client);
+                    uids = folder.Search(SearchQuery.FromContains(searchQuery).Or(SearchQuery.SubjectContains(searchQuery)).Or(SearchQuery.BodyContains(searchQuery)));
 
-                    folder.Open(FolderAccess.ReadWrite);
-                    IList<UniqueId> uids = null!;
-
-                    // TODO make this work on tokens in strings too, i.e. "test" should catch "testing" and not just "RE:test" or "xxx test yyy" 
-                    if (SearchSenderCheck.Checked && SearchSubjectCheck.Checked && SearchContentCheck.Checked)
-                    {
-                        uids = folder.Search(SearchQuery.FromContains(searchQuery).Or(SearchQuery.SubjectContains(searchQuery)).Or(SearchQuery.BodyContains(searchQuery)));
-                       
-                    }
-                    else if (!SearchSenderCheck.Checked && SearchSubjectCheck.Checked && SearchContentCheck.Checked)
-                    {
-                        uids = folder.Search(SearchQuery.SubjectContains(searchQuery).Or(SearchQuery.BodyContains(searchQuery)));
-
-                    }
-                    else if (SearchSenderCheck.Checked && !SearchSubjectCheck.Checked && SearchContentCheck.Checked)
-                    {
-                        uids = folder.Search(SearchQuery.FromContains(searchQuery).Or(SearchQuery.BodyContains(searchQuery)));
-                    }
-
-                    else if (SearchSenderCheck.Checked && SearchSubjectCheck.Checked && !SearchContentCheck.Checked)
-                    {
-                        uids = folder.Search(SearchQuery.FromContains(searchQuery).Or(SearchQuery.SubjectContains(searchQuery)));
-                    }
-                    else if (SearchSenderCheck.Checked && !SearchSubjectCheck.Checked && !SearchContentCheck.Checked)
-                    {
-                        uids = folder.Search(SearchQuery.FromContains(searchQuery));
-                    }
-                    else if (!SearchSenderCheck.Checked && SearchSubjectCheck.Checked && !SearchContentCheck.Checked)
-                    {
-                        uids = folder.Search(SearchQuery.SubjectContains(searchQuery));
-                    }
-                    else if (!SearchSenderCheck.Checked && !SearchSubjectCheck.Checked && SearchContentCheck.Checked)
-                    {
-                        uids = folder.Search(SearchQuery.BodyContains(searchQuery));
-                    }
-                    else
-                    {
-                        MessageBox.Show("Please specify a search query");
-                    }
-                    if(uids != null)
-                    {
-                        ShowSearchResult(folder, uids);
-                    }
                 }
-                catch(Exception ex)
+                else if (!SearchSenderCheck.Checked && SearchSubjectCheck.Checked && SearchContentCheck.Checked)
+                {
+                    uids = folder.Search(SearchQuery.SubjectContains(searchQuery).Or(SearchQuery.BodyContains(searchQuery)));
+
+                }
+                else if (SearchSenderCheck.Checked && !SearchSubjectCheck.Checked && SearchContentCheck.Checked)
+                {
+                    uids = folder.Search(SearchQuery.FromContains(searchQuery).Or(SearchQuery.BodyContains(searchQuery)));
+                }
+
+                else if (SearchSenderCheck.Checked && SearchSubjectCheck.Checked && !SearchContentCheck.Checked)
+                {
+                    uids = folder.Search(SearchQuery.FromContains(searchQuery).Or(SearchQuery.SubjectContains(searchQuery)));
+                }
+                else if (SearchSenderCheck.Checked && !SearchSubjectCheck.Checked && !SearchContentCheck.Checked)
+                {
+                    uids = folder.Search(SearchQuery.FromContains(searchQuery));
+                }
+                else if (!SearchSenderCheck.Checked && SearchSubjectCheck.Checked && !SearchContentCheck.Checked)
+                {
+                    uids = folder.Search(SearchQuery.SubjectContains(searchQuery));
+                }
+                else if (!SearchSenderCheck.Checked && !SearchSubjectCheck.Checked && SearchContentCheck.Checked)
+                {
+                    uids = folder.Search(SearchQuery.BodyContains(searchQuery));
+                }
+                else
+                {
+                    MessageBox.Show("Please specify a search query");
+                }
+                if (uids != null)
+                {
+                    ShowSearchResult(folder, uids);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
+                if (ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
                 {
                     MessageBox.Show(ex.Message);
                 }
-                finally
-                {
-                    client?.DisconnectAsync(true);
-                    client?.Dispose();
-                    this.Cursor = Cursors.Default;
-                }
             }
-
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
         }
 
         private void ShowSearchResult(IMailFolder folder, IList<UniqueId> uids)
@@ -639,7 +632,7 @@ namespace Email_Client_01
                 return;
             }
             string FilterName = "";
-            if(!(Utility.InputBox("Add Filter", "Filter Name: ", ref FilterName) == DialogResult.OK))
+            if (!(Utility.InputBox("Add Filter", "Filter Name: ", ref FilterName) == DialogResult.OK))
             {
                 return;
             }
@@ -651,15 +644,23 @@ namespace Email_Client_01
                 return;
             }
 
+            // Check if filter name is already in use
             if (filterNames.Contains(FilterName))
             {
                 MessageBox.Show("A filter with the name " + FilterName + " already exists");
                 return;
             }
 
+            if(string.IsNullOrEmpty(FilterName))
+            {
+                MessageBox.Show("Please enter a valid filter name");
+                return;
+            }
+
+
             // add the search query locations
             List<string>? searchLocations = new List<string>();
-            if(!SearchSubjectCheck.Checked && !SearchSenderCheck.Checked && !SearchContentCheck.Checked)
+            if (!SearchSubjectCheck.Checked && !SearchSenderCheck.Checked && !SearchContentCheck.Checked)
             {
                 MessageBox.Show("Please specify a location to query");
                 return;
@@ -683,10 +684,12 @@ namespace Email_Client_01
             // sort by destination folder, so we can filter all mails to the same folder in one swoop. 
             FilterList.Sort((x, y) => x.DestinationFolder.CompareTo(y.DestinationFolder));
 
-            
+
             // Update json data string
             var newJson = JsonConvert.SerializeObject(FilterList);
             System.IO.File.WriteAllText(filepath, newJson);
+
+            filterCount += 1;
 
         }
         private void SearchButton_Click(object sender, EventArgs e)
@@ -723,7 +726,7 @@ namespace Email_Client_01
         private void Inbox_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             ReadMessage(sender, e);
-            
+
         }
 
         /* IMailFolder GetTrashFolder(ImapClient client, CancellationToken cancellationToken)
@@ -754,49 +757,49 @@ namespace Email_Client_01
             return null;
         }*/
 
-       /* private async void MoveToTrashButton_Click(object sender, EventArgs e)
-        {
-            var msgIndex = Inbox.SelectedIndex;
+        /* private async void MoveToTrashButton_Click(object sender, EventArgs e)
+         {
+             var msgIndex = Inbox.SelectedIndex;
 
-            // just a quick comparison to not use unnecessary time to establish an IMAP connection if nothing is selected.
-            if (msgIndex < 0 || msgIndex > Inbox.Items.Count)
-            {
-                MessageBox.Show("Please select an email to move to the trash folder");
-                return;
-            }
-            var msg = messageSummaries[messageSummaries.Count - 1 - msgIndex];
-
-
-            this.Cursor = Cursors.WaitCursor;
-            using (var client = await Utility.GetImapClient())
-            {
-                try
-                {
-                    var folder = await GetCurrentFolder(client);
-                    IMailFolder trashFolder = GetTrashFolder(client, CancellationToken.None);
-
-                    await folder.OpenAsync(FolderAccess.ReadWrite);
+             // just a quick comparison to not use unnecessary time to establish an IMAP connection if nothing is selected.
+             if (msgIndex < 0 || msgIndex > Inbox.Items.Count)
+             {
+                 MessageBox.Show("Please select an email to move to the trash folder");
+                 return;
+             }
+             var msg = messageSummaries[messageSummaries.Count - 1 - msgIndex];
 
 
-                    if (trashFolder == null)
-                        return;
-                    
-                    await folder.MoveToAsync(msg.UniqueId, trashFolder);
-                    RefreshCurrentFolder();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-                finally
-                {
-                    client?.DisconnectAsync(true);
-                    client?.Dispose();
-                    this.Cursor = Cursors.Default;
-                }
-            }
-        }
-*/
+             this.Cursor = Cursors.WaitCursor;
+             using (var client = await Utility.GetImapClient())
+             {
+                 try
+                 {
+                     var folder = await GetCurrentFolder(client);
+                     IMailFolder trashFolder = GetTrashFolder(client, CancellationToken.None);
+
+                     await folder.OpenAsync(FolderAccess.ReadWrite);
+
+
+                     if (trashFolder == null)
+                         return;
+
+                     await folder.MoveToAsync(msg.UniqueId, trashFolder);
+                     RefreshCurrentFolder();
+                 }
+                 catch (Exception ex)
+                 {
+                     MessageBox.Show(ex.Message);
+                 }
+                 finally
+                 {
+                     client?.DisconnectAsync(true);
+                     client?.Dispose();
+                     this.Cursor = Cursors.Default;
+                 }
+             }
+         }
+ */
         private void Inbox_DrawItem(object sender, DrawItemEventArgs e)
         {
             //base.OnDrawItem(e);
@@ -837,7 +840,7 @@ namespace Email_Client_01
             if (!clicked) return;
             clicked = false;
 
-            var idx = Inbox.IndexFromPoint(e.X,e.Y);
+            var idx = Inbox.IndexFromPoint(e.X, e.Y);
             if (idx < 0 || idx > Inbox.Items.Count) return;
 
             DragDropEffects dde1 = DoDragDrop(idx,
@@ -887,42 +890,42 @@ namespace Email_Client_01
 
 
             this.Cursor = Cursors.WaitCursor;
-            using (var client = await Utility.GetImapClient())
+            try
             {
-                try
+
+                // find the unique id of message to be moved
+                var openFolder = GetCurrentFolder();
+
+                var toplevel = client.GetFolder(client.PersonalNamespaces[0]);
+
+
+                // find the folder that has "folderName", list of folders is stored as an attribute from when we loaded in the folders.
+                foreach (var folder in folders)
                 {
-                    
-                    // find the unique id of message to be moved
-                    var openFolder = GetCurrentFolder(client).Result;
-
-                    var toplevel = client.GetFolder(client.PersonalNamespaces[0]);
-
-                    // get list of all folders
-                    var folders = await client.GetFoldersAsync(new FolderNamespace('.', ""));
-                    // find the folder that has "folderName"
-                    foreach(var folder in folders)
+                    if (folder.FullName == folderName)
                     {
-                        if (folder.FullName == folderName)
-                        {
-                            await openFolder.OpenAsync(FolderAccess.ReadWrite);
-                            await openFolder.MoveToAsync(messageSummaries[messageSummaries.Count - 1 - InboxIdx].UniqueId, folder);
-                            RefreshCurrentFolder();
-                            break;
-                        }
+                        await openFolder.OpenAsync(FolderAccess.ReadWrite);
+                        await openFolder.MoveToAsync(messageSummaries[messageSummaries.Count - 1 - InboxIdx].UniqueId, folder);
+                        break;
                     }
-                    
                 }
-                catch(Exception ex)
+
+            }
+            catch (Exception ex)
+            {
+                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
+                if (ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
                 {
                     MessageBox.Show(ex.Message);
                 }
-                finally
-                {
-                    client?.DisconnectAsync(true);
-                    client?.Dispose();
-                    this.Cursor = Cursors.Default;
-                }
-
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
             }
         }
 
@@ -935,7 +938,7 @@ namespace Email_Client_01
         // changes the text of the button to .... if and else...
         private void FilterCheckbox_CheckedChanged(object sender, EventArgs e)
         {
-            if(FilterCheckbox.Checked)
+            if (FilterCheckbox.Checked)
             {
                 SearchButton.Text = "Add";
             }
@@ -945,14 +948,92 @@ namespace Email_Client_01
             }
         }
 
-        /* filters */
+        private void ShowFiltersCheckbox_CheckStateChanged(object sender, EventArgs e)
+        {
+            // read existing json data
+            var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
+            // if file does not exist
+            if (!File.Exists(filepath))
+            {
+                // create the file
+                File.Create(filepath).Close();
+            }
+
+            // Read the entire file and De-serialize to list of filters
+            var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
+
+            filterCount = FilterList.Count();
 
 
+            if (ShowFiltersCheckbox.Checked && filterCount > 0)
+            {
+                if(FilterListbox.Items.Count != filterCount)
+                {
+                    // remove the entries of listbox and add all. Few so performance cost is negligible. 
+                    FilterListbox.Items.Clear();
+                    foreach(var filter in FilterList)
+                    {
+                        if(!string.IsNullOrEmpty(filter.Name)) 
+                            FilterListbox.Items.Add(filter.Name);
+                    }
+                }
+                FilterListbox.Visible = true;
+                FilterLabel.Visible = true;
+                RemoveFilterButton.Visible = true;
+            }
+            else
+            {
+                FilterListbox.Visible = false;
+                FilterLabel.Visible = false;
+                RemoveFilterButton.Visible = false;
+            }
+        }
+
+        private void RemoveFilterButton_Click(object sender, EventArgs e)
+        {
+            // get the filter name
+            string? filterName = FilterListbox.SelectedItem.ToString();
+
+            if(!string.IsNullOrEmpty(filterName))
+            {
+                // read existing json data
+                var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
+                // if file does not exist
+                if (!File.Exists(filepath))
+                {
+                    // create the file
+                    File.Create(filepath).Close();
+                }
+
+                // Read the entire file and De-serialize to list of filters
+                var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
+
+                var filter = FilterList.Find(x=>x.Name == filterName);
+                if(filter != null && !string.IsNullOrEmpty(filter.Name))
+                {
+                    FilterList.Remove(filter);
+                    filterCount -= 1;
+
+                    // We need to serialize and write the updated version to file
+                    var newJson = JsonConvert.SerializeObject(FilterList);
+                    System.IO.File.WriteAllText(filepath, newJson);
+
+                    // remove from listbox too
+                    FilterListbox.Items.Remove(filter.Name);
+
+                    // no more filters so we don't show these ui elements. 
+                    if(FilterListbox.Items.Count < 1)
+                    {
+                        FilterListbox.Visible = false;
+                        FilterLabel.Visible = false;
+                        RemoveFilterButton.Visible = false;
+                    }
+
+                }
+            }
+        }
 
 
-        // json ?? 
-        // mailkit only new messages --> apply filters from json file
-        // filtering from search query --> filters all mails
         // need somewhere to display active filters and option to remove any active filters (does not work backwards, only works for future filtering)
 
 

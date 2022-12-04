@@ -1,4 +1,5 @@
 ﻿
+using EmailValidation;
 using MailKit.Net.Smtp;
 using System.ComponentModel;
 
@@ -25,7 +26,7 @@ namespace Email_Client_01
         public static LogIn GetInstance
         {
             // coalescing operator, return first non-null value; 
-            get { return instance ??= new LogIn(); } 
+            get { return instance ??= new LogIn(); }
         }
 
         private void Form3_Load(object sender, EventArgs e)
@@ -33,7 +34,7 @@ namespace Email_Client_01
             this.TopMost = true;
         }
 
-                
+
         private void EmailAddress_Click(object sender, EventArgs e)
         {
             EmailTextBox.ResetText();
@@ -46,8 +47,20 @@ namespace Email_Client_01
             PasswordTextBox.ForeColor = System.Drawing.Color.Black;
         }
 
-        private void LogIn_button(object sender, EventArgs e)
+        private async void LogIn_button(object sender, EventArgs e)
         {
+            // check username and password validity (length, and username looks like email?)
+            if (PasswordTextBox.Text.Length > 99 || PasswordTextBox.Text.Length < 8)
+            {
+                MessageBox.Show("Please enter a password between 8 and 99 characters (inclusive)");
+                return;
+            }
+            if (!EmailValidator.Validate(EmailTextBox.Text))
+            {
+                MessageBox.Show("Please enter a valid email address");
+                return;
+            }
+
 
             if (RememberMeCheckBox.Checked)
             {
@@ -69,86 +82,20 @@ namespace Email_Client_01
             Utility.password = password;
 
             this.Cursor = Cursors.WaitCursor;
-            using (var client = new SmtpClient())
+            var client = await Utility.GetImapClient();
+            if (client.IsConnected && client.IsAuthenticated)
             {
-                try
-                {
-                    string mail = username.Substring(username.LastIndexOf("@") + 1);
-
-                    client.Connect("smtp." + mail, 465, true);
-
-                    client.Authenticate(username, password);
-
-                    
-                    // hide the current form and ensure it is closed once inbox is closed. 
-                    this.Hide();
-                    var Inbox = Inboxes.GetInstance;
-                    Inbox.Closed += (s, args) => this.Close();
-                    Inbox.Show();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-                finally
-                {
-                    client.Disconnect(true);
-                    client.Dispose();
-                    this.Cursor=Cursors.Default;
-                }
+                this.Hide();
+                var Inbox = Inboxes.GetInstance(client);
+                Inbox.FormClosed += (s, args) => this.Close();
+                Inbox.Show();
             }
+            this.Cursor = Cursors.Default;
         }
 
         private void Exit_button(object sender, EventArgs e)
         {
             this.Close();
-        }
-
-
-        private async Task DoWork(BackgroundWorker w, DoWorkEventArgs e)
-        {
-            
-        }
-
-        private void InitializeBackgroundWorker()
-        {
-            backgroundWorker1.DoWork += new DoWorkEventHandler(backgroundWorker1_DoWork);
-            backgroundWorker1.RunWorkerCompleted += new RunWorkerCompletedEventHandler(backgroundWorker1_RunWorkerCompleted);
-            backgroundWorker1.ProgressChanged += new ProgressChangedEventHandler(backgroundWorker1_ProgressChanged);
-        }
-        private void backgroundWorker1_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
-        {
-            // Get the BackgroundWorker that raised this event.
-            BackgroundWorker worker = sender as BackgroundWorker;
-
-            // Assign the result of the computation to the Result property of the DoWorkEventArgs
-            // object. This is will be available to the RunWorkerCompleted eventhandler.
-            e.Result = DoWork(worker, e);
-
-        }
-
-        private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            // not sure if we need this 
-        }
-
-        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Error == null)
-            {
-                MessageBox.Show("Error");
-            }
-            else if (e.Cancelled)
-            {
-                MessageBox.Show("Cancelled");
-            }
-            else
-            {
-                // start a different thread?
-                MessageBox.Show("Completed");
-            }
-
-            
         }
     }
 }

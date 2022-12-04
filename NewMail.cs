@@ -25,20 +25,24 @@ namespace Email_Client_01
         // draft specific
         bool MailIsDraft = false;
         string DraftID;
+        ImapClient client; 
         
 
-        public NewMail()
+        public NewMail(ImapClient client)
         {
             InitializeComponent();
+            
+            this.client = client;
             attachmentPaths = new();
 
         }
 
-        public NewMail(MimeMessage msg)
+        public NewMail(MimeMessage msg, ImapClient client)
         {
             InitializeComponent();
             attachmentPaths = new();
 
+            this.client = client;
             RecipientTextBox.Text = msg.To.ToString();
             SubjectTextBox.Text = msg.Subject;
             MessageBodyTextBox.Text = msg.TextBody;
@@ -60,10 +64,6 @@ namespace Email_Client_01
             {
                 DraftID = msg.MessageId;
             }
-        }
-
-        private void Form2_Load(object sender, EventArgs e)
-        {
         }
 
         private void RecipientsMouseOver(object sender, EventArgs e)
@@ -232,29 +232,31 @@ namespace Email_Client_01
             {
                 // delete the mail from drafts folder
                 this.Cursor = Cursors.WaitCursor;
-                using(var client = await Utility.GetImapClient())
+                try
                 {
-                    try
-                    {
-                        var draftsFolder = getDraftFolder(client, CancellationToken.None);
-                        await draftsFolder.OpenAsync(FolderAccess.ReadWrite);
-                        var uid = draftsFolder.Search(SearchQuery.HeaderContains("Message-Id", DraftID));
+                    var draftsFolder = await getDraftFolder(CancellationToken.None);
+                    await draftsFolder.OpenAsync(FolderAccess.ReadWrite);
+                    var uid = draftsFolder.Search(SearchQuery.HeaderContains("Message-Id", DraftID));
 
-                        await draftsFolder.AddFlagsAsync(uid, MessageFlags.Deleted, true);
-                        await draftsFolder.ExpungeAsync();
+                    await draftsFolder.AddFlagsAsync(uid, MessageFlags.Deleted, true);
+                    await draftsFolder.ExpungeAsync();
 /*                        RefreshCurrentFolder();*/
+                }
+                catch (Exception ex)
+                {
+                    // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
+                    if (ex is ImapProtocolException || ex is IOException)
+                    {
+                        await Utility.ReconnectAsync(client);
                     }
-                    catch(Exception ex)
+                    else
                     {
                         MessageBox.Show(ex.Message);
                     }
-                    finally
-                    {
-                        client?.DisconnectAsync(true);
-                        client?.Dispose();
-                        this.Cursor = Cursors.Default;
-                    }
-
+                }
+                finally
+                {
+                    this.Cursor = Cursors.Default;
                 }
             }
 
@@ -266,30 +268,6 @@ namespace Email_Client_01
             this.Close();
         }
 
-        private void richTextBox4_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void richTextBox3_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void NewMail_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        private void richTextBox2_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void richTextBox5_TextChanged(object sender, EventArgs e)
-        {
-
-        }
 
         private void RecipientsValidating(object sender, CancelEventArgs e)
         {
@@ -315,13 +293,15 @@ namespace Email_Client_01
         {
             string[] cc = CCTextBox.Text.Split(",");
             bool valid = validateRecipientArray(cc);
+            SendButton.Enabled = valid;
+
             if (!valid)
             {
                 CCTextBox.ForeColor = Color.Red;
             }
             else
             {
-                RecipientTextBox.ForeColor = Color.Green;
+                CCTextBox.ForeColor = Color.Green;
             }
         }
 
@@ -432,6 +412,7 @@ namespace Email_Client_01
                 emailMessage.Body = builder.ToMessageBody();                        // TODO add alias/username
                 emailMessage.From.Add(new MailboxAddress(Properties.Credentials.Default.username, Properties.Credentials.Default.username)); // username    &&     //email of user
                 emailMessage.To.AddRange(email.To);
+                emailMessage.Cc.AddRange(email.CC);
                 emailMessage.Subject = email.Subject;
 
                 return emailMessage;
@@ -461,30 +442,45 @@ namespace Email_Client_01
             }
         }
 
-        private IMailFolder getDraftFolder(ImapClient client, CancellationToken cancellationToken)
+        private async Task<IMailFolder> getDraftFolder(CancellationToken cancellationToken)
         {
-            string[] DraftFolderNames = { "Drafts", "Kladder", "Draft" };
-            if ((client.Capabilities & (ImapCapabilities.SpecialUse | ImapCapabilities.XList)) != 0)
+            try
             {
-                var trashFolder = client.GetFolder(SpecialFolder.Drafts);
-                return trashFolder;
-            }
-
-            else
-            {
-                var personal = client.GetFolder(client.PersonalNamespaces[0]);
-
-                foreach (var folder in personal.GetSubfolders(false, cancellationToken))
+                string[] DraftFolderNames = { "Drafts", "Kladder", "Draft" };
+                if ((client.Capabilities & (ImapCapabilities.SpecialUse | ImapCapabilities.XList)) != 0)
                 {
-                    foreach (var name in DraftFolderNames)
+                    var trashFolder = client.GetFolder(SpecialFolder.Drafts);
+                    return trashFolder;
+                }
+
+                else
+                {
+                    var personal = client.GetFolder(client.PersonalNamespaces[0]);
+
+                    foreach (var folder in personal.GetSubfolders(false, cancellationToken))
                     {
-                        if (folder.Name == name)
-                            return folder;
+                        foreach (var name in DraftFolderNames)
+                        {
+                            if (folder.Name == name)
+                                return folder;
+                        }
                     }
                 }
             }
-
+            catch(Exception ex)
+            {
+                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects.
+                if (ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
             return null;
+            
         }
 
         // saves the current message state as a draft
@@ -541,27 +537,28 @@ namespace Email_Client_01
         private async void SaveDraftButton_Click(object sender, EventArgs e)
         {
             this.Cursor = Cursors.WaitCursor;
-            using (var client = await Utility.GetImapClient())
+            try
             {
-                try
+                MimeMessage message = BuildDraftMessage();
+                IMailFolder draftsFolder = await getDraftFolder(CancellationToken.None);
+                await draftsFolder.OpenAsync(FolderAccess.ReadWrite);
+                await draftsFolder.AppendAsync(message, MessageFlags.Draft);
+            }
+            catch (Exception ex)
+            {
+                // IMAP protocol exception often causes client disconnects, and io exceptions always do.
+                if(ex is ImapProtocolException || ex is IOException)
                 {
-                    MimeMessage message = BuildDraftMessage();
-                    IMailFolder draftsFolder = getDraftFolder(client, CancellationToken.None);
-                    await draftsFolder.OpenAsync(FolderAccess.ReadWrite);
-                    await draftsFolder.AppendAsync(message, MessageFlags.Draft);
+                    await Utility.ReconnectAsync(client);
                 }
-                catch (Exception ex)
+                else
                 {
                     MessageBox.Show(ex.Message);
                 }
-                finally
-                {
-                    // always disconnect no matter the scenario
-                    client?.Disconnect(true);
-                    // and dispose/free/delete the smtp client object
-                    client?.Dispose();
-                    this.Cursor = Cursors.Default;
-                }
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
             }
         }
     }

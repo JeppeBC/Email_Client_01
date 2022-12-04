@@ -47,6 +47,10 @@
             this.SearchSubjectCheck = new System.Windows.Forms.CheckBox();
             this.SearchContentCheck = new System.Windows.Forms.CheckBox();
             this.FilterCheckbox = new System.Windows.Forms.CheckBox();
+            this.FilterListbox = new System.Windows.Forms.ListBox();
+            this.FilterLabel = new System.Windows.Forms.Label();
+            this.RemoveFilterButton = new System.Windows.Forms.Button();
+            this.ShowFiltersCheckbox = new System.Windows.Forms.CheckBox();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -62,7 +66,7 @@
             this.ToggleFlagButton,
             this.toolStripSeparator1,
             this.RefreshButton});
-            this.toolStrip1.Location = new System.Drawing.Point(544, 29);
+            this.toolStrip1.Location = new System.Drawing.Point(364, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 6, 0);
             this.toolStrip1.Size = new System.Drawing.Size(254, 37);
@@ -186,7 +190,7 @@
             // SearchSenderCheck
             // 
             this.SearchSenderCheck.AutoSize = true;
-            this.SearchSenderCheck.Location = new System.Drawing.Point(1164, 14);
+            this.SearchSenderCheck.Location = new System.Drawing.Point(1322, 14);
             this.SearchSenderCheck.Name = "SearchSenderCheck";
             this.SearchSenderCheck.Size = new System.Drawing.Size(177, 52);
             this.SearchSenderCheck.TabIndex = 13;
@@ -196,7 +200,7 @@
             // SearchSubjectCheck
             // 
             this.SearchSubjectCheck.AutoSize = true;
-            this.SearchSubjectCheck.Location = new System.Drawing.Point(1164, 66);
+            this.SearchSubjectCheck.Location = new System.Drawing.Point(1322, 66);
             this.SearchSubjectCheck.Name = "SearchSubjectCheck";
             this.SearchSubjectCheck.Size = new System.Drawing.Size(183, 52);
             this.SearchSubjectCheck.TabIndex = 14;
@@ -206,7 +210,7 @@
             // SearchContentCheck
             // 
             this.SearchContentCheck.AutoSize = true;
-            this.SearchContentCheck.Location = new System.Drawing.Point(1164, 114);
+            this.SearchContentCheck.Location = new System.Drawing.Point(1322, 116);
             this.SearchContentCheck.Name = "SearchContentCheck";
             this.SearchContentCheck.Size = new System.Drawing.Size(192, 52);
             this.SearchContentCheck.TabIndex = 15;
@@ -216,7 +220,7 @@
             // FilterCheckbox
             // 
             this.FilterCheckbox.AutoSize = true;
-            this.FilterCheckbox.Location = new System.Drawing.Point(1409, 13);
+            this.FilterCheckbox.Location = new System.Drawing.Point(1517, 12);
             this.FilterCheckbox.Name = "FilterCheckbox";
             this.FilterCheckbox.Size = new System.Drawing.Size(279, 52);
             this.FilterCheckbox.TabIndex = 16;
@@ -224,12 +228,58 @@
             this.FilterCheckbox.UseVisualStyleBackColor = true;
             this.FilterCheckbox.CheckedChanged += new System.EventHandler(this.FilterCheckbox_CheckedChanged);
             // 
+            // FilterListbox
+            // 
+            this.FilterListbox.FormattingEnabled = true;
+            this.FilterListbox.ItemHeight = 48;
+            this.FilterListbox.Location = new System.Drawing.Point(862, 16);
+            this.FilterListbox.Name = "FilterListbox";
+            this.FilterListbox.Size = new System.Drawing.Size(428, 148);
+            this.FilterListbox.TabIndex = 17;
+            this.FilterListbox.Visible = false;
+            // 
+            // FilterLabel
+            // 
+            this.FilterLabel.AutoSize = true;
+            this.FilterLabel.Location = new System.Drawing.Point(733, 9);
+            this.FilterLabel.Name = "FilterLabel";
+            this.FilterLabel.Size = new System.Drawing.Size(123, 48);
+            this.FilterLabel.TabIndex = 18;
+            this.FilterLabel.Text = "Filters:";
+            this.FilterLabel.Visible = false;
+            // 
+            // RemoveFilterButton
+            // 
+            this.RemoveFilterButton.Location = new System.Drawing.Point(685, 71);
+            this.RemoveFilterButton.Name = "RemoveFilterButton";
+            this.RemoveFilterButton.Size = new System.Drawing.Size(171, 52);
+            this.RemoveFilterButton.TabIndex = 19;
+            this.RemoveFilterButton.Text = "Remove";
+            this.RemoveFilterButton.UseVisualStyleBackColor = true;
+            this.RemoveFilterButton.Visible = false;
+            this.RemoveFilterButton.Click += new System.EventHandler(this.RemoveFilterButton_Click);
+            // 
+            // ShowFiltersCheckbox
+            // 
+            this.ShowFiltersCheckbox.AutoSize = true;
+            this.ShowFiltersCheckbox.Location = new System.Drawing.Point(1806, 12);
+            this.ShowFiltersCheckbox.Name = "ShowFiltersCheckbox";
+            this.ShowFiltersCheckbox.Size = new System.Drawing.Size(257, 52);
+            this.ShowFiltersCheckbox.TabIndex = 20;
+            this.ShowFiltersCheckbox.Text = "Show Filters";
+            this.ShowFiltersCheckbox.UseVisualStyleBackColor = true;
+            this.ShowFiltersCheckbox.CheckStateChanged += new System.EventHandler(this.ShowFiltersCheckbox_CheckStateChanged);
+            // 
             // Inboxes
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(20F, 48F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.ClientSize = new System.Drawing.Size(2286, 1274);
+            this.Controls.Add(this.ShowFiltersCheckbox);
+            this.Controls.Add(this.RemoveFilterButton);
+            this.Controls.Add(this.FilterLabel);
+            this.Controls.Add(this.FilterListbox);
             this.Controls.Add(this.FilterCheckbox);
             this.Controls.Add(this.SearchContentCheck);
             this.Controls.Add(this.SearchSubjectCheck);
@@ -269,5 +319,9 @@
         private CheckBox SearchSubjectCheck;
         private CheckBox SearchContentCheck;
         private CheckBox FilterCheckbox;
+        private ListBox FilterListbox;
+        private Label FilterLabel;
+        private Button RemoveFilterButton;
+        private CheckBox ShowFiltersCheckbox;
     }
 }

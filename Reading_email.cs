@@ -10,11 +10,13 @@ namespace Email_Client_01
     public partial class Reading_email : Form
     {
         MimeMessage message = null!;
-        public Reading_email(MimeMessage msg)
+        ImapClient client;
+        public Reading_email(MimeMessage msg, ImapClient client)
         {
             InitializeComponent();
             message = msg;
             InitializeMessage();
+            this.client = client;
         }
 
         private void InitializeMessage()
@@ -122,7 +124,7 @@ namespace Email_Client_01
                 };
             }
 
-            new NewMail(reply).Show();
+            new NewMail(reply, client).Show();
         }
 
         private void Forward(MimeMessage message)
@@ -163,7 +165,7 @@ namespace Email_Client_01
                 }
             }
 
-            new NewMail(ForwardedMessage).Show();
+            new NewMail(ForwardedMessage, client).Show();
         }
         private void label3_Click(object sender, EventArgs e)
         {
@@ -192,7 +194,7 @@ namespace Email_Client_01
             this.Close();
         }
 
-        private void DownloadAttachmentButton_Click(object sender, EventArgs e)
+        private async void DownloadAttachmentButton_Click(object sender, EventArgs e)
         {
             try
             {
@@ -220,9 +222,17 @@ namespace Email_Client_01
                 }
                 MessageBox.Show(filename + " was saved successfully to the downloads folder!");
             }
-            catch
+            catch(Exception ex)
             {
-                MessageBox.Show("No Attachment selected!");
+                // ImapProtocolExceptions often cause client disconnects, and IOExceptions always do.
+                if(ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }
         }
 

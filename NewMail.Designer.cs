@@ -75,7 +75,6 @@
             this.RecipientTextBox.TabIndex = 2;
             this.RecipientTextBox.Text = "";
             this.RecipientTextBox.Click += new System.EventHandler(this.To_Click);
-            this.RecipientTextBox.TextChanged += new System.EventHandler(this.richTextBox2_TextChanged);
             this.RecipientTextBox.MouseHover += new System.EventHandler(this.RecipientsMouseOver);
             this.RecipientTextBox.Validating += new System.ComponentModel.CancelEventHandler(this.RecipientsValidating);
             // 
@@ -90,7 +89,6 @@
             this.SubjectTextBox.TabIndex = 3;
             this.SubjectTextBox.Text = "";
             this.SubjectTextBox.Click += new System.EventHandler(this.Subject_Click);
-            this.SubjectTextBox.TextChanged += new System.EventHandler(this.richTextBox3_TextChanged);
             // 
             // MessageBodyTextBox
             // 
@@ -103,7 +101,6 @@
             this.MessageBodyTextBox.TabIndex = 4;
             this.MessageBodyTextBox.Text = "Write your message here";
             this.MessageBodyTextBox.Click += new System.EventHandler(this.Mail_click);
-            this.MessageBodyTextBox.TextChanged += new System.EventHandler(this.richTextBox4_TextChanged);
             // 
             // SendButton
             // 
@@ -159,7 +156,6 @@
             this.CCTextBox.Size = new System.Drawing.Size(1871, 62);
             this.CCTextBox.TabIndex = 11;
             this.CCTextBox.Text = "";
-            this.CCTextBox.TextChanged += new System.EventHandler(this.richTextBox5_TextChanged);
             this.CCTextBox.Validating += new System.ComponentModel.CancelEventHandler(this.CCValidating);
             // 
             // AttachmentsListBox
@@ -227,7 +223,6 @@
             this.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
             this.Name = "NewMail";
             this.Text = "New Email";
-            this.Load += new System.EventHandler(this.Form2_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
