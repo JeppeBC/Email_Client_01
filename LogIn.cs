@@ -68,11 +68,11 @@ namespace Email_Client_01
             Utility.username = username;
             Utility.password = password;
 
+            this.Cursor = Cursors.WaitCursor;
             using (var client = new SmtpClient())
             {
                 try
                 {
-                    this.Cursor = Cursors.WaitCursor;
                     string mail = username.Substring(username.LastIndexOf("@") + 1);
 
                     client.Connect("smtp." + mail, 465, true);
@@ -80,8 +80,11 @@ namespace Email_Client_01
                     client.Authenticate(username, password);
 
                     
-                    Inboxes.GetInstance.Show();
-                    this.Hide(); // #TODO CLOSE THIS FORM INSTEAD
+                    // hide the current form and ensure it is closed once inbox is closed. 
+                    this.Hide();
+                    var Inbox = Inboxes.GetInstance;
+                    Inbox.Closed += (s, args) => this.Close();
+                    Inbox.Show();
                 }
                 catch (Exception ex)
                 {

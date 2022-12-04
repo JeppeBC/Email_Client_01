@@ -1,9 +1,7 @@
 ﻿using MailKit.Net.Imap;
 using MailKit.Net.Smtp;
+using Newtonsoft.Json;
 using System.Runtime.InteropServices; // for the known folder stuff.
-using System.Text;
-using System.Text.RegularExpressions;
-/*using Newtonsoft.Json;*/
 
 
 namespace Email_Client_01
@@ -39,18 +37,19 @@ namespace Email_Client_01
             return client;
         }
 
-        /*        public static class JsonFileReader
-                {
-                    public static T? Read<T>(string filePath)
-                    {
 
-                        // TODO make this async/await??? Newtonsoft json does not support this?
-                        // so use the .Net version : System.Text.Json....
-                        string json = File.ReadAllText(filePath);
-                        return JsonConvert.DeserializeObject<T>(json);
-                    }
-                }*/
 
+        public static class JsonFileReader
+        {
+            public static T? Read<T>(string filePath)
+            {
+
+                // TODO make this async/await??? Newtonsoft json does not support this?
+                // so use the .Net version : System.Text.Json....
+                string json = File.ReadAllText(filePath);
+                return JsonConvert.DeserializeObject<T>(json);
+            }
+        }
         public enum KnownFolder
         {
             Contacts,
@@ -85,5 +84,78 @@ namespace Email_Client_01
                 [MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags,
                 nint hToken = 0);
         }
+
+
+        public static DialogResult InputBox(string title, string promptText, ref string value)
+        {
+            Form form = new Form();
+            Label label = new Label();
+            TextBox textBox = new TextBox();
+            Button buttonOk = new Button();
+            Button buttonCancel = new Button();
+
+            form.Text = title;
+            label.Text = promptText;
+
+            buttonOk.Text = "OK";
+            buttonCancel.Text = "Cancel";
+            buttonOk.DialogResult = DialogResult.OK;
+            buttonCancel.DialogResult = DialogResult.Cancel;
+
+            label.SetBounds(36, 36, 372, 13);
+            textBox.SetBounds(36, 86, 700, 20);
+            buttonOk.SetBounds(228, 160, 160, 60);
+            buttonCancel.SetBounds(400, 160, 160, 60);
+            label.AutoSize = true;
+            form.ClientSize = new Size(796, 307);
+            form.FormBorderStyle = FormBorderStyle.FixedDialog;
+            form.StartPosition = FormStartPosition.CenterScreen;
+            form.MinimizeBox = false;
+            form.MaximizeBox = false;
+
+            form.Controls.AddRange(new Control[] { label, textBox, buttonOk, buttonCancel });
+            form.AcceptButton = buttonOk;
+            form.CancelButton = buttonCancel;
+
+            DialogResult dialogResult = form.ShowDialog();
+
+            value = textBox.Text;
+            return dialogResult;
+
+        }
+
+        /*    // see https://stackoverflow.com/questions/5427020/prompt-dialog-in-windows-forms
+            public static class Prompt
+            {
+                public static string ShowDialog(string text, string caption)
+                {
+                    Form prompt = new Form()
+                    {
+                        Width = 750,
+                        Height = 400,
+                        FormBorderStyle = FormBorderStyle.FixedDialog,
+                        Text = caption,
+                        StartPosition = FormStartPosition.CenterScreen
+                    };
+                    Label textLabel = new Label() { Left = 100, Top = 0, Text = text };
+                    TextBox textBox = new TextBox() { Left = 100, Top = 100, Width = 800 };
+                    Button confirmation = new Button() { Text = "Ok", Left = 700, Width = 200, Top = 140, DialogResult = DialogResult.OK };
+                    confirmation.Click += (sender, e) => { prompt.Close(); };
+                    prompt.Controls.Add(textBox);
+                    prompt.Controls.Add(confirmation);
+                    prompt.Controls.Add(textLabel);
+                    prompt.AcceptButton = confirmation;
+
+                    return prompt.ShowDialog() == DialogResult.OK ? textBox.Text : "";
+                }
+            }
+    */
+
+
+
+
+
+
+
     }
 }

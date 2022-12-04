@@ -37,7 +37,6 @@
             this.ToggleFlagButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.RefreshButton = new System.Windows.Forms.ToolStripButton();
-            this.MoveToTrashButton = new System.Windows.Forms.ToolStripButton();
             this.Inbox = new System.Windows.Forms.ListBox();
             this.label2 = new System.Windows.Forms.Label();
             this.Compose = new System.Windows.Forms.Button();
@@ -47,6 +46,7 @@
             this.SearchSenderCheck = new System.Windows.Forms.CheckBox();
             this.SearchSubjectCheck = new System.Windows.Forms.CheckBox();
             this.SearchContentCheck = new System.Windows.Forms.CheckBox();
+            this.FilterCheckbox = new System.Windows.Forms.CheckBox();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -61,12 +61,11 @@
             this.toolStripSeparator2,
             this.ToggleFlagButton,
             this.toolStripSeparator1,
-            this.RefreshButton,
-            this.MoveToTrashButton});
-            this.toolStrip1.Location = new System.Drawing.Point(552, 29);
+            this.RefreshButton});
+            this.toolStrip1.Location = new System.Drawing.Point(544, 29);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 6, 0);
-            this.toolStrip1.Size = new System.Drawing.Size(323, 37);
+            this.toolStrip1.Size = new System.Drawing.Size(254, 37);
             this.toolStrip1.TabIndex = 5;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -110,16 +109,6 @@
             this.RefreshButton.Text = "RefreshButton";
             this.RefreshButton.Click += new System.EventHandler(this.RefreshPage_Click);
             // 
-            // MoveToTrashButton
-            // 
-            this.MoveToTrashButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.MoveToTrashButton.Image = ((System.Drawing.Image)(resources.GetObject("MoveToTrashButton.Image")));
-            this.MoveToTrashButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.MoveToTrashButton.Name = "MoveToTrashButton";
-            this.MoveToTrashButton.Size = new System.Drawing.Size(69, 28);
-            this.MoveToTrashButton.Text = "Moves selected item to trash folder";
-            this.MoveToTrashButton.Click += new System.EventHandler(this.MoveToTrashButton_Click);
-            // 
             // Inbox
             // 
             this.Inbox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
@@ -133,6 +122,7 @@
             this.Inbox.TabIndex = 6;
             this.Inbox.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.Inbox_DrawItem);
             this.Inbox.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.Inbox_MouseDoubleClick);
+            this.Inbox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Inbox_MouseDown);
             // 
             // label2
             // 
@@ -159,6 +149,7 @@
             // 
             // Folders
             // 
+            this.Folders.AllowDrop = true;
             this.Folders.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
             this.Folders.FormattingEnabled = true;
             this.Folders.ItemHeight = 48;
@@ -168,6 +159,9 @@
             this.Folders.Size = new System.Drawing.Size(355, 916);
             this.Folders.TabIndex = 10;
             this.Folders.SelectedIndexChanged += new System.EventHandler(this.Folders_SelectedIndexChanged);
+            this.Folders.DragDrop += new System.Windows.Forms.DragEventHandler(this.Folders_DragDrop);
+            this.Folders.DragEnter += new System.Windows.Forms.DragEventHandler(this.Folders_DragEnter);
+            this.Folders.DragOver += new System.Windows.Forms.DragEventHandler(this.Folders_DragOver);
             // 
             // SearchTextBox
             // 
@@ -219,12 +213,24 @@
             this.SearchContentCheck.Text = "Content";
             this.SearchContentCheck.UseVisualStyleBackColor = true;
             // 
+            // FilterCheckbox
+            // 
+            this.FilterCheckbox.AutoSize = true;
+            this.FilterCheckbox.Location = new System.Drawing.Point(1409, 13);
+            this.FilterCheckbox.Name = "FilterCheckbox";
+            this.FilterCheckbox.Size = new System.Drawing.Size(279, 52);
+            this.FilterCheckbox.TabIndex = 16;
+            this.FilterCheckbox.Text = "Add to Filters";
+            this.FilterCheckbox.UseVisualStyleBackColor = true;
+            this.FilterCheckbox.CheckedChanged += new System.EventHandler(this.FilterCheckbox_CheckedChanged);
+            // 
             // Inboxes
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(20F, 48F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.ClientSize = new System.Drawing.Size(2286, 1274);
+            this.Controls.Add(this.FilterCheckbox);
             this.Controls.Add(this.SearchContentCheck);
             this.Controls.Add(this.SearchSubjectCheck);
             this.Controls.Add(this.SearchSenderCheck);
@@ -262,6 +268,6 @@
         private CheckBox SearchSenderCheck;
         private CheckBox SearchSubjectCheck;
         private CheckBox SearchContentCheck;
-        private ToolStripButton MoveToTrashButton;
+        private CheckBox FilterCheckbox;
     }
 }

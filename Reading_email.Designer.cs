@@ -37,7 +37,7 @@
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
-            this.button4 = new System.Windows.Forms.Button();
+            this.ForwardButton = new System.Windows.Forms.Button();
             this.button5 = new System.Windows.Forms.Button();
             this.button6 = new System.Windows.Forms.Button();
             this.DateTextBox = new System.Windows.Forms.TextBox();
@@ -146,15 +146,16 @@
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
-            // button4
+            // ForwardButton
             // 
-            this.button4.Location = new System.Drawing.Point(540, 1139);
-            this.button4.Margin = new System.Windows.Forms.Padding(6);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(243, 112);
-            this.button4.TabIndex = 9;
-            this.button4.Text = "Forward";
-            this.button4.UseVisualStyleBackColor = true;
+            this.ForwardButton.Location = new System.Drawing.Point(540, 1139);
+            this.ForwardButton.Margin = new System.Windows.Forms.Padding(6);
+            this.ForwardButton.Name = "ForwardButton";
+            this.ForwardButton.Size = new System.Drawing.Size(243, 112);
+            this.ForwardButton.TabIndex = 9;
+            this.ForwardButton.Text = "Forward";
+            this.ForwardButton.UseVisualStyleBackColor = true;
+            this.ForwardButton.Click += new System.EventHandler(this.ForwardButton_Click);
             // 
             // button5
             // 
@@ -265,6 +266,7 @@
             this.DownloadAllAttachmentsButton.TabIndex = 21;
             this.DownloadAllAttachmentsButton.Text = "Download All Attachments";
             this.DownloadAllAttachmentsButton.UseVisualStyleBackColor = true;
+            this.DownloadAllAttachmentsButton.Visible = false;
             this.DownloadAllAttachmentsButton.Click += new System.EventHandler(this.DownloadAllAttachmentsButton_Click);
             // 
             // TrashButton
@@ -296,7 +298,7 @@
             this.Controls.Add(this.DateTextBox);
             this.Controls.Add(this.button6);
             this.Controls.Add(this.button5);
-            this.Controls.Add(this.button4);
+            this.Controls.Add(this.ForwardButton);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
@@ -325,7 +327,7 @@
         private Button button1;
         private Button button2;
         private Button button3;
-        private Button button4;
+        private Button ForwardButton;
         private Button button5;
         private Button button6;
         private TextBox DateTextBox;

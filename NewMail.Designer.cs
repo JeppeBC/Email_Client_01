@@ -30,17 +30,18 @@
         {
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.richTextBox2 = new System.Windows.Forms.RichTextBox();
-            this.richTextBox3 = new System.Windows.Forms.RichTextBox();
-            this.richTextBox4 = new System.Windows.Forms.RichTextBox();
-            this.button1 = new System.Windows.Forms.Button();
+            this.RecipientTextBox = new System.Windows.Forms.RichTextBox();
+            this.SubjectTextBox = new System.Windows.Forms.RichTextBox();
+            this.MessageBodyTextBox = new System.Windows.Forms.RichTextBox();
+            this.SendButton = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
-            this.richTextBox5 = new System.Windows.Forms.RichTextBox();
+            this.CCTextBox = new System.Windows.Forms.RichTextBox();
             this.AttachmentsListBox = new System.Windows.Forms.ListBox();
             this.AttachmentLabel = new System.Windows.Forms.Label();
             this.RemoveAttachmentButton = new System.Windows.Forms.Button();
+            this.SaveDraftButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label2
@@ -63,57 +64,58 @@
             this.label3.TabIndex = 7;
             this.label3.Text = "Subject:";
             // 
-            // richTextBox2
+            // RecipientTextBox
             // 
-            this.richTextBox2.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.richTextBox2.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox2.Location = new System.Drawing.Point(34, 66);
-            this.richTextBox2.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
-            this.richTextBox2.Name = "richTextBox2";
-            this.richTextBox2.Size = new System.Drawing.Size(1871, 56);
-            this.richTextBox2.TabIndex = 2;
-            this.richTextBox2.Text = "";
-            this.richTextBox2.Click += new System.EventHandler(this.To_Click);
-            this.richTextBox2.TextChanged += new System.EventHandler(this.richTextBox2_TextChanged);
-            this.richTextBox2.MouseHover += new System.EventHandler(this.richTextBox2_MouseHover);
-            this.richTextBox2.Validating += new System.ComponentModel.CancelEventHandler(this.richTextBox2_Validating);
+            this.RecipientTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.RecipientTextBox.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.RecipientTextBox.Location = new System.Drawing.Point(34, 66);
+            this.RecipientTextBox.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
+            this.RecipientTextBox.Name = "RecipientTextBox";
+            this.RecipientTextBox.Size = new System.Drawing.Size(1871, 56);
+            this.RecipientTextBox.TabIndex = 2;
+            this.RecipientTextBox.Text = "";
+            this.RecipientTextBox.Click += new System.EventHandler(this.To_Click);
+            this.RecipientTextBox.TextChanged += new System.EventHandler(this.richTextBox2_TextChanged);
+            this.RecipientTextBox.MouseHover += new System.EventHandler(this.RecipientsMouseOver);
+            this.RecipientTextBox.Validating += new System.ComponentModel.CancelEventHandler(this.RecipientsValidating);
             // 
-            // richTextBox3
+            // SubjectTextBox
             // 
-            this.richTextBox3.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.richTextBox3.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox3.Location = new System.Drawing.Point(34, 320);
-            this.richTextBox3.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
-            this.richTextBox3.Name = "richTextBox3";
-            this.richTextBox3.Size = new System.Drawing.Size(1871, 67);
-            this.richTextBox3.TabIndex = 3;
-            this.richTextBox3.Text = "";
-            this.richTextBox3.Click += new System.EventHandler(this.Subject_Click);
-            this.richTextBox3.TextChanged += new System.EventHandler(this.richTextBox3_TextChanged);
+            this.SubjectTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.SubjectTextBox.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.SubjectTextBox.Location = new System.Drawing.Point(34, 320);
+            this.SubjectTextBox.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
+            this.SubjectTextBox.Name = "SubjectTextBox";
+            this.SubjectTextBox.Size = new System.Drawing.Size(1871, 67);
+            this.SubjectTextBox.TabIndex = 3;
+            this.SubjectTextBox.Text = "";
+            this.SubjectTextBox.Click += new System.EventHandler(this.Subject_Click);
+            this.SubjectTextBox.TextChanged += new System.EventHandler(this.richTextBox3_TextChanged);
             // 
-            // richTextBox4
+            // MessageBodyTextBox
             // 
-            this.richTextBox4.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.richTextBox4.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox4.Location = new System.Drawing.Point(38, 418);
-            this.richTextBox4.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
-            this.richTextBox4.Name = "richTextBox4";
-            this.richTextBox4.Size = new System.Drawing.Size(1867, 919);
-            this.richTextBox4.TabIndex = 4;
-            this.richTextBox4.Text = "Write your message here";
-            this.richTextBox4.Click += new System.EventHandler(this.Mail_click);
-            this.richTextBox4.TextChanged += new System.EventHandler(this.richTextBox4_TextChanged);
+            this.MessageBodyTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.MessageBodyTextBox.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.MessageBodyTextBox.Location = new System.Drawing.Point(38, 418);
+            this.MessageBodyTextBox.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
+            this.MessageBodyTextBox.Name = "MessageBodyTextBox";
+            this.MessageBodyTextBox.Size = new System.Drawing.Size(1867, 919);
+            this.MessageBodyTextBox.TabIndex = 4;
+            this.MessageBodyTextBox.Text = "Write your message here";
+            this.MessageBodyTextBox.Click += new System.EventHandler(this.Mail_click);
+            this.MessageBodyTextBox.TextChanged += new System.EventHandler(this.richTextBox4_TextChanged);
             // 
-            // button1
+            // SendButton
             // 
-            this.button1.Location = new System.Drawing.Point(2038, 1357);
-            this.button1.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(214, 73);
-            this.button1.TabIndex = 6;
-            this.button1.Text = "Send";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.Send_mail);
+            this.SendButton.Enabled = false;
+            this.SendButton.Location = new System.Drawing.Point(2038, 1357);
+            this.SendButton.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
+            this.SendButton.Name = "SendButton";
+            this.SendButton.Size = new System.Drawing.Size(214, 73);
+            this.SendButton.TabIndex = 6;
+            this.SendButton.Text = "Send";
+            this.SendButton.UseVisualStyleBackColor = true;
+            this.SendButton.Click += new System.EventHandler(this.Send_mail);
             // 
             // button2
             // 
@@ -147,18 +149,18 @@
             this.label4.TabIndex = 10;
             this.label4.Text = "Cc:";
             // 
-            // richTextBox5
+            // CCTextBox
             // 
-            this.richTextBox5.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.richTextBox5.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.richTextBox5.Location = new System.Drawing.Point(34, 187);
-            this.richTextBox5.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
-            this.richTextBox5.Name = "richTextBox5";
-            this.richTextBox5.Size = new System.Drawing.Size(1871, 62);
-            this.richTextBox5.TabIndex = 11;
-            this.richTextBox5.Text = "";
-            this.richTextBox5.TextChanged += new System.EventHandler(this.richTextBox5_TextChanged);
-            this.richTextBox5.Validating += new System.ComponentModel.CancelEventHandler(this.richTextBox5_Validating);
+            this.CCTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.CCTextBox.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.CCTextBox.Location = new System.Drawing.Point(34, 187);
+            this.CCTextBox.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
+            this.CCTextBox.Name = "CCTextBox";
+            this.CCTextBox.Size = new System.Drawing.Size(1871, 62);
+            this.CCTextBox.TabIndex = 11;
+            this.CCTextBox.Text = "";
+            this.CCTextBox.TextChanged += new System.EventHandler(this.richTextBox5_TextChanged);
+            this.CCTextBox.Validating += new System.ComponentModel.CancelEventHandler(this.CCValidating);
             // 
             // AttachmentsListBox
             // 
@@ -192,23 +194,34 @@
             this.RemoveAttachmentButton.Visible = false;
             this.RemoveAttachmentButton.Click += new System.EventHandler(this.RemoveAttachmentButton_Click);
             // 
+            // SaveDraftButton
+            // 
+            this.SaveDraftButton.Location = new System.Drawing.Point(1513, 1359);
+            this.SaveDraftButton.Name = "SaveDraftButton";
+            this.SaveDraftButton.Size = new System.Drawing.Size(266, 69);
+            this.SaveDraftButton.TabIndex = 15;
+            this.SaveDraftButton.Text = "Save as Draft";
+            this.SaveDraftButton.UseVisualStyleBackColor = true;
+            this.SaveDraftButton.Click += new System.EventHandler(this.SaveDraftButton_Click);
+            // 
             // NewMail
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(20F, 48F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.ClientSize = new System.Drawing.Size(2286, 1440);
+            this.Controls.Add(this.SaveDraftButton);
             this.Controls.Add(this.RemoveAttachmentButton);
             this.Controls.Add(this.AttachmentLabel);
             this.Controls.Add(this.AttachmentsListBox);
-            this.Controls.Add(this.richTextBox5);
+            this.Controls.Add(this.CCTextBox);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
-            this.Controls.Add(this.button1);
-            this.Controls.Add(this.richTextBox4);
-            this.Controls.Add(this.richTextBox3);
-            this.Controls.Add(this.richTextBox2);
+            this.Controls.Add(this.SendButton);
+            this.Controls.Add(this.MessageBodyTextBox);
+            this.Controls.Add(this.SubjectTextBox);
+            this.Controls.Add(this.RecipientTextBox);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Margin = new System.Windows.Forms.Padding(8, 10, 8, 10);
@@ -223,16 +236,17 @@
         #endregion
         private Label label2;
         private Label label3;
-        private RichTextBox richTextBox2;
-        private RichTextBox richTextBox3;
-        private RichTextBox richTextBox4;
-        private Button button1;
+        private RichTextBox RecipientTextBox;
+        private RichTextBox SubjectTextBox;
+        private RichTextBox MessageBodyTextBox;
+        private Button SendButton;
         private Button button2;
         private Button button3;
         private Label label4;
-        private RichTextBox richTextBox5;
+        private RichTextBox CCTextBox;
         private ListBox AttachmentsListBox;
         private Label AttachmentLabel;
         private Button RemoveAttachmentButton;
+        private Button SaveDraftButton;
     }
 }

@@ -12,12 +12,21 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using EmailValidation; // package
+using MailKit.Net.Imap;
+using MailKit.Search;
+using Org.BouncyCastle.Asn1.X509;
 
 namespace Email_Client_01
 {
     public partial class NewMail : Form
     {
         List<string> attachmentPaths;
+
+        // draft specific
+        bool MailIsDraft = false;
+        string DraftID;
+        
+
         public NewMail()
         {
             InitializeComponent();
@@ -27,43 +36,58 @@ namespace Email_Client_01
 
         public NewMail(MimeMessage msg)
         {
-
             InitializeComponent();
             attachmentPaths = new();
-            
 
-            richTextBox2.Text = msg.To.ToString();
-            richTextBox3.Text = msg.Subject;
-            richTextBox4.Text = msg.TextBody;
-            richTextBox5.Text = msg.Cc.ToString();
+            RecipientTextBox.Text = msg.To.ToString();
+            SubjectTextBox.Text = msg.Subject;
+            MessageBodyTextBox.Text = msg.TextBody;
+            CCTextBox.Text = msg.Cc.ToString();
+        }
+
+        public NewMail(MimeMessage msg, bool isDraft)
+        {
+            InitializeComponent();
+            attachmentPaths = new();
+
+            MailIsDraft = isDraft;
+            RecipientTextBox.Text = msg.To.ToString();
+            SubjectTextBox.Text = msg.Subject;
+            MessageBodyTextBox.Text = msg.TextBody;
+            CCTextBox.Text = msg.Cc.ToString();
+
+            if(isDraft)
+            {
+                DraftID = msg.MessageId;
+            }
         }
 
         private void Form2_Load(object sender, EventArgs e)
         {
         }
 
-        private void richTextBox2_MouseHover(object sender, EventArgs e)
+        private void RecipientsMouseOver(object sender, EventArgs e)
         {
-            
+
             ToolTip tooltip = new ToolTip();
             tooltip.InitialDelay = 150;
 
-            tooltip.SetToolTip(richTextBox2, "Separate recipients with ','");
+            tooltip.SetToolTip(RecipientTextBox, "Separate recipients with ','");
         }
 
         private void To_Click(object sender, EventArgs e)
         {
-            richTextBox2.ForeColor = System.Drawing.Color.Black;
+            RecipientTextBox.ForeColor = System.Drawing.Color.Black;
         }
 
         private void Subject_Click(object sender, EventArgs e)
         {
-            richTextBox3.ForeColor = System.Drawing.Color.Black;
+            SubjectTextBox.ForeColor = System.Drawing.Color.Black;
         }
 
         private void Mail_click(object sender, EventArgs e)
         {
-            richTextBox4.ForeColor = System.Drawing.Color.Black;
+            MessageBodyTextBox.ForeColor = System.Drawing.Color.Black;
         }
 
         private void Attach_file(object sender, EventArgs e)
@@ -99,7 +123,7 @@ namespace Email_Client_01
 
         private string[]? GetRecipients()
         {
-            if (string.IsNullOrEmpty(richTextBox2.Text))
+            if (string.IsNullOrEmpty(RecipientTextBox.Text))
             {
                 MessageBox.Show("No recipient!");
                 return null;
@@ -107,31 +131,31 @@ namespace Email_Client_01
 
             else
             {
-                return richTextBox2.Text.Split(",");
+                return RecipientTextBox.Text.Split(",");
             }
         }
 
         private string[]? GetCCs()
         {
-            if (string.IsNullOrEmpty(richTextBox5.Text))
+            if (string.IsNullOrEmpty(CCTextBox.Text))
             {
-                return null; 
+                return null;
             }
             else
             {
-                return richTextBox5.Text.Split(",");
+                return CCTextBox.Text.Split(",");
             }
         }
         private string? GetSubject()
         {
-            if(string.IsNullOrEmpty(richTextBox3.Text))
+            if (string.IsNullOrEmpty(SubjectTextBox.Text))
             {
                 DialogResult result = MessageBox.Show("No subject. Do you want to send the email anyway?", "Fault", MessageBoxButtons.YesNo);
                 if (result == DialogResult.No)
                 {
                     return null;
                 }
-                else if(result == DialogResult.Yes)
+                else if (result == DialogResult.Yes)
                 {
                     return "<no subject>";
                 }
@@ -139,7 +163,7 @@ namespace Email_Client_01
             }
             else
             {
-                return richTextBox3.Text;
+                return SubjectTextBox.Text;
             }
         }
 
@@ -148,19 +172,17 @@ namespace Email_Client_01
         {
             // we expect strings of the form "Alias" <MailAddress>
             // and want to return only MailAddress
-
+            string result = s;
             // remove the text between quotations and " chars. 
             int startQuotation = s.IndexOf('"');
             int endQuoatation = s.IndexOf('"', startQuotation + 1);
-            string result = s.Remove(startQuotation, endQuoatation - startQuotation + 1);
-            
+            if (startQuotation != -1 && endQuoatation != -1)
+                result = s.Remove(startQuotation, endQuoatation - startQuotation + 1);
+
             // Remove the '<' chars
             result = result.Replace('<', ' ');
             result = result.Replace('>', ' ');
 
-
-            // remove the whitespaces;
-            MessageBox.Show(result.Trim());
             return result.Trim();
         }
 
@@ -177,41 +199,71 @@ namespace Email_Client_01
 
                 r = FilterString(r);
 
-                if(!EmailValidator.Validate(r))
+                if (!EmailValidator.Validate(r))
                 {
                     return false;
                 }
             }
+            SendButton.Enabled = true;
             return true;
         }
 
 
 
-        private void Send_mail(object sender, EventArgs e)
+        private async void Send_mail(object sender, EventArgs e)
         {
 
             this.Cursor = Cursors.WaitCursor;
 
             var To = GetRecipients();
             var CC = GetCCs();
-            
+
             var Subject = GetSubject();
-/*                richTextBox3.Text;*/
-            var Content = richTextBox4.Text;
+            var Content = MessageBodyTextBox.Text;
 
 
             Email email = new Email(To, CC, Subject, Content, attachmentPaths);
 
-
             var s = new EmailSender();
             s.sendEmail(email);
+
+            // expensive as we establish smtp connection to send just prior and then imap connection to delete..
+            if(MailIsDraft)
+            {
+                // delete the mail from drafts folder
+                this.Cursor = Cursors.WaitCursor;
+                using(var client = await Utility.GetImapClient())
+                {
+                    try
+                    {
+                        var draftsFolder = getDraftFolder(client, CancellationToken.None);
+                        await draftsFolder.OpenAsync(FolderAccess.ReadWrite);
+                        var uid = draftsFolder.Search(SearchQuery.HeaderContains("Message-Id", DraftID));
+
+                        await draftsFolder.AddFlagsAsync(uid, MessageFlags.Deleted, true);
+                        await draftsFolder.ExpungeAsync();
+/*                        RefreshCurrentFolder();*/
+                    }
+                    catch(Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                    }
+                    finally
+                    {
+                        client?.DisconnectAsync(true);
+                        client?.Dispose();
+                        this.Cursor = Cursors.Default;
+                    }
+
+                }
+            }
 
             this.Close();
         }
 
         private void Exit_button(object sender, EventArgs e)
         {
-            this.Close();            
+            this.Close();
         }
 
         private void richTextBox4_TextChanged(object sender, EventArgs e)
@@ -239,37 +291,37 @@ namespace Email_Client_01
 
         }
 
-        private void richTextBox2_Validating(object sender, CancelEventArgs e)
+        private void RecipientsValidating(object sender, CancelEventArgs e)
         {
-            string[] recipients = richTextBox2.Text.Split(",");
+            string[] recipients = RecipientTextBox.Text.Split(",");
             bool valid = validateRecipientArray(recipients);
-            button1.Enabled = valid;
+            SendButton.Enabled = valid;
 
             if (!valid)
             {
-                richTextBox2.ForeColor = Color.Red;
+                RecipientTextBox.ForeColor = Color.Red;
 
             }
 
             else
             {
-                richTextBox2.ForeColor = Color.Green;
+                RecipientTextBox.ForeColor = Color.Green;
             }
         }
 
 
         // CC validation does not work for some reason, #TODO
-        private void richTextBox5_Validating(object sender, CancelEventArgs e)
+        private void CCValidating(object sender, CancelEventArgs e)
         {
-            string[] cc = richTextBox5.Text.Split(",");
+            string[] cc = CCTextBox.Text.Split(",");
             bool valid = validateRecipientArray(cc);
             if (!valid)
             {
-                richTextBox5.ForeColor = Color.Red;
+                CCTextBox.ForeColor = Color.Red;
             }
             else
             {
-                richTextBox2.ForeColor = Color.Green;
+                RecipientTextBox.ForeColor = Color.Green;
             }
         }
 
@@ -284,6 +336,9 @@ namespace Email_Client_01
             {
                 // Remove the attachment from the listbox
                 var idx = AttachmentsListBox.SelectedIndex;
+
+                // failsafe
+                if (idx < 0) return;
                 AttachmentsListBox.Items.RemoveAt(idx);
 
                 // Remove the attachment from the list to be constructed as mime message
@@ -295,100 +350,205 @@ namespace Email_Client_01
             }
 
             // if no more attachments hide the listbox, label and button
-            if(attachmentPaths.Count <= 0)
+            if (attachmentPaths.Count <= 0)
             {
                 RemoveAttachmentButton.Visible = false;
                 AttachmentLabel.Visible = false;
                 AttachmentsListBox.Visible = false;
             }
         }
-    }
 
-    public class Email
-    {
-        public List<MailboxAddress> To { get; set; }
 
-        public List<MailboxAddress> CC { get; set; }
-        public string Subject { get; set; }
-
-        public string Content { get; set; }
-
-        public List<string> Attachments { get; set; }
-
-        public Email(string[] to, string[]? cc, string subject, string content, List<string> attachments)
-
+        public class Email
         {
-            To = new List<MailboxAddress>();
-            // username and address, #TODO currently we do not have aliases but extend this once we do
+            public bool isDraft = false;
+            public List<MailboxAddress> To { get; set; }
 
-            foreach(var recipient in to)
+            public List<MailboxAddress> CC { get; set; }
+            public string Subject { get; set; }
+
+            public string Content { get; set; }
+
+            public List<string> Attachments { get; set; }
+
+            public Email(string[] to, string[]? cc, string subject, string content, List<string> attachments)
+
             {
-                To.Add(MailboxAddress.Parse(recipient));
+                To = new List<MailboxAddress>();
+                // username and address, #TODO currently we do not have aliases but extend this once we do
+
+                foreach (var recipient in to)
+                {
+                    To.Add(MailboxAddress.Parse(recipient));
+                }
+
+
+                CC = new List<MailboxAddress>();
+                if (!(cc == null))
+                {
+                    foreach (var c in cc)
+                    {
+                        CC.Add(MailboxAddress.Parse(c));
+                    }
+                }
+
+
+
+                Subject = subject;
+                Content = content;
+                Attachments = attachments;
+            }
+        }
+
+        public interface IEmailSender
+        {
+            void sendEmail(Email email);
+        }
+
+
+        public class EmailSender : IEmailSender
+        {
+
+            public void sendEmail(Email email)
+            {
+                var emailMessage = CreateEmailMessage(email);
+
+                Send(emailMessage);
             }
 
-            
-            CC = new List<MailboxAddress>();
-            if(!(cc == null))
+            private MimeMessage CreateEmailMessage(Email email)
             {
-                foreach (var c in cc)
+                MimeMessage emailMessage = new();
+
+                var builder = new BodyBuilder
                 {
-                    CC.Add(MailboxAddress.Parse(c));
+                    TextBody = email.Content // TODO formatting needed here???
+                };
+                foreach (var attachment in email.Attachments)
+                {
+                    builder.Attachments.Add(attachment);
+                }
+
+                emailMessage.Body = builder.ToMessageBody();                        // TODO add alias/username
+                emailMessage.From.Add(new MailboxAddress(Properties.Credentials.Default.username, Properties.Credentials.Default.username)); // username    &&     //email of user
+                emailMessage.To.AddRange(email.To);
+                emailMessage.Subject = email.Subject;
+
+                return emailMessage;
+            }
+
+            private async void Send(MimeMessage emailMessage)
+            {
+
+                using (var client = await Utility.GetSmtpClient())
+                {
+                    try
+                    {
+                        client.Send(emailMessage);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                    }
+                    finally
+                    {
+                        // always disconnect no matter the scenario
+                        client?.Disconnect(true);
+                        // and dispose/free/delete the smtp client object
+                        client?.Dispose();
+                    }
+                }
+            }
+        }
+
+        private IMailFolder getDraftFolder(ImapClient client, CancellationToken cancellationToken)
+        {
+            string[] DraftFolderNames = { "Drafts", "Kladder", "Draft" };
+            if ((client.Capabilities & (ImapCapabilities.SpecialUse | ImapCapabilities.XList)) != 0)
+            {
+                var trashFolder = client.GetFolder(SpecialFolder.Drafts);
+                return trashFolder;
+            }
+
+            else
+            {
+                var personal = client.GetFolder(client.PersonalNamespaces[0]);
+
+                foreach (var folder in personal.GetSubfolders(false, cancellationToken))
+                {
+                    foreach (var name in DraftFolderNames)
+                    {
+                        if (folder.Name == name)
+                            return folder;
+                    }
                 }
             }
 
-
-
-            Subject = subject;
-            Content = content;
-            Attachments = attachments;
-        }
-    }
-
-    public interface IEmailSender
-    {
-        void sendEmail(Email email);
-    }
-
-
-    public class EmailSender : IEmailSender
-    {
-
-        public void sendEmail(Email email)
-        {
-            var emailMessage = CreateEmailMessage(email);
-
-            Send(emailMessage);
+            return null;
         }
 
-        private MimeMessage CreateEmailMessage(Email email)
+        // saves the current message state as a draft
+        private MimeMessage BuildDraftMessage()
         {
-            MimeMessage emailMessage = new();
+            BodyBuilder builder = new BodyBuilder();
+            MimeMessage message = new MimeMessage();
+            
+            message.Subject = SubjectTextBox.Text;
 
-            var builder = new BodyBuilder
+            if (string.IsNullOrEmpty(MessageBodyTextBox.Text))
             {
-                TextBody = email.Content // TODO formatting needed here???
-            };
-            foreach (var attachment in email.Attachments)
+                builder.TextBody = @"";
+            }
+            else
             {
-                builder.Attachments.Add(attachment);
+                builder.TextBody = MessageBodyTextBox.Text;
             }
 
-            emailMessage.Body = builder.ToMessageBody();                        // TODO add alias/username
-            emailMessage.From.Add(new MailboxAddress(Properties.Credentials.Default.username, Properties.Credentials.Default.username)); // username    &&     //email of user
-            emailMessage.To.AddRange(email.To);
-            emailMessage.Subject = email.Subject;
+            if (!string.IsNullOrEmpty(RecipientTextBox.Text))
+            {
+                string[] recipients = RecipientTextBox.Text.Split(",");
 
-            return emailMessage;
+                foreach (var r in recipients)
+                {
+                    message.To.Add(MailboxAddress.Parse(r));
+                }
+            }
+
+            if (!string.IsNullOrEmpty(CCTextBox.Text))
+            {
+                string[] CCs = CCTextBox.Text.Split(",");
+
+                foreach (var cc in CCs)
+                {
+                    message.Cc.Add(MailboxAddress.Parse(cc));
+                }
+            }
+
+            if (AttachmentsListBox.Items.Count > 0)
+            {
+                foreach (var item in AttachmentsListBox.Items)
+                {
+                    // todo don't know if this works
+                    builder.Attachments.Add(item.ToString());
+                }
+            }
+
+            message.Body = builder.ToMessageBody();
+            return message;
         }
 
-        private async void Send(MimeMessage emailMessage)
-        {
 
-            using (var client = await Utility.GetSmtpClient())
+        private async void SaveDraftButton_Click(object sender, EventArgs e)
+        {
+            this.Cursor = Cursors.WaitCursor;
+            using (var client = await Utility.GetImapClient())
             {
                 try
                 {
-                    client.Send(emailMessage);
+                    MimeMessage message = BuildDraftMessage();
+                    IMailFolder draftsFolder = getDraftFolder(client, CancellationToken.None);
+                    await draftsFolder.OpenAsync(FolderAccess.ReadWrite);
+                    await draftsFolder.AppendAsync(message, MessageFlags.Draft);
                 }
                 catch (Exception ex)
                 {
@@ -400,10 +560,9 @@ namespace Email_Client_01
                     client?.Disconnect(true);
                     // and dispose/free/delete the smtp client object
                     client?.Dispose();
+                    this.Cursor = Cursors.Default;
                 }
             }
         }
-
     }
-
 }

@@ -1,6 +1,8 @@
 ﻿using MailKit;
 using MailKit.Net.Imap;
 using MimeKit;
+using MimeKit.Utils;
+using static System.Net.Mime.MediaTypeNames;
 
 
 namespace Email_Client_01
@@ -34,7 +36,8 @@ namespace Email_Client_01
                 CCTextBox.Text = message.Cc.ToString();
             }
 
-            DateTextBox.Text = message.Date.ToString();
+
+            DateTextBox.Text = message.Date.LocalDateTime.ToString();
 
 
             if(message.Attachments.Any())
@@ -122,6 +125,46 @@ namespace Email_Client_01
             new NewMail(reply).Show();
         }
 
+        private void Forward(MimeMessage message)
+        {
+            var ForwardedMessage = new MimeMessage();
+
+/*            ForwardedMessage.ReplyTo.AddRange(message.ReplyTo);*/
+
+
+            // set the reply subject
+            if (!message.Subject.StartsWith("FWD:", StringComparison.OrdinalIgnoreCase))
+                ForwardedMessage.Subject = "FWD:" + message.Subject;
+            else
+                ForwardedMessage.Subject = message.Subject;
+
+
+            // quote the original message text
+            using (var quoted = new StringWriter())
+            {
+                var sender = message.Sender ?? message.From.Mailboxes.FirstOrDefault();
+
+                using (var text = new StringWriter())
+                {
+                    text.WriteLine();
+                    text.WriteLine("-----Original Message-----");
+                    text.WriteLine("From: {0}", message.From);
+                    text.WriteLine("Sent: {0}", DateUtils.FormatDate(message.Date));
+                    text.WriteLine("To: {0}", message.To);
+                    text.WriteLine("Subject: {0}", message.Subject);
+                    text.WriteLine();
+
+                    text.Write(message.TextBody);
+
+                    ForwardedMessage.Body = new TextPart("plain")
+                    {
+                        Text = text.ToString()
+                    };
+                }
+            }
+
+            new NewMail(ForwardedMessage).Show();
+        }
         private void label3_Click(object sender, EventArgs e)
         {
 
@@ -220,6 +263,11 @@ namespace Email_Client_01
         private void TrashButton_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void ForwardButton_Click(object sender, EventArgs e)
+        {
+            Forward(message);
         }
     }
 }
