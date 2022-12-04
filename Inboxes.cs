@@ -23,8 +23,6 @@ namespace Email_Client_01
     {
         IList<IMessageSummary> messageSummaries = null!;
         IList<IMailFolder> folders = null!;
-
-        List<string> folderNames = new();
         List<string> filterNames = new();
         private static Inboxes instance = null!;
         private bool clicked = false; // for double clicks handling
@@ -91,10 +89,7 @@ namespace Email_Client_01
                             if (!f.Exists) continue;
                             if (f == folder)
                                 continue;
-
-                            // Folder.fullnames are of the form "[Gmail]/Spam", we only want the part after '/'
-                            var folderName = f.FullName.Substring(f.FullName.LastIndexOf("/") + 1);
-                            if (filter.DestinationFolder == folderName)
+                            if (filter.DestinationFolder == f.FullName)
                             {
                                 var query = GetSearchQueryFromFilter(filter);
                                 await folder.OpenAsync(FolderAccess.ReadWrite);
@@ -125,7 +120,6 @@ namespace Email_Client_01
                         }
 
                         var folderName = folder.FullName.Substring(folder.FullName.LastIndexOf("/") + 1);
-                        folderNames.Add(folderName); // for bookkeeping without spinning up a client 
                         folderName += " (" + unreadCount + ")";
                         foldersMap.Add(key: folder.FullName, value: folderName); // add to dictionary. 
                         folder.Close();
@@ -134,7 +128,6 @@ namespace Email_Client_01
 
                 // Designating a data source for the listbox. 
                 Folders.DataSource = new BindingSource(foldersMap, null);
-
                 // The value and keys
                 Folders.DisplayMember = "Value";
                 Folders.ValueMember = "Key";
@@ -627,20 +620,21 @@ namespace Email_Client_01
 
 
             string DestinationFolder = "";
-            if (!(Utility.InputBox("Add Filter", "Destination folder", ref DestinationFolder) == DialogResult.OK))
+            if(!(Utility.RadioListBoxInput(Folders, ref DestinationFolder) == DialogResult.OK))
             {
                 return;
             }
+            // this should mutate DestinationFolder to the stringified selected item of the data source
+            // In our case the folder name is something like: "[Folder.Fullname, Displayed name]";
+            if (string.IsNullOrEmpty(DestinationFolder)) return; // guard
+
+            // Mutate the string to the "Folder.Fullname" part only
+            DestinationFolder = DestinationFolder.Substring(1, DestinationFolder.IndexOf(",") - 1);
+
+            
             string FilterName = "";
             if (!(Utility.InputBox("Add Filter", "Filter Name: ", ref FilterName) == DialogResult.OK))
             {
-                return;
-            }
-
-            // Check if valid folder name was input?
-            if (!folderNames.Contains(DestinationFolder))
-            {
-                MessageBox.Show(DestinationFolder + " is not an existing folder");
                 return;
             }
 

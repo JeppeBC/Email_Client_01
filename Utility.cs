@@ -1,8 +1,11 @@
 ﻿using MailKit.Net.Imap;
 using MailKit.Net.Smtp;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Asn1.X509;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.InteropServices; // for the known folder stuff.
-
+using System.Windows.Forms.VisualStyles;
 
 namespace Email_Client_01
 {
@@ -167,7 +170,127 @@ namespace Email_Client_01
 
 
 
+        // see top answer of https://stackoverflow.com/questions/1015411/winforms-radiobuttonlist-doesnt-exist
+        public class RadioButtonList : ListBox
+        {
+            Size s;
+            public RadioButtonList()
+            {
+                this.DrawMode = DrawMode.OwnerDrawFixed;
+                using (var g = Graphics.FromHwnd(IntPtr.Zero))
+                    s = RadioButtonRenderer.GetGlyphSize(
+                        Graphics.FromHwnd(IntPtr.Zero), RadioButtonState.CheckedNormal);
+            }
 
+            protected override void OnDrawItem(DrawItemEventArgs e)
+            {
+
+                var text = (Items.Count > 0) ? GetItemText(Items[e.Index]) : Name;
+                Rectangle r = e.Bounds; Point p;
+                var flags = TextFormatFlags.Default | TextFormatFlags.NoPrefix;
+                var selected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+                var state = selected ?
+                    (Enabled ? RadioButtonState.CheckedNormal :
+                               RadioButtonState.CheckedDisabled) :
+                    (Enabled ? RadioButtonState.UncheckedNormal :
+                               RadioButtonState.UncheckedDisabled);
+                if (RightToLeft == System.Windows.Forms.RightToLeft.Yes)
+                {
+                    p = new Point(r.Right - r.Height + (ItemHeight - s.Width) / 2,
+                        r.Top + (ItemHeight - s.Height) / 2);
+                    r = new Rectangle(r.Left, r.Top, r.Width - r.Height, r.Height);
+                    flags |= TextFormatFlags.RightToLeft | TextFormatFlags.Right;
+                }
+                else
+                {
+                    p = new Point(r.Left + (ItemHeight - s.Width) / 2,
+                    r.Top + (ItemHeight - s.Height) / 2);
+                    r = new Rectangle(r.Left + r.Height, r.Top, r.Width - r.Height, r.Height);
+                }
+                var bc = selected ? (Enabled ? SystemColors.Highlight :
+                    SystemColors.InactiveBorder) : BackColor;
+                var fc = selected ? (Enabled ? SystemColors.HighlightText :
+                    SystemColors.GrayText) : ForeColor;
+                using (var b = new SolidBrush(bc))
+                    e.Graphics.FillRectangle(b, e.Bounds);
+                RadioButtonRenderer.DrawRadioButton(e.Graphics, p, state);
+                TextRenderer.DrawText(e.Graphics, text, Font, r, fc, bc, flags);
+                e.DrawFocusRectangle();
+                base.OnDrawItem(e);
+            }
+            [Browsable(false), EditorBrowsable(EditorBrowsableState.Never),
+            DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+            public override SelectionMode SelectionMode
+            {
+                get { return System.Windows.Forms.SelectionMode.One; }
+                set { }
+            }
+            [Browsable(false), EditorBrowsable(EditorBrowsableState.Never),
+            DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+            public override int ItemHeight
+            {
+                get { return (this.Font.Height + 2); }
+                set { }
+            }
+            [EditorBrowsable(EditorBrowsableState.Never), Browsable(false),
+            DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+            public override DrawMode DrawMode
+            {
+                get { return base.DrawMode; }
+                set { base.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed; }
+            }
+        }
+
+
+        public static DialogResult RadioListBoxInput(ListBox lb, ref string? selectedFolder)
+        {
+            Form form = new Form();
+            Label label = new Label();
+            RadioButtonList RBL = new RadioButtonList();
+            Button buttonOk = new Button();
+            Button buttonCancel = new Button();
+
+            RBL.Height = lb.ItemHeight * (lb.Items.Count + 1);
+            RBL.Width = lb.Width;
+            // todo set maximum limit to protect form?
+
+            RBL.DataSource = lb.DataSource;
+            // The value and keys
+            RBL.DisplayMember = "Value";
+            RBL.ValueMember = "Key";
+
+            form.Text = "Folders";
+            label.Text = "Please select a destination folder: ";
+
+            buttonOk.Text = "OK";
+            buttonCancel.Text = "Cancel";
+            buttonOk.DialogResult = DialogResult.OK;
+            buttonCancel.DialogResult = DialogResult.Cancel;
+
+
+            RBL.SetBounds(25, label.Height*2, RBL.Width, RBL.Height);
+            buttonOk.SetBounds(400, 160, 160, 60);
+            buttonCancel.SetBounds(400, 240, 160, 60);
+
+
+            label.AutoSize = true;
+            form.ClientSize = new Size((int)(Math.Max(RBL.Width, label.Width) * 2), (int)((RBL.Height + label.Height)*1.25));
+            form.FormBorderStyle = FormBorderStyle.FixedDialog;
+            form.StartPosition = FormStartPosition.CenterScreen;
+            form.MinimizeBox = false;
+            form.MaximizeBox = false;
+
+            form.Controls.AddRange(new Control[] { label, RBL, buttonOk, buttonCancel });
+            form.AcceptButton = buttonOk;
+            form.CancelButton = buttonCancel;
+
+            DialogResult dialogResult = form.ShowDialog();
+
+
+            selectedFolder = RBL.SelectedItem.ToString();
+            return dialogResult;
+
+        }
 
 
 
