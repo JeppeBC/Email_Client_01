@@ -37,7 +37,6 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.RefreshButton = new System.Windows.Forms.ToolStripButton();
             this.MoveToTrashButton = new System.Windows.Forms.ToolStripButton();
-            this.Inbox = new System.Windows.Forms.ListBox();
             this.label2 = new System.Windows.Forms.Label();
             this.Compose = new System.Windows.Forms.Button();
             this.Folders = new System.Windows.Forms.ListBox();
@@ -133,17 +132,6 @@
             this.MoveToTrashButton.Size = new System.Drawing.Size(34, 28);
             this.MoveToTrashButton.Text = "Moves selected item to trash folder";
             this.MoveToTrashButton.Click += new System.EventHandler(this.MoveToTrashButton_Click);
-            // 
-            // Inbox
-            // 
-            this.Inbox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
-            this.Inbox.FormattingEnabled = true;
-            this.Inbox.ItemHeight = 25;
-            this.Inbox.Location = new System.Drawing.Point(206, 90);
-            this.Inbox.Name = "Inbox";
-            this.Inbox.Size = new System.Drawing.Size(920, 554);
-            this.Inbox.TabIndex = 6;
-            this.Inbox.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.Inbox_MouseDoubleClick);
             // 
             // label2
             // 
@@ -264,12 +252,12 @@
             this.Sender,
             this.Subject,
             this.Date});
-            this.InboxGrid.Location = new System.Drawing.Point(205, 90);
+            this.InboxGrid.Location = new System.Drawing.Point(206, 90);
             this.InboxGrid.Name = "InboxGrid";
             this.InboxGrid.RowHeadersVisible = false;
             this.InboxGrid.RowHeadersWidth = 62;
             this.InboxGrid.RowTemplate.Height = 33;
-            this.InboxGrid.Size = new System.Drawing.Size(936, 568);
+            this.InboxGrid.Size = new System.Drawing.Size(935, 568);
             this.InboxGrid.TabIndex = 18;
             this.InboxGrid.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.InboxGrid_Click);
             this.InboxGrid.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.InboxGrid_DoubleClick);
@@ -365,7 +353,6 @@
             this.Controls.Add(this.Folders);
             this.Controls.Add(this.Compose);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.Inbox);
             this.Controls.Add(this.toolStrip1);
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "Inboxes";
@@ -389,7 +376,6 @@
         private ToolStripButton ToggleFlagButton;
         private ToolStripSeparator toolStripSeparator1;
         private ToolStripButton RefreshButton;
-        private ListBox Inbox;
         private Label label2;
         private Button Compose;
         private ListBox Folders;

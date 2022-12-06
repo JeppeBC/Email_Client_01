@@ -147,7 +147,7 @@ namespace Email_Client_01
         private async void RetrieveInboxMessages()
         {
             // remove all messages
-            Inbox.Items.Clear();
+            InboxGrid.Rows.Clear();
 
             this.Cursor = Cursors.WaitCursor;
             using (var client = await Utility.GetImapClient())
@@ -164,8 +164,7 @@ namespace Email_Client_01
                     if (messages.Count <= 0)
                     {
                         toolStrip1.Visible = false;
-                        Inbox.Items.Add("No messages in this folder!");
-                        Inbox.Enabled = false;
+                        InboxGrid.Rows.Add("No messages in this folder!");                        
                     }
                     else
                     {
@@ -173,10 +172,9 @@ namespace Email_Client_01
                         messageSummaries = messages;
                         foreach (var item in messages.Reverse())
                         {
-                            Inbox.Items.Add(FormatInboxMessageText(item));
+                            InboxGrid.Rows.Add(GetFlags(item), item.Envelope.Sender, item.Envelope.Subject, item.Envelope.Date);
                       
                         }
-                        Inbox.Enabled = true;
                     }
                 }
                 catch (Exception ex)
@@ -215,7 +213,7 @@ namespace Email_Client_01
         // retrives messages in a folder when it is double clicked. 
         private async void RetrieveMessagesFromFolder(object sender = null!, EventArgs e = null!)
         {
-            Inbox.Items.Clear();
+            InboxGrid.Rows.Clear();
 
             this.Cursor = Cursors.WaitCursor;
             using (var client = await Utility.GetImapClient())
@@ -231,9 +229,7 @@ namespace Email_Client_01
 
                     if (messages.Count <= 0)
                     {
-                        Inbox.Items.Add("This folder is empty!");
-
-                        Inbox.Enabled = false;
+                        InboxGrid.Rows.Add("This folder is empty!");
                     }
                     else if(folder.Attributes.HasFlag(FolderAttributes.Drafts))
                     {
@@ -313,6 +309,7 @@ namespace Email_Client_01
         private void Form1_Load(object sender, EventArgs e)
         {
             InboxGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            PriorityGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
         }
 
         private void Prime_Mail_Homepage(object sender, EventArgs e)
@@ -326,12 +323,12 @@ namespace Email_Client_01
         
         private async void DeleteButton_click(object sender, EventArgs e)
         {
-            var msgIndex = Inbox.SelectedIndex;
+            var msgIndex = InboxGrid.CurrentRow.Index;
             var msg = messageSummaries[messageSummaries.Count - 1 - msgIndex];
 
 
             // quick check so we do not waste unnecessary time to establish an imap connection in case of errors.
-            if(msgIndex < 0 || msgIndex > Inbox.Items.Count)
+            if(msgIndex < 0 || msgIndex > InboxGrid.Rows.Count)
             {
                 MessageBox.Show("Please select an email for deletion.");
                 return;
@@ -394,7 +391,7 @@ namespace Email_Client_01
             {
                 try
                 {
-                    var messageIndex = Inbox.SelectedIndex;
+                    var messageIndex = InboxGrid.CurrentRow.Index;
                     var message = messageSummaries[messageSummaries.Count - 1 - messageIndex];
 
                     var folder = await client.GetFolderAsync(message.Folder.ToString());
@@ -496,7 +493,7 @@ namespace Email_Client_01
 
         private void ShowSearchResult(IMailFolder folder, IList<UniqueId> uids)
         {
-            Inbox.Items.Clear();
+            InboxGrid.Rows.Clear();
             IList<IMessageSummary> messages = folder.Fetch(uids, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
             messageSummaries = messages;
@@ -504,13 +501,13 @@ namespace Email_Client_01
             if (messages.Count <= 0)
             {
                 toolStrip1.Visible = false;
-                Inbox.Items.Add("No results!");
+                InboxGrid.Rows.Add("No results!");
             }
 
             foreach (var item in messages.Reverse())
             {
                 toolStrip1.Visible = true;
-                Inbox.Items.Add(FormatInboxMessageText(item));
+                InboxGrid.Rows.Add(GetFlags(item), item.Envelope.Sender, item.Envelope.Subject, item.Envelope.Date);
             }
         }
 
@@ -583,11 +580,11 @@ namespace Email_Client_01
 
         private async void MoveToTrashButton_Click(object sender, EventArgs e)
         {
-            var msgIndex = Inbox.SelectedIndex;
+            var msgIndex = InboxGrid.CurrentRow.Index;
             var msg = messageSummaries[messageSummaries.Count - 1 - msgIndex];
 
             // just a quick comparison to not use unnecessary time to establish an IMAP connection if nothing is selected.
-            if (msgIndex < 0 || msgIndex > Inbox.Items.Count)
+            if (msgIndex < 0 || msgIndex > InboxGrid.Rows.Count)
             {
                 MessageBox.Show("Please select an email to move to trash");
                 return;
@@ -645,7 +642,7 @@ namespace Email_Client_01
             Object Selecteditem = PrioritySelecter.SelectedItem;
 
             var msgIndex = InboxGrid.CurrentRow.Index;
-            Object PriorityMsg = Inbox.Items[msgIndex];
+            Object PriorityMsg = InboxGrid.Rows[InboxGrid.CurrentRow.Index].Cells[2].Value;
 
             // Display the selected mail in listbox "Priority" as "priority + subject of email"
             PriorityGrid.Rows.Add(Selecteditem, PriorityMsg);
