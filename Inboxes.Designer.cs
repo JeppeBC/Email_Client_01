@@ -54,6 +54,7 @@
             this.emailBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.emailSenderBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.PriorityGrid = new System.Windows.Forms.DataGridView();
+            this.Remove = new System.Windows.Forms.DataGridViewButtonColumn();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.toolStrip1.SuspendLayout();
@@ -65,7 +66,6 @@
             // 
             // toolStrip1
             // 
-            this.toolStrip1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.toolStrip1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
             this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
             this.toolStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
@@ -76,7 +76,7 @@
             this.toolStripSeparator1,
             this.RefreshButton,
             this.MoveToTrashButton});
-            this.toolStrip1.Location = new System.Drawing.Point(261, 15);
+            this.toolStrip1.Location = new System.Drawing.Point(215, 15);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
             this.toolStrip1.Size = new System.Drawing.Size(167, 33);
@@ -146,11 +146,12 @@
             // 
             // Compose
             // 
+            this.Compose.AutoSize = true;
             this.Compose.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
             this.Compose.Location = new System.Drawing.Point(10, 90);
             this.Compose.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Compose.Name = "Compose";
-            this.Compose.Size = new System.Drawing.Size(188, 55);
+            this.Compose.Size = new System.Drawing.Size(277, 55);
             this.Compose.TabIndex = 9;
             this.Compose.Text = "Compose";
             this.Compose.UseVisualStyleBackColor = false;
@@ -164,12 +165,13 @@
             this.Folders.Location = new System.Drawing.Point(10, 155);
             this.Folders.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Folders.Name = "Folders";
-            this.Folders.Size = new System.Drawing.Size(186, 254);
+            this.Folders.Size = new System.Drawing.Size(277, 254);
             this.Folders.TabIndex = 10;
             this.Folders.SelectedIndexChanged += new System.EventHandler(this.Folders_SelectedIndexChanged);
             // 
             // SearchTextBox
             // 
+            this.SearchTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.SearchTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.SearchTextBox.Location = new System.Drawing.Point(758, 36);
             this.SearchTextBox.Margin = new System.Windows.Forms.Padding(2);
@@ -182,6 +184,7 @@
             // 
             // SearchButton
             // 
+            this.SearchButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.SearchButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
             this.SearchButton.Location = new System.Drawing.Point(1041, 20);
             this.SearchButton.Margin = new System.Windows.Forms.Padding(2);
@@ -238,7 +241,7 @@
             "5th"});
             this.PrioritySelecter.Location = new System.Drawing.Point(10, 417);
             this.PrioritySelecter.Name = "PrioritySelecter";
-            this.PrioritySelecter.Size = new System.Drawing.Size(188, 33);
+            this.PrioritySelecter.Size = new System.Drawing.Size(278, 33);
             this.PrioritySelecter.TabIndex = 17;
             this.PrioritySelecter.Text = "Priorities";
             this.PrioritySelecter.SelectedIndexChanged += new System.EventHandler(this.PriorityClicked);
@@ -252,20 +255,19 @@
             this.Sender,
             this.Subject,
             this.Date});
-            this.InboxGrid.Location = new System.Drawing.Point(206, 90);
+            this.InboxGrid.Location = new System.Drawing.Point(294, 90);
             this.InboxGrid.Name = "InboxGrid";
             this.InboxGrid.RowHeadersVisible = false;
             this.InboxGrid.RowHeadersWidth = 62;
             this.InboxGrid.RowTemplate.Height = 33;
-            this.InboxGrid.Size = new System.Drawing.Size(935, 568);
+            this.InboxGrid.Size = new System.Drawing.Size(847, 568);
             this.InboxGrid.TabIndex = 18;
             this.InboxGrid.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.InboxGrid_Click);
             this.InboxGrid.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.InboxGrid_DoubleClick);
             // 
             // Flags
             // 
-            this.Flags.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.Flags.FillWeight = 50F;
+            this.Flags.FillWeight = 10F;
             this.Flags.HeaderText = "Flags";
             this.Flags.MinimumWidth = 8;
             this.Flags.Name = "Flags";
@@ -289,11 +291,11 @@
             // 
             // Date
             // 
-            this.Date.FillWeight = 236.8421F;
+            this.Date.FillWeight = 10F;
             this.Date.HeaderText = "Date";
             this.Date.MinimumWidth = 8;
             this.Date.Name = "Date";
-            this.Date.Width = 200;
+            this.Date.Width = 150;
             // 
             // emailBindingSource
             // 
@@ -308,6 +310,7 @@
             this.PriorityGrid.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
             this.PriorityGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.PriorityGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.Remove,
             this.dataGridViewTextBoxColumn1,
             this.dataGridViewTextBoxColumn2});
             this.PriorityGrid.Location = new System.Drawing.Point(10, 456);
@@ -315,11 +318,17 @@
             this.PriorityGrid.RowHeadersVisible = false;
             this.PriorityGrid.RowHeadersWidth = 62;
             this.PriorityGrid.RowTemplate.Height = 33;
-            this.PriorityGrid.Size = new System.Drawing.Size(190, 202);
+            this.PriorityGrid.Size = new System.Drawing.Size(278, 202);
             this.PriorityGrid.TabIndex = 19;
-            this.PriorityGrid.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.PriorityGrid_Click);
-            this.PriorityGrid.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.PriorityGrid_CellContentClick);
+            this.PriorityGrid.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.PriorityGrid_Click);
             this.PriorityGrid.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.PriorityGrid_DoubleClick);
+            // 
+            // Remove
+            // 
+            this.Remove.HeaderText = "";
+            this.Remove.MinimumWidth = 8;
+            this.Remove.Name = "Remove";
+            this.Remove.Width = 30;
             // 
             // dataGridViewTextBoxColumn1
             // 
@@ -390,11 +399,12 @@
         private BindingSource emailBindingSource;
         private BindingSource emailSenderBindingSource;
         private DataGridView PriorityGrid;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private DataGridViewTextBoxColumn Flags;
         private DataGridViewTextBoxColumn Sender;
         private DataGridViewTextBoxColumn Subject;
         private DataGridViewTextBoxColumn Date;
+        private DataGridViewButtonColumn Remove;
+        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
     }
 }

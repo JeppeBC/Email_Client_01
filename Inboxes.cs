@@ -641,27 +641,24 @@ namespace Email_Client_01
             // Take selected email and selected priority
             Object Selecteditem = PrioritySelecter.SelectedItem;
 
-            var msgIndex = InboxGrid.CurrentRow.Index;
             Object PriorityMsg = InboxGrid.Rows[InboxGrid.CurrentRow.Index].Cells[2].Value;
-
+            
             // Display the selected mail in listbox "Priority" as "priority + subject of email"
-            PriorityGrid.Rows.Add(Selecteditem, PriorityMsg);
+            PriorityGrid.Rows.Add("", Selecteditem, PriorityMsg);
 
-            PriorityGrid.Sort(PriorityGrid.Columns[0], ListSortDirection.Ascending);
+            PriorityGrid.Sort(PriorityGrid.Columns[1], ListSortDirection.Ascending);
         }
         
         private void PriorityGrid_Click(object sender, DataGridViewCellEventArgs e)
         {
             PriorityGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        }
 
-        private void PriorityGrid_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-            PriorityGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            if (e.ColumnIndex == 0)
+                PriorityGrid.Rows.RemoveAt(e.RowIndex);
         }
         
         private void PriorityGrid_DoubleClick(object sender, DataGridViewCellEventArgs e)
-        {
+        {   
             ReadMessage(sender, e);
         }
     }
