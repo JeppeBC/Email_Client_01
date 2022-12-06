@@ -106,10 +106,10 @@ namespace Email_Client_01
             {
                 var sender = message.Sender ?? message.From.Mailboxes.FirstOrDefault();
 
-                quoted.WriteLine("On {0}, {1} wrote:", message.Date.ToString("f"), !string.IsNullOrEmpty(sender.Name) ? sender.Name : sender.Address);
+                quoted.WriteLine("On {0}, {1} wrote:", message.Date.ToString("f"), !string.IsNullOrEmpty(sender?.Name) ? sender.Name : sender?.Address);
                 using (var reader = new StringReader(message.TextBody))
                 {
-                    string line;
+                    string? line;
 
                     while ((line = reader.ReadLine()) != null)
                     {
@@ -202,6 +202,8 @@ namespace Email_Client_01
                 var idx = AttachmentListBox.SelectedIndex;
                 var filename = AttachmentListBox.SelectedItem.ToString();
 
+                if (string.IsNullOrEmpty(filename)) return; 
+
                 // Utility.GetDownloadsPath is windows specific? see the implementation
                 var downloadFolderPath = Utility.KnownFolders.GetPath(Utility.KnownFolder.Downloads);
                 var path = Path.Combine(downloadFolderPath, filename);
@@ -245,6 +247,8 @@ namespace Email_Client_01
                 {
                     var attachment = message.Attachments.ElementAt(i);
                     var filename = AttachmentListBox.Items[i].ToString(); // listbox items are filenames
+
+                    if (string.IsNullOrEmpty(filename)) return; // guard
                     var path = Path.Combine(downloadFolderPath, filename);
 
                     using (var stream = File.Create(path))

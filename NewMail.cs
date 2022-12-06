@@ -24,7 +24,7 @@ namespace Email_Client_01
 
         // draft specific
         bool MailIsDraft = false;
-        string DraftID;
+        string? DraftID;
         ImapClient client; 
         
 
@@ -49,11 +49,12 @@ namespace Email_Client_01
             CCTextBox.Text = msg.Cc.ToString();
         }
 
-        public NewMail(MimeMessage msg, bool isDraft)
+        public NewMail(MimeMessage msg, bool isDraft, ImapClient client)
         {
             InitializeComponent();
             attachmentPaths = new();
 
+            this.client = client;
             MailIsDraft = isDraft;
             RecipientTextBox.Text = msg.To.ToString();
             SubjectTextBox.Text = msg.Subject;
@@ -151,11 +152,7 @@ namespace Email_Client_01
             if (string.IsNullOrEmpty(SubjectTextBox.Text))
             {
                 DialogResult result = MessageBox.Show("No subject. Do you want to send the email anyway?", "Fault", MessageBoxButtons.YesNo);
-                if (result == DialogResult.No)
-                {
-                    return null;
-                }
-                else if (result == DialogResult.Yes)
+                if (result == DialogResult.Yes)
                 {
                     return "<no subject>";
                 }
@@ -216,9 +213,25 @@ namespace Email_Client_01
             this.Cursor = Cursors.WaitCursor;
 
             var To = GetRecipients();
-            var CC = GetCCs();
 
+            // To should never be null, as you would not be able to click the button
+            // but this is here just in case. IDK data corruption or something could still happen. 
+            if(To == null)
+            {
+                MessageBox.Show("Recipients not found");
+                return;
+            }
+            
+            var CC = GetCCs();
             var Subject = GetSubject();
+
+
+            if(Subject == null) // another gaurd 
+            {
+                MessageBox.Show("Invalid subject found");
+                return;
+            }
+
             var Content = MessageBodyTextBox.Text;
 
 
@@ -235,6 +248,11 @@ namespace Email_Client_01
                 try
                 {
                     var draftsFolder = await getDraftFolder(CancellationToken.None);
+                    if(draftsFolder == null)
+                    {
+                        MessageBox.Show("\"Draft(s)\" folder not found");
+                        return;
+                    }
                     await draftsFolder.OpenAsync(FolderAccess.ReadWrite);
                     var uid = draftsFolder.Search(SearchQuery.HeaderContains("Message-Id", DraftID));
 
@@ -442,7 +460,7 @@ namespace Email_Client_01
             }
         }
 
-        private async Task<IMailFolder> getDraftFolder(CancellationToken cancellationToken)
+        private async Task<IMailFolder?> getDraftFolder(CancellationToken cancellationToken)
         {
             try
             {
@@ -540,7 +558,13 @@ namespace Email_Client_01
             try
             {
                 MimeMessage message = BuildDraftMessage();
-                IMailFolder draftsFolder = await getDraftFolder(CancellationToken.None);
+                IMailFolder? draftsFolder = await getDraftFolder(CancellationToken.None);
+                if(draftsFolder == null)
+                {
+                    MessageBox.Show("\"Draft(s)\" folder not found");
+                    return;
+
+                }
                 await draftsFolder.OpenAsync(FolderAccess.ReadWrite);
                 await draftsFolder.AppendAsync(message, MessageFlags.Draft);
             }

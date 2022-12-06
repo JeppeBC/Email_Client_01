@@ -54,8 +54,6 @@ namespace Email_Client_01
             return client;
         }
 
-
-
         public static class JsonFileReader
         {
             public static T? Read<T>(string filePath)
@@ -65,6 +63,16 @@ namespace Email_Client_01
                 // so use the .Net version : System.Text.Json....
                 string json = File.ReadAllText(filePath);
                 return JsonConvert.DeserializeObject<T>(json);
+            }
+        }
+
+        public static class JsonFileWriter
+        {
+
+            public static void Write<T>(string filePath, T jsonDeserializedObject)
+            {
+                var newJson = JsonConvert.SerializeObject(jsonDeserializedObject);
+                System.IO.File.WriteAllText(filePath, newJson);
             }
         }
         public enum KnownFolder
@@ -242,6 +250,8 @@ namespace Email_Client_01
         }
 
 
+        // takes listbox, translates it into a radiolistbox and prompts the user to select one item.
+        // SelectedFolder is mutated to match the user's choice. DialogResult returned. 
         public static DialogResult RadioListBoxInput(ListBox lb, ref string? selectedFolder)
         {
             Form form = new Form();
@@ -268,13 +278,13 @@ namespace Email_Client_01
             buttonCancel.DialogResult = DialogResult.Cancel;
 
 
-            RBL.SetBounds(25, label.Height*2, RBL.Width, RBL.Height);
+            RBL.SetBounds(25, label.Height * 2, RBL.Width, RBL.Height);
             buttonOk.SetBounds(400, 160, 160, 60);
             buttonCancel.SetBounds(400, 240, 160, 60);
 
 
             label.AutoSize = true;
-            form.ClientSize = new Size((int)(Math.Max(RBL.Width, label.Width) * 2), (int)((RBL.Height + label.Height)*1.25));
+            form.ClientSize = new Size((int)(Math.Max(RBL.Width, label.Width) * 2), (int)((RBL.Height + label.Height) * 1.25));
             form.FormBorderStyle = FormBorderStyle.FixedDialog;
             form.StartPosition = FormStartPosition.CenterScreen;
             form.MinimizeBox = false;
@@ -289,7 +299,6 @@ namespace Email_Client_01
 
             selectedFolder = RBL.SelectedItem.ToString();
             return dialogResult;
-
         }
 
 

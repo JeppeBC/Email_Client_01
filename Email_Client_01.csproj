@@ -19,6 +19,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Credentials.settings</DependentUpon>
     </Compile>
+    <Compile Update="Properties\Time.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Time.settings</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -42,6 +47,10 @@
     <None Update="Properties\Credentials.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Credentials.Designer.cs</LastGenOutput>
+    </None>
+    <None Update="Properties\Time.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Time.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
 

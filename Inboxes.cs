@@ -8,6 +8,7 @@ using Org.BouncyCastle.Asn1.X509;
 using System;
 using System.DirectoryServices;
 using System.Drawing.Design;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Windows.Forms;
 using System.Xml.Linq;
@@ -28,6 +29,8 @@ namespace Email_Client_01
         private bool clicked = false; // for double clicks handling
         ImapClient client;
         bool loadingFolders = false;
+        bool loadingMessages = false;
+        IMailFolder? folder; // current folder (mostly bookkeeping for loading)
         int filterCount = 0;
 
 
@@ -36,6 +39,7 @@ namespace Email_Client_01
         private Inboxes(ImapClient client)
         {
             this.client = client;
+            folder = null;
             
             InitializeComponent();
             // todo change this to the idle, active and ui threads. Add checks that this connection does not break / expire
@@ -78,6 +82,7 @@ namespace Email_Client_01
                 var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
 
 
+                // TODO optimize this. Also fix time.
                 foreach (var filter in FilterList)
                 {
                     foreach (var folder in folders)
@@ -86,14 +91,16 @@ namespace Email_Client_01
                         if (!folder.Exists) continue;
                         foreach (var f in folders)
                         {
-                            if (!f.Exists) continue;
-                            if (f == folder)
+                            if (!f.Exists) continue; // folder does not exist, cannot filter
+                            if (f == folder) // same folder, no need for filtering
                                 continue;
                             if (filter.DestinationFolder == f.FullName)
                             {
                                 var query = GetSearchQueryFromFilter(filter);
                                 await folder.OpenAsync(FolderAccess.ReadWrite);
-                                foreach (var uid in folder.Search(query))
+                                IList<UniqueId> recent = folder.Search(MailKit.Search.SearchQuery.DeliveredAfter(Properties.Time.Default.Date));
+                                if (recent.Count <= 0 || recent == null) continue;
+                                foreach (var uid in folder.Search(recent, query))
                                 {
                                     await folder.MoveToAsync(uid, f);
                                 }
@@ -132,7 +139,9 @@ namespace Email_Client_01
                 Folders.DisplayMember = "Value";
                 Folders.ValueMember = "Key";
 
-                loadingFolders = false;
+                // everything worked so far, so we can update the last sucessful login time
+                Properties.Time.Default.Date = DateTime.Now;
+
                 RetrieveMessagesFromFolder();
             }
             catch (Exception ex)
@@ -150,7 +159,9 @@ namespace Email_Client_01
             finally
             {
                 this.Cursor = Cursors.Default;
+                loadingFolders=false;
             }
+
         }
 
 
@@ -191,9 +202,12 @@ namespace Email_Client_01
             return null;
         }
 
-        private string GetFlags(IMessageSummary item)
+        private string? GetFlags(IMessageSummary item)
         {
             string FlagString = "";
+
+            if (item.Flags == null)
+                return null;
 
             if (item.Flags.Value.HasFlag(MessageFlags.Flagged))
             {
@@ -242,10 +256,18 @@ namespace Email_Client_01
         private string FormatInboxMessageText(IMessageSummary item)
         {
             string subject = getSubject(item);
-            string flags = GetFlags(item);
+            string? flags = GetFlags(item);
             string sender = GetSender(item);
-            string result = flags + sender + ": " + subject;
 
+            string result;
+            if(flags == null)
+            {
+                result = sender + ": " + subject;
+            }
+            else
+            {
+                result = flags + sender + ": " + subject;
+            }
             return result;
         }
 
@@ -266,18 +288,24 @@ namespace Email_Client_01
         }
 
 
+
+
         // default parameters here because we send it another method that does not care.
         // retrives messages in a folder when it is double clicked. 
         private async void RetrieveMessagesFromFolder(object sender = null!, EventArgs e = null!)
         {
             Inbox.Items.Clear();
 
+            if (loadingMessages) return; // ensure we don't start loading another batch of messages before we are done loading the current batch.
+
             this.Cursor = Cursors.WaitCursor;
+            loadingMessages = true;
             try
             {
                 Inbox.Items.Clear();
 
-                var folder = GetCurrentFolder();
+                
+                folder = GetCurrentFolder();
                 await folder.OpenAsync(FolderAccess.ReadOnly);
 
                 var messages = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
@@ -293,7 +321,7 @@ namespace Email_Client_01
                     foreach (var item in messages.Reverse())
                     {
                         // Remove messages not flagged as draft.
-                        if (!item.Flags.Value.HasFlag(MessageFlags.Draft))
+                        if (item.Flags != null && !item.Flags.Value.HasFlag(MessageFlags.Draft))
                         {
                             folder.AddFlags(item.UniqueId, MessageFlags.Draft, true);
                             folder.Expunge();
@@ -326,6 +354,11 @@ namespace Email_Client_01
             finally
             {
                 this.Cursor = Cursors.Default;
+                loadingMessages = false;
+                if(folder != GetCurrentFolder()) // we have since we started loading selected a new folder, so we load that in instead
+                {
+                    RetrieveMessagesFromFolder(sender, e);
+                }
             }
         }
 
@@ -355,7 +388,7 @@ namespace Email_Client_01
                 //if the message is draft, open as draft!
                 if (folder.Attributes.HasFlag(FolderAttributes.Drafts))
                 {
-                    new NewMail(msg, isDraft: true).Show();
+                    new NewMail(msg, isDraft: true, client).Show();
                 }
                 else
                 {
@@ -446,9 +479,9 @@ namespace Email_Client_01
 
 
         // TODO CAN WE RENAME THIS WINDOW FORMS SPECIFIC METHOD?
-        private void Folders_SelectedIndexChanged(object sender, EventArgs e)
+        private void Folders_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            if(!loadingFolders)
+            if(!loadingFolders && sender != null)
             {
                 RetrieveMessagesFromFolder(sender, e);
             }
@@ -470,7 +503,7 @@ namespace Email_Client_01
                 await folder.OpenAsync(FolderAccess.ReadWrite);
 
                 // toggle the flag
-                if (message.Flags.Value.HasFlag(MessageFlags.Flagged))
+                if (message.Flags != null && message.Flags.Value.HasFlag(MessageFlags.Flagged))
                 {
                     await folder.RemoveFlagsAsync(message.UniqueId, MessageFlags.Flagged, false);
                 }
@@ -604,6 +637,10 @@ namespace Email_Client_01
 
         private void AddFilter(string searchQuery)
         {
+            // When LOADING MESSAGES when choosing filters
+            var InitialFolder = Folders.SelectedItem;
+
+
             // read existing json data
             var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
 
@@ -618,12 +655,18 @@ namespace Email_Client_01
             // Read the entire file and De-serialize to list of filters
             var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
 
-
-            string DestinationFolder = "";
+            // the 5 commented lines here about the SelecteDIndexChanged and selectedItem is if we do not want to load in the messages as we select them
+/*          var selectedFolder = Folders.SelectedItem;
+            Folders.SelectedIndexChanged -= Folders_SelectedIndexChanged;*/
+            string? DestinationFolder = "";
             if(!(Utility.RadioListBoxInput(Folders, ref DestinationFolder) == DialogResult.OK))
             {
+/*                Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;*/
                 return;
             }
+/*            Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;
+            Folders.SelectedItem = selectedFolder;*/
+
             // this should mutate DestinationFolder to the stringified selected item of the data source
             // In our case the folder name is something like: "[Folder.Fullname, Displayed name]";
             if (string.IsNullOrEmpty(DestinationFolder)) return; // guard
@@ -666,6 +709,7 @@ namespace Email_Client_01
             if (SearchContentCheck.Checked)
                 searchLocations.Add("Body");
 
+
             FilterList.Add(new Filter()
             {
                 Name = FilterName,
@@ -676,14 +720,29 @@ namespace Email_Client_01
 
 
             // sort by destination folder, so we can filter all mails to the same folder in one swoop. 
-            FilterList.Sort((x, y) => x.DestinationFolder.CompareTo(y.DestinationFolder));
+            FilterList.Sort((x, y) =>
+            {
+                if(!string.IsNullOrEmpty(x.DestinationFolder))
+                    return x.DestinationFolder.CompareTo(y.DestinationFolder);
+                return 0;
+            });
 
 
-            // Update json data string
-            var newJson = JsonConvert.SerializeObject(FilterList);
-            System.IO.File.WriteAllText(filepath, newJson);
+            // Update json file with new deserialized object
+            Utility.JsonFileWriter.Write<List<Filter>>(filepath, FilterList);
+
+            // Update the listbox immediately, so we don't have to rely on the guard and untick and tick the show checkbox
+            FilterListbox.Items.Add(FilterName);
 
             filterCount += 1;
+
+            // LOADING MESSAGES: Load the initial folder back
+            if(InitialFolder != Folders.SelectedValue)
+            {
+                Folders.SelectedItem = InitialFolder;
+                RetrieveMessagesFromFolder();
+            }
+            
 
         }
         private void SearchButton_Click(object sender, EventArgs e)
@@ -801,9 +860,10 @@ namespace Email_Client_01
             e.DrawFocusRectangle();
 
             // failsafe
-            if (e.Index < 0)
-                return;
-            String item = Inbox.Items[e.Index].ToString();
+            if (e.Index < 0) return;
+            String? item = Inbox.Items[e.Index].ToString();
+
+            if (string.IsNullOrEmpty(item)) return; // another guard
             int indexOfChar = item.IndexOf(':');
 
 
@@ -849,6 +909,7 @@ namespace Email_Client_01
 
         private void Folders_DragEnter(object sender, DragEventArgs e)
         {
+            if (e.Data == null) return; // guard
             if (e.Data.GetDataPresent(DataFormats.Text))
             {
                 e.Effect = DragDropEffects.Copy;
@@ -1009,8 +1070,7 @@ namespace Email_Client_01
                     filterCount -= 1;
 
                     // We need to serialize and write the updated version to file
-                    var newJson = JsonConvert.SerializeObject(FilterList);
-                    System.IO.File.WriteAllText(filepath, newJson);
+                    Utility.JsonFileWriter.Write<List<Filter>>(filepath, FilterList);
 
                     // remove from listbox too
                     FilterListbox.Items.Remove(filter.Name);
