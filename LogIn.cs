@@ -44,6 +44,7 @@ namespace Email_Client_01
         {
             PasswordTextBox.ResetText();
             PasswordTextBox.ForeColor = System.Drawing.Color.Black;
+
         }
 
         private void LogIn_button(object sender, EventArgs e)
@@ -146,6 +147,24 @@ namespace Email_Client_01
             }
 
             
+        }
+
+        private void Password_Enter_Click(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                LogInButton.PerformClick();
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void Email_Press_enter(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                LogInButton.PerformClick();
+                e.SuppressKeyPress = true;
+            }
         }
     }
 }

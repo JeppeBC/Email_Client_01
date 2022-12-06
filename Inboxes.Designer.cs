@@ -46,19 +46,22 @@
             this.SearchSenderCheck = new System.Windows.Forms.CheckBox();
             this.SearchSubjectCheck = new System.Windows.Forms.CheckBox();
             this.SearchContentCheck = new System.Windows.Forms.CheckBox();
-            this.Priority = new System.Windows.Forms.ListBox();
             this.PrioritySelecter = new System.Windows.Forms.ComboBox();
             this.InboxGrid = new System.Windows.Forms.DataGridView();
-            this.emailBindingSource = new System.Windows.Forms.BindingSource(this.components);
-            this.emailSenderBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.Flags = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Sender = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Subject = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Date = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.emailBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.emailSenderBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.PriorityGrid = new System.Windows.Forms.DataGridView();
+            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.InboxGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.emailBindingSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.emailSenderBindingSource)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PriorityGrid)).BeginInit();
             this.SuspendLayout();
             // 
             // toolStrip1
@@ -156,10 +159,10 @@
             // Compose
             // 
             this.Compose.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
-            this.Compose.Location = new System.Drawing.Point(16, 90);
+            this.Compose.Location = new System.Drawing.Point(10, 90);
             this.Compose.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Compose.Name = "Compose";
-            this.Compose.Size = new System.Drawing.Size(182, 55);
+            this.Compose.Size = new System.Drawing.Size(188, 55);
             this.Compose.TabIndex = 9;
             this.Compose.Text = "Compose";
             this.Compose.UseVisualStyleBackColor = false;
@@ -170,10 +173,10 @@
             this.Folders.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
             this.Folders.FormattingEnabled = true;
             this.Folders.ItemHeight = 25;
-            this.Folders.Location = new System.Drawing.Point(16, 164);
+            this.Folders.Location = new System.Drawing.Point(10, 155);
             this.Folders.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Folders.Name = "Folders";
-            this.Folders.Size = new System.Drawing.Size(180, 254);
+            this.Folders.Size = new System.Drawing.Size(186, 254);
             this.Folders.TabIndex = 10;
             this.Folders.SelectedIndexChanged += new System.EventHandler(this.Folders_SelectedIndexChanged);
             // 
@@ -204,13 +207,14 @@
             // SearchSenderCheck
             // 
             this.SearchSenderCheck.AutoSize = true;
+            this.SearchSenderCheck.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.SearchSenderCheck.Location = new System.Drawing.Point(582, 7);
             this.SearchSenderCheck.Margin = new System.Windows.Forms.Padding(2);
             this.SearchSenderCheck.Name = "SearchSenderCheck";
             this.SearchSenderCheck.Size = new System.Drawing.Size(93, 29);
             this.SearchSenderCheck.TabIndex = 13;
             this.SearchSenderCheck.Text = "Sender";
-            this.SearchSenderCheck.UseVisualStyleBackColor = true;
+            this.SearchSenderCheck.UseVisualStyleBackColor = false;
             // 
             // SearchSubjectCheck
             // 
@@ -234,17 +238,6 @@
             this.SearchContentCheck.Text = "Content";
             this.SearchContentCheck.UseVisualStyleBackColor = true;
             // 
-            // Priority
-            // 
-            this.Priority.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
-            this.Priority.FormattingEnabled = true;
-            this.Priority.ItemHeight = 25;
-            this.Priority.Location = new System.Drawing.Point(16, 465);
-            this.Priority.Name = "Priority";
-            this.Priority.Size = new System.Drawing.Size(180, 179);
-            this.Priority.TabIndex = 16;
-            this.Priority.DoubleClick += new System.EventHandler(this.Priority_DoubleClick);
-            // 
             // PrioritySelecter
             // 
             this.PrioritySelecter.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
@@ -255,26 +248,64 @@
             "3rd",
             "4th",
             "5th"});
-            this.PrioritySelecter.Location = new System.Drawing.Point(16, 426);
+            this.PrioritySelecter.Location = new System.Drawing.Point(10, 417);
             this.PrioritySelecter.Name = "PrioritySelecter";
-            this.PrioritySelecter.Size = new System.Drawing.Size(182, 33);
+            this.PrioritySelecter.Size = new System.Drawing.Size(188, 33);
             this.PrioritySelecter.TabIndex = 17;
+            this.PrioritySelecter.Text = "Priorities";
             this.PrioritySelecter.SelectedIndexChanged += new System.EventHandler(this.PriorityClicked);
             // 
             // InboxGrid
             // 
+            this.InboxGrid.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
             this.InboxGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.InboxGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Flags,
             this.Sender,
             this.Subject,
-            this.Time});
-            this.InboxGrid.Location = new System.Drawing.Point(293, 143);
+            this.Date});
+            this.InboxGrid.Location = new System.Drawing.Point(205, 90);
             this.InboxGrid.Name = "InboxGrid";
+            this.InboxGrid.RowHeadersVisible = false;
             this.InboxGrid.RowHeadersWidth = 62;
             this.InboxGrid.RowTemplate.Height = 33;
-            this.InboxGrid.Size = new System.Drawing.Size(764, 395);
+            this.InboxGrid.Size = new System.Drawing.Size(936, 568);
             this.InboxGrid.TabIndex = 18;
+            this.InboxGrid.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.InboxGrid_Click);
+            this.InboxGrid.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.InboxGrid_DoubleClick);
+            // 
+            // Flags
+            // 
+            this.Flags.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.Flags.FillWeight = 50F;
+            this.Flags.HeaderText = "Flags";
+            this.Flags.MinimumWidth = 8;
+            this.Flags.Name = "Flags";
+            this.Flags.Width = 89;
+            // 
+            // Sender
+            // 
+            this.Sender.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Sender.FillWeight = 31.57895F;
+            this.Sender.HeaderText = "Sender";
+            this.Sender.MinimumWidth = 8;
+            this.Sender.Name = "Sender";
+            // 
+            // Subject
+            // 
+            this.Subject.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Subject.FillWeight = 31.57895F;
+            this.Subject.HeaderText = "Subject";
+            this.Subject.MinimumWidth = 8;
+            this.Subject.Name = "Subject";
+            // 
+            // Date
+            // 
+            this.Date.FillWeight = 236.8421F;
+            this.Date.HeaderText = "Date";
+            this.Date.MinimumWidth = 8;
+            this.Date.Name = "Date";
+            this.Date.Width = 200;
             // 
             // emailBindingSource
             // 
@@ -284,33 +315,37 @@
             // 
             this.emailSenderBindingSource.DataSource = typeof(Email_Client_01.EmailSender);
             // 
-            // Flags
+            // PriorityGrid
             // 
-            this.Flags.HeaderText = "Flags";
-            this.Flags.MinimumWidth = 8;
-            this.Flags.Name = "Flags";
-            this.Flags.Width = 150;
+            this.PriorityGrid.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
+            this.PriorityGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.PriorityGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dataGridViewTextBoxColumn1,
+            this.dataGridViewTextBoxColumn2});
+            this.PriorityGrid.Location = new System.Drawing.Point(10, 456);
+            this.PriorityGrid.Name = "PriorityGrid";
+            this.PriorityGrid.RowHeadersVisible = false;
+            this.PriorityGrid.RowHeadersWidth = 62;
+            this.PriorityGrid.RowTemplate.Height = 33;
+            this.PriorityGrid.Size = new System.Drawing.Size(190, 202);
+            this.PriorityGrid.TabIndex = 19;
+            this.PriorityGrid.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.PriorityGrid_Click);
+            this.PriorityGrid.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.PriorityGrid_CellContentClick);
+            this.PriorityGrid.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.PriorityGrid_DoubleClick);
             // 
-            // Sender
+            // dataGridViewTextBoxColumn1
             // 
-            this.Sender.HeaderText = "Sender";
-            this.Sender.MinimumWidth = 8;
-            this.Sender.Name = "Sender";
-            this.Sender.Width = 150;
+            this.dataGridViewTextBoxColumn1.HeaderText = "Priority";
+            this.dataGridViewTextBoxColumn1.MinimumWidth = 8;
+            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            this.dataGridViewTextBoxColumn1.Width = 70;
             // 
-            // Subject
+            // dataGridViewTextBoxColumn2
             // 
-            this.Subject.HeaderText = "Subject";
-            this.Subject.MinimumWidth = 8;
-            this.Subject.Name = "Subject";
-            this.Subject.Width = 150;
-            // 
-            // Time
-            // 
-            this.Time.HeaderText = "Time";
-            this.Time.MinimumWidth = 8;
-            this.Time.Name = "Time";
-            this.Time.Width = 150;
+            this.dataGridViewTextBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewTextBoxColumn2.HeaderText = "Subject";
+            this.dataGridViewTextBoxColumn2.MinimumWidth = 8;
+            this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
             // 
             // Inboxes
             // 
@@ -319,9 +354,9 @@
             this.AutoSize = true;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.ClientSize = new System.Drawing.Size(1153, 670);
+            this.Controls.Add(this.PriorityGrid);
             this.Controls.Add(this.InboxGrid);
             this.Controls.Add(this.PrioritySelecter);
-            this.Controls.Add(this.Priority);
             this.Controls.Add(this.SearchContentCheck);
             this.Controls.Add(this.SearchSubjectCheck);
             this.Controls.Add(this.SearchSenderCheck);
@@ -341,6 +376,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.InboxGrid)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.emailBindingSource)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.emailSenderBindingSource)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PriorityGrid)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -363,14 +399,16 @@
         private CheckBox SearchSubjectCheck;
         private CheckBox SearchContentCheck;
         private ToolStripButton MoveToTrashButton;
-        private ListBox Priority;
         private ComboBox PrioritySelecter;
         private DataGridView InboxGrid;
         private BindingSource emailBindingSource;
         private BindingSource emailSenderBindingSource;
+        private DataGridView PriorityGrid;
+        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private DataGridViewTextBoxColumn Flags;
         private DataGridViewTextBoxColumn Sender;
         private DataGridViewTextBoxColumn Subject;
-        private DataGridViewTextBoxColumn Time;
+        private DataGridViewTextBoxColumn Date;
     }
 }

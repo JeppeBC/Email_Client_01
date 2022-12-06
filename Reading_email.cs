@@ -1,7 +1,8 @@
 ﻿using MailKit;
 using MailKit.Net.Imap;
 using MimeKit;
-
+using System.Net;
+using System.Net.Mail;
 
 namespace Email_Client_01
 {
@@ -218,6 +219,11 @@ namespace Email_Client_01
         }
 
         private void TrashButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button6_Click(object sender, EventArgs e)
         {
 
         }

@@ -3,7 +3,9 @@ using MailKit.Net.Imap;
 using MailKit.Search;
 using MimeKit;
 using System;
+using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.Metrics;
 using System.DirectoryServices;
 using System.Windows.Forms;
 using System.Xml.Linq;
@@ -230,6 +232,7 @@ namespace Email_Client_01
                     if (messages.Count <= 0)
                     {
                         Inbox.Items.Add("This folder is empty!");
+
                         Inbox.Enabled = false;
                     }
                     else if(folder.Attributes.HasFlag(FolderAttributes.Drafts))
@@ -241,8 +244,10 @@ namespace Email_Client_01
                         /*                        addFlagsBt.visible = true;*/
                         messageSummaries = messages;
                         foreach (var item in messages.Reverse())
-                        {
-                           Inbox.Items.Add(FormatInboxMessageText(item));
+                        {   
+                           InboxGrid.Rows.Add(GetFlags(item), item.Envelope.Sender, item.Envelope.Subject, item.Envelope.Date);
+
+                           //Inbox.Items.Add(FormatInboxMessageText(item));
                         }
                     }
 
@@ -273,10 +278,10 @@ namespace Email_Client_01
 
 
                     // Get the specific message
-                    var messageId = (((ListBox)sender).SelectedIndex); // 2 parenthesis warns about missing ';' for some reason.
-                    var messageItem = messageSummaries[messageSummaries.Count - messageId - 1];
+                    var messageId = (((DataGridView)sender).SelectedRows); // 2 parenthesis warns about missing ';' for some reason.
+                    var messageItem = messageSummaries[messageSummaries.Count - InboxGrid.CurrentRow.Index - 1];
 
-                    MessageBox.Show(messageItem.NormalizedSubject);
+                    //MessageBox.Show(messageItem.NormalizedSubject);
 
                     // Add "Seen" flag to the message
                     var folder = await client.GetFolderAsync(messageItem.Folder.ToString());
@@ -306,8 +311,8 @@ namespace Email_Client_01
 
 
         private void Form1_Load(object sender, EventArgs e)
-        {   
-         
+        {
+            InboxGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
         }
 
         private void Prime_Mail_Homepage(object sender, EventArgs e)
@@ -623,28 +628,44 @@ namespace Email_Client_01
             }
         }
 
+        private void InboxGrid_DoubleClick(object sender, EventArgs e)
+        {
+            //opens Reading_email
+            ReadMessage(sender, e);
+        }
+
+        private void InboxGrid_Click(object sender, DataGridViewCellEventArgs e)
+        {
+            InboxGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        }
+
         private void PriorityClicked(object sender, EventArgs e)
         {
             // Take selected email and selected priority
             Object Selecteditem = PrioritySelecter.SelectedItem;
 
-            var msgIndex = Inbox.SelectedIndex;
+            var msgIndex = InboxGrid.CurrentRow.Index;
             Object PriorityMsg = Inbox.Items[msgIndex];
 
             // Display the selected mail in listbox "Priority" as "priority + subject of email"
-            Priority.Items.Add(Selecteditem.ToString() + ": " + PriorityMsg.ToString());
+            PriorityGrid.Rows.Add(Selecteditem, PriorityMsg);
 
-            Priority.Sorted = true;
+            PriorityGrid.Sort(PriorityGrid.Columns[0], ListSortDirection.Ascending);
         }
-
-        private void Priority_DoubleClick(object sender, EventArgs e)
+        
+        private void PriorityGrid_Click(object sender, DataGridViewCellEventArgs e)
         {
-
-            ReadMessage(sender, e);
-
-            //Object msgIndex = Priority.SelectedIndex;
-            //Priority.Items.Remove(msgIndex);
+            PriorityGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
         }
 
+        private void PriorityGrid_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            PriorityGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        }
+        
+        private void PriorityGrid_DoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            ReadMessage(sender, e);
+        }
     }
 }

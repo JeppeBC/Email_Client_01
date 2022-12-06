@@ -64,7 +64,7 @@
             // SubjectTextBox
             // 
             this.SubjectTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.SubjectTextBox.Location = new System.Drawing.Point(24, 143);
+            this.SubjectTextBox.Location = new System.Drawing.Point(24, 148);
             this.SubjectTextBox.Name = "SubjectTextBox";
             this.SubjectTextBox.Size = new System.Drawing.Size(844, 31);
             this.SubjectTextBox.TabIndex = 1;
@@ -81,7 +81,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(24, 115);
+            this.label2.Location = new System.Drawing.Point(24, 120);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(74, 25);
             this.label2.TabIndex = 3;
@@ -90,7 +90,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(24, 172);
+            this.label3.Location = new System.Drawing.Point(24, 182);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(86, 25);
             this.label3.TabIndex = 4;
@@ -100,7 +100,7 @@
             // MessageTextBox
             // 
             this.MessageTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.MessageTextBox.Location = new System.Drawing.Point(24, 201);
+            this.MessageTextBox.Location = new System.Drawing.Point(24, 210);
             this.MessageTextBox.Name = "MessageTextBox";
             this.MessageTextBox.Size = new System.Drawing.Size(844, 379);
             this.MessageTextBox.TabIndex = 5;
@@ -163,12 +163,13 @@
             this.button6.TabIndex = 11;
             this.button6.Text = "Mark as unread";
             this.button6.UseVisualStyleBackColor = true;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
             // 
             // DateTextBox
             // 
             this.DateTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.DateTextBox.Location = new System.Drawing.Point(900, 30);
-            this.DateTextBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.DateTextBox.Margin = new System.Windows.Forms.Padding(2);
             this.DateTextBox.Name = "DateTextBox";
             this.DateTextBox.Size = new System.Drawing.Size(254, 31);
             this.DateTextBox.TabIndex = 12;
@@ -187,7 +188,7 @@
             // 
             this.CCTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.CCTextBox.Location = new System.Drawing.Point(900, 84);
-            this.CCTextBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.CCTextBox.Margin = new System.Windows.Forms.Padding(2);
             this.CCTextBox.Name = "CCTextBox";
             this.CCTextBox.Size = new System.Drawing.Size(256, 31);
             this.CCTextBox.TabIndex = 14;
@@ -196,8 +197,8 @@
             // ToTextBox
             // 
             this.ToTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
-            this.ToTextBox.Location = new System.Drawing.Point(24, 84);
-            this.ToTextBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.ToTextBox.Location = new System.Drawing.Point(24, 87);
+            this.ToTextBox.Margin = new System.Windows.Forms.Padding(2);
             this.ToTextBox.Name = "ToTextBox";
             this.ToTextBox.Size = new System.Drawing.Size(844, 31);
             this.ToTextBox.TabIndex = 15;
@@ -216,7 +217,7 @@
             // ToLabel
             // 
             this.ToLabel.AutoSize = true;
-            this.ToLabel.Location = new System.Drawing.Point(24, 58);
+            this.ToLabel.Location = new System.Drawing.Point(24, 64);
             this.ToLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.ToLabel.Name = "ToLabel";
             this.ToLabel.Size = new System.Drawing.Size(34, 25);
@@ -229,7 +230,7 @@
             this.AttachmentListBox.FormattingEnabled = true;
             this.AttachmentListBox.ItemHeight = 25;
             this.AttachmentListBox.Location = new System.Drawing.Point(900, 201);
-            this.AttachmentListBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.AttachmentListBox.Margin = new System.Windows.Forms.Padding(2);
             this.AttachmentListBox.Name = "AttachmentListBox";
             this.AttachmentListBox.Size = new System.Drawing.Size(256, 279);
             this.AttachmentListBox.TabIndex = 18;
@@ -249,7 +250,7 @@
             // DownloadAttachmentButton
             // 
             this.DownloadAttachmentButton.Location = new System.Drawing.Point(900, 487);
-            this.DownloadAttachmentButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.DownloadAttachmentButton.Margin = new System.Windows.Forms.Padding(2);
             this.DownloadAttachmentButton.Name = "DownloadAttachmentButton";
             this.DownloadAttachmentButton.Size = new System.Drawing.Size(254, 36);
             this.DownloadAttachmentButton.TabIndex = 20;
@@ -261,7 +262,7 @@
             // DownloadAllAttachmentsButton
             // 
             this.DownloadAllAttachmentsButton.Location = new System.Drawing.Point(900, 532);
-            this.DownloadAllAttachmentsButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.DownloadAllAttachmentsButton.Margin = new System.Windows.Forms.Padding(2);
             this.DownloadAllAttachmentsButton.Name = "DownloadAllAttachmentsButton";
             this.DownloadAllAttachmentsButton.Size = new System.Drawing.Size(252, 36);
             this.DownloadAllAttachmentsButton.TabIndex = 21;
@@ -272,7 +273,7 @@
             // TrashButton
             // 
             this.TrashButton.Location = new System.Drawing.Point(826, 594);
-            this.TrashButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.TrashButton.Margin = new System.Windows.Forms.Padding(2);
             this.TrashButton.Name = "TrashButton";
             this.TrashButton.Size = new System.Drawing.Size(89, 58);
             this.TrashButton.TabIndex = 22;
