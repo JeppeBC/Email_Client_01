@@ -25,7 +25,6 @@ namespace Email_Client_01.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1989-01-01")]
         public global::System.DateTime Date {
             get {
                 return ((global::System.DateTime)(this["Date"]));

@@ -6,6 +6,7 @@ using MimeKit;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.X509;
 using System;
+using System.Diagnostics;
 using System.DirectoryServices;
 using System.Drawing.Design;
 using System.Reflection;
@@ -69,48 +70,6 @@ namespace Email_Client_01
                 Dictionary<string, string> foldersMap = new Dictionary<string, string>();
 
 
-                var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
-
-                // if file does not exist
-                if (!File.Exists(filepath))
-                {
-                    // create the file
-                    File.Create(filepath).Close();
-                }
-
-                // Read the entire file and De-serialize to list of filters
-                var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
-
-
-                // TODO optimize this. Also fix time.
-                foreach (var filter in FilterList)
-                {
-                    foreach (var folder in folders)
-                    {
-
-                        if (!folder.Exists) continue;
-                        foreach (var f in folders)
-                        {
-                            if (!f.Exists) continue; // folder does not exist, cannot filter
-                            if (f == folder) // same folder, no need for filtering
-                                continue;
-                            if (filter.DestinationFolder == f.FullName)
-                            {
-                                var query = GetSearchQueryFromFilter(filter);
-                                await folder.OpenAsync(FolderAccess.ReadWrite);
-                                IList<UniqueId> recent = folder.Search(MailKit.Search.SearchQuery.DeliveredAfter(Properties.Time.Default.Date));
-                                if (recent.Count <= 0 || recent == null) continue;
-                                foreach (var uid in folder.Search(recent, query))
-                                {
-                                    await folder.MoveToAsync(uid, f);
-                                }
-                                break;
-                            }
-
-                        }
-                    }
-                }
-
                 foreach (var folder in folders)
                 {
                     if (folder.Exists)
@@ -121,10 +80,13 @@ namespace Email_Client_01
                         folder.Open(FolderAccess.ReadOnly);
 
 
-                        foreach (var uid in folder.Search(MailKit.Search.SearchQuery.NotSeen))
+/*                        stopwatch.Restart();*/
+                        foreach (var uid in folder.Search(SearchQuery.NotSeen))
                         {
                             unreadCount++;
                         }
+/*                        stopwatch.Stop();
+                        MessageBox.Show(stopwatch.ElapsedMilliseconds.ToString());*/
 
                         var folderName = folder.FullName.Substring(folder.FullName.LastIndexOf("/") + 1);
                         folderName += " (" + unreadCount + ")";
@@ -141,6 +103,8 @@ namespace Email_Client_01
 
                 // everything worked so far, so we can update the last sucessful login time
                 Properties.Time.Default.Date = DateTime.Now;
+                Properties.Time.Default.Save();
+
 
                 RetrieveMessagesFromFolder();
             }
@@ -165,7 +129,7 @@ namespace Email_Client_01
         }
 
 
-        private MailKit.Search.SearchQuery? GetSearchQueryFromFilter(Filter filter)
+        private SearchQuery? GetSearchQueryFromFilter(Filter filter)
         {
             if (filter.SearchLocations == null)
             {
@@ -296,7 +260,7 @@ namespace Email_Client_01
         {
             Inbox.Items.Clear();
 
-            if (loadingMessages) return; // ensure we don't start loading another batch of messages before we are done loading the current batch.
+            if (loadingMessages) return; // ensure we don't start loading another batch of messages before we are done loading the current batch. Even prevents queueing of many folders that need to be loaded in
 
             this.Cursor = Cursors.WaitCursor;
             loadingMessages = true;
@@ -304,21 +268,53 @@ namespace Email_Client_01
             {
                 Inbox.Items.Clear();
 
-                
                 folder = GetCurrentFolder();
-                await folder.OpenAsync(FolderAccess.ReadOnly);
+                if (!folder.Exists) return;
 
-                var messages = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
-                messageSummaries = messages;
+                await folder.OpenAsync(FolderAccess.ReadWrite);
+                
+                var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
+                // if file does not exist
+                if (!File.Exists(filepath))
+                {
+                    // create the file
+                    File.Create(filepath).Close();
+                }
+                // Read the entire file and De-serialize to list of filters
+                var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
 
-                if (messages.Count <= 0)
+
+                // optional TODO optimize the search queries so we can do these in batches.
+                // Each call to search takes about 200ms per filter (of course depending on the number of mails it is filtering)
+                foreach (var filter in FilterList)
+                {
+                    foreach (var f in folders) // find the IMailFolder from string DestinationFolder
+                    {
+                        if (f == folder) continue; // no point in moving to the same folder as we are currently in
+                        if (f.FullName != filter.DestinationFolder || !f.Exists) continue;
+                        var query = GetSearchQueryFromFilter(filter);
+                        if (query == null) continue;
+                        foreach (var uid in folder.Search(query.And(SearchQuery.DeliveredAfter(Properties.Time.Default.Date))))
+                        {
+                            await folder.MoveToAsync(uid, f);
+                        }
+                        break;
+
+                    }
+                }
+
+                // load in the mails after filtering
+                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+
+
+                if (messageSummaries.Count <= 0)
                 {
                     Inbox.Items.Add("This folder is empty!");
                 }
                 else if (folder.Attributes.HasFlag(FolderAttributes.Drafts))
                 {
-                    await folder.OpenAsync(FolderAccess.ReadWrite);
-                    foreach (var item in messages.Reverse())
+                    if(!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
+                    foreach (var item in messageSummaries.Reverse())
                     {
                         // Remove messages not flagged as draft.
                         if (item.Flags != null && !item.Flags.Value.HasFlag(MessageFlags.Draft))
@@ -328,11 +324,10 @@ namespace Email_Client_01
                         }
                         Inbox.Items.Add(FormatDraftInboxText(item));
                     }
-                    await folder.CloseAsync();
                 }
                 else
                 {
-                    foreach (var item in messages.Reverse())
+                    foreach (var item in messageSummaries.Reverse())
                     {
                        Inbox.Items.Add(FormatInboxMessageText(item));
                     }
@@ -374,13 +369,17 @@ namespace Email_Client_01
             this.Cursor = Cursors.WaitCursor;
             try
             {
-                // Add "Seen" flag to the message
-                var folder = await client.GetFolderAsync(messageItem.Folder.ToString());
-                await folder.OpenAsync(FolderAccess.ReadWrite);
+                if(folder == null) folder = GetCurrentFolder();
+
+                if(!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
+                
+                // add Seen flag to message
                 await folder.AddFlagsAsync(messageItem.UniqueId, MessageFlags.Seen, true);
 
                 // Mutate the message in the listbox, so it no longer says unread
-                // TODO
+                string currentString = (string) Inbox.Items[messageId];
+                // Remove (UNREAD) if present
+                Inbox.Items[messageId] = currentString.Replace("(UNREAD)", "").Trim();
 
                 // Get the MimeMessage from id:
                 MimeMessage msg = folder.GetMessage(messageItem.UniqueId);
@@ -441,11 +440,16 @@ namespace Email_Client_01
             this.Cursor = Cursors.WaitCursor;
             try
             {
-                var folder = await client.GetFolderAsync(msg.Folder.ToString());
-                await folder.OpenAsync(FolderAccess.ReadWrite);
+                if (folder == null) folder = GetCurrentFolder();
+                if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
+
+                // Delete the message
                 await folder.AddFlagsAsync(msg.UniqueId, MessageFlags.Deleted, true);
                 await folder.ExpungeAsync();
-                RefreshCurrentFolder();
+
+                // Instead of calling RefreshCurrentFolder(), we just remove it from the current listbox as this is faster
+                // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
+                Inbox.Items.Remove(Inbox.SelectedItem);
             }
             catch (Exception ex)
             {
@@ -498,9 +502,8 @@ namespace Email_Client_01
             this.Cursor = Cursors.WaitCursor;
             try
             {
-
-                var folder = await client.GetFolderAsync(message.Folder.ToString());
-                await folder.OpenAsync(FolderAccess.ReadWrite);
+                if (folder == null) folder = GetCurrentFolder();
+                if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
 
                 // toggle the flag
                 if (message.Flags != null && message.Flags.Value.HasFlag(MessageFlags.Flagged))
@@ -539,9 +542,8 @@ namespace Email_Client_01
             this.Cursor = Cursors.WaitCursor;
             try
             {
-                var folder = GetCurrentFolder();
-
-                folder.Open(FolderAccess.ReadWrite);
+                if (folder == null) folder = GetCurrentFolder();
+                if (!folder.IsOpen) folder.Open(FolderAccess.ReadWrite);
                 IList<UniqueId> uids = null!;
 
                 // TODO make this work on tokens in strings too, i.e. "test" should catch "testing" and not just "RE:test" or "xxx test yyy" 
@@ -733,8 +735,26 @@ namespace Email_Client_01
 
             // Update the listbox immediately, so we don't have to rely on the guard and untick and tick the show checkbox
             FilterListbox.Items.Add(FilterName);
-
             filterCount += 1;
+
+            // show the item if checkbox is checked
+            if (ShowFiltersCheckbox.Checked && filterCount > 0)
+            {
+                if (FilterListbox.Items.Count != filterCount)
+                {
+                    // remove the entries of listbox and add all. Few so performance cost is negligible. 
+                    FilterListbox.Items.Clear();
+                    foreach (var filter in FilterList)
+                    {
+                        if (!string.IsNullOrEmpty(filter.Name))
+                            FilterListbox.Items.Add(filter.Name);
+                    }
+                }
+                FilterListbox.Visible = true;
+                FilterLabel.Visible = true;
+                RemoveFilterButton.Visible = true;
+            }
+
 
             // LOADING MESSAGES: Load the initial folder back
             if(InitialFolder != Folders.SelectedValue)
@@ -947,20 +967,17 @@ namespace Email_Client_01
             this.Cursor = Cursors.WaitCursor;
             try
             {
+                if (folder == null) folder = GetCurrentFolder();
 
-                // find the unique id of message to be moved
-                var openFolder = GetCurrentFolder();
-
-                var toplevel = client.GetFolder(client.PersonalNamespaces[0]);
 
 
                 // find the folder that has "folderName", list of folders is stored as an attribute from when we loaded in the folders.
-                foreach (var folder in folders)
+                foreach (var f in folders)
                 {
-                    if (folder.FullName == folderName)
+                    if (f.FullName == folderName)
                     {
-                        await openFolder.OpenAsync(FolderAccess.ReadWrite);
-                        await openFolder.MoveToAsync(messageSummaries[messageSummaries.Count - 1 - InboxIdx].UniqueId, folder);
+                        await folder.OpenAsync(FolderAccess.ReadWrite);
+                        await folder.MoveToAsync(messageSummaries[messageSummaries.Count - 1 - InboxIdx].UniqueId, f);
                         break;
                     }
                 }
