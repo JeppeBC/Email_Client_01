@@ -658,7 +658,7 @@ namespace Email_Client_01
         }
         
         private void PriorityGrid_DoubleClick(object sender, DataGridViewCellEventArgs e)
-        {   
+        {
             // opens the specified email when doubleclicked in Prioritygrid
             ReadMessage(sender, e);
         }
