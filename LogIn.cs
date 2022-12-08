@@ -87,7 +87,12 @@ namespace Email_Client_01
             {
                 this.Hide();
                 var Inbox = Inboxes.GetInstance(client);
-                Inbox.FormClosed += (s, args) => this.Close();
+                Inbox.FormClosed += (s, args) =>
+                {
+                    Properties.Time.Default.Date = DateTime.Now;
+                    Properties.Time.Default.Save();
+                    this.Close();
+                };
                 Inbox.Show();
             }
             this.Cursor = Cursors.Default;

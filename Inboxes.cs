@@ -11,6 +11,7 @@ using System.DirectoryServices;
 using System.Drawing.Design;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Timers;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using static Email_Client_01.Utility;
@@ -34,18 +35,33 @@ namespace Email_Client_01
         IMailFolder? folder; // current folder (mostly bookkeeping for loading)
         int filterCount = 0;
 
+        // storing folders in a dictionary.
+        Dictionary<string, string>? foldersMap;
 
 
         // private construtor as we employ singleton pattern
         private Inboxes(ImapClient client)
         {
             this.client = client;
+
+            // Add timer as a way of enforcing that this client connection does not time out naturally.
+            // Normally this can happen anywhere between 10, 15, 20, 25 or even 30 min. It is not very consistent. 
+            System.Timers.Timer aTimer = new System.Timers.Timer();
+            aTimer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
+            aTimer.Interval = 300000; // every 5 min, unit is milliseconds.
+            aTimer.Enabled = true;
+
             folder = null;
-            
+
             InitializeComponent();
             // todo change this to the idle, active and ui threads. Add checks that this connection does not break / expire
             RetrieveFolders();
+        }
 
+        private void OnTimedEvent(object? sender, ElapsedEventArgs e)
+        {
+            // Dummy ping the server to prevent timing out
+            client.NoOp();
         }
 
 
@@ -57,6 +73,7 @@ namespace Email_Client_01
         }
 
         // retrives all the folder names and add to the listbox
+        // retrives all the folder names and add to the listbox
         private async void RetrieveFolders()
         {
             this.Cursor = Cursors.WaitCursor;
@@ -67,7 +84,7 @@ namespace Email_Client_01
                 folders = await client.GetFoldersAsync(new FolderNamespace('.', ""));
 
                 // storing folders in a dictionary.
-                Dictionary<string, string> foldersMap = new Dictionary<string, string>();
+                foldersMap = new Dictionary<string, string>();
 
 
                 foreach (var folder in folders)
@@ -79,14 +96,10 @@ namespace Email_Client_01
                         // counting number of unread messages, the time this takes is noticeable #TODO
                         folder.Open(FolderAccess.ReadOnly);
 
-
-/*                        stopwatch.Restart();*/
                         foreach (var uid in folder.Search(SearchQuery.NotSeen))
                         {
                             unreadCount++;
                         }
-/*                        stopwatch.Stop();
-                        MessageBox.Show(stopwatch.ElapsedMilliseconds.ToString());*/
 
                         var folderName = folder.FullName.Substring(folder.FullName.LastIndexOf("/") + 1);
                         folderName += " (" + unreadCount + ")";
@@ -100,11 +113,6 @@ namespace Email_Client_01
                 // The value and keys
                 Folders.DisplayMember = "Value";
                 Folders.ValueMember = "Key";
-
-                // everything worked so far, so we can update the last sucessful login time
-                Properties.Time.Default.Date = DateTime.Now;
-                Properties.Time.Default.Save();
-
 
                 RetrieveMessagesFromFolder();
             }
@@ -123,7 +131,7 @@ namespace Email_Client_01
             finally
             {
                 this.Cursor = Cursors.Default;
-                loadingFolders=false;
+                loadingFolders = false;
             }
 
         }
@@ -165,6 +173,7 @@ namespace Email_Client_01
             }
             return null;
         }
+
 
         private string? GetFlags(IMessageSummary item)
         {
@@ -224,7 +233,7 @@ namespace Email_Client_01
             string sender = GetSender(item);
 
             string result;
-            if(flags == null)
+            if (flags == null)
             {
                 result = sender + ": " + subject;
             }
@@ -234,6 +243,7 @@ namespace Email_Client_01
             }
             return result;
         }
+
 
         private string FormatDraftInboxText(IMessageSummary item)
         {
@@ -256,6 +266,8 @@ namespace Email_Client_01
 
         // default parameters here because we send it another method that does not care.
         // retrives messages in a folder when it is double clicked. 
+        // default parameters here because we send it another method that does not care.
+        // retrives messages in a folder when it is double clicked. 
         private async void RetrieveMessagesFromFolder(object sender = null!, EventArgs e = null!)
         {
             Inbox.Items.Clear();
@@ -272,7 +284,7 @@ namespace Email_Client_01
                 if (!folder.Exists) return;
 
                 await folder.OpenAsync(FolderAccess.ReadWrite);
-                
+
                 var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
                 // if file does not exist
                 if (!File.Exists(filepath))
@@ -294,10 +306,27 @@ namespace Email_Client_01
                         if (f.FullName != filter.DestinationFolder || !f.Exists) continue;
                         var query = GetSearchQueryFromFilter(filter);
                         if (query == null) continue;
-                        foreach (var uid in folder.Search(query.And(SearchQuery.DeliveredAfter(Properties.Time.Default.Date))))
-                        {
-                            await folder.MoveToAsync(uid, f);
-                        }
+
+                        // find all the mails to be moved
+
+                        // takes like 150-200 ms per filter, slightly (almost negligible) extra ammount from moving the mail.
+                        var listUIDs = await folder.SearchAsync(query.And(SearchQuery.DeliveredAfter(Properties.Time.Default.Date)));
+
+                        //TODO FIx this
+
+                        // this takes slightly less than 200 ms, for loop included for a few mails. Mostly just the call to fecth. 
+                        // fetch summaries before moving to different folder
+
+                        /*                    foreach (var summary in folder.Fetch(listUIDs, MessageSummaryItems.Flags))
+                                            {
+                                                MessageBox.Show("SUMMARY");
+                                                updateFoldersUnreadCount(summary, TargetFolder: f);
+                                            }
+
+
+                                            MessageBox.Show(listUIDs.ToList().Count.ToString());*/
+                        await folder.MoveToAsync(listUIDs, f);
+
                         break;
 
                     }
@@ -313,7 +342,7 @@ namespace Email_Client_01
                 }
                 else if (folder.Attributes.HasFlag(FolderAttributes.Drafts))
                 {
-                    if(!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
+                    if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
                     foreach (var item in messageSummaries.Reverse())
                     {
                         // Remove messages not flagged as draft.
@@ -329,7 +358,7 @@ namespace Email_Client_01
                 {
                     foreach (var item in messageSummaries.Reverse())
                     {
-                       Inbox.Items.Add(FormatInboxMessageText(item));
+                        Inbox.Items.Add(FormatInboxMessageText(item));
                     }
                 }
 
@@ -350,7 +379,7 @@ namespace Email_Client_01
             {
                 this.Cursor = Cursors.Default;
                 loadingMessages = false;
-                if(folder != GetCurrentFolder()) // we have since we started loading selected a new folder, so we load that in instead
+                if (folder != GetCurrentFolder()) // we have since we started loading selected a new folder, so we load that in instead
                 {
                     RetrieveMessagesFromFolder(sender, e);
                 }
@@ -358,6 +387,7 @@ namespace Email_Client_01
         }
 
 
+        // Read a specific method when doubleClicked
         // Read a specific method when doubleClicked
         private async void ReadMessage(object sender, EventArgs e)
         {
@@ -369,17 +399,25 @@ namespace Email_Client_01
             this.Cursor = Cursors.WaitCursor;
             try
             {
-                if(folder == null) folder = GetCurrentFolder();
+                if (folder == null) folder = GetCurrentFolder();
 
-                if(!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
-                
-                // add Seen flag to message
-                await folder.AddFlagsAsync(messageItem.UniqueId, MessageFlags.Seen, true);
+                if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
 
-                // Mutate the message in the listbox, so it no longer says unread
-                string currentString = (string) Inbox.Items[messageId];
-                // Remove (UNREAD) if present
-                Inbox.Items[messageId] = currentString.Replace("(UNREAD)", "").Trim();
+                // if unread mail
+                if (messageItem.Flags != null && !messageItem.Flags.Value.HasFlag(MessageFlags.Seen))
+                {
+                    // Mutate the message in the listbox, so it no longer says unread
+                    string currentString = (string)Inbox.Items[messageId];
+                    // Remove (UNREAD) if present in the inbox view
+                    Inbox.Items[messageId] = currentString.Replace("(UNREAD)", "").Trim();
+
+                    // Update the unread count
+                    updateFoldersUnreadCount(messageItem, TargetFolder: folder);
+
+                    // Add read flag
+                    await folder.AddFlagsAsync(messageItem.UniqueId, MessageFlags.Seen, true);
+
+                }
 
                 // Get the MimeMessage from id:
                 MimeMessage msg = folder.GetMessage(messageItem.UniqueId);
@@ -450,6 +488,10 @@ namespace Email_Client_01
                 // Instead of calling RefreshCurrentFolder(), we just remove it from the current listbox as this is faster
                 // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
                 Inbox.Items.Remove(Inbox.SelectedItem);
+
+                // if the message is unread, we update the unread count of the folder
+                updateFoldersUnreadCount(msg, TargetFolder: folder);
+
             }
             catch (Exception ex)
             {
@@ -469,11 +511,13 @@ namespace Email_Client_01
             }
         }
 
+
         private void RefreshPage_Click(object sender, EventArgs e)
         {
             // #TODO make this only refresh the current folder to save time?
             RetrieveFolders();
         }
+
 
         private void Compose_Click(object sender, EventArgs e)
         {
@@ -485,7 +529,7 @@ namespace Email_Client_01
         // TODO CAN WE RENAME THIS WINDOW FORMS SPECIFIC METHOD?
         private void Folders_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            if(!loadingFolders && sender != null)
+            if (!loadingFolders && sender != null)
             {
                 RetrieveMessagesFromFolder(sender, e);
             }
@@ -534,6 +578,9 @@ namespace Email_Client_01
                 this.Cursor = Cursors.Default;
             }
         }
+
+
+
 
 
 
@@ -605,19 +652,20 @@ namespace Email_Client_01
             }
         }
 
+
+
         private void ShowSearchResult(IMailFolder folder, IList<UniqueId> uids)
         {
             Inbox.Items.Clear();
-            IList<IMessageSummary> messages = folder.Fetch(uids, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
-            messageSummaries = messages;
+            messageSummaries = folder.Fetch(uids, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
-            if (messages.Count <= 0)
+            if (messageSummaries.Count <= 0)
             {
                 toolStrip1.Visible = false;
                 Inbox.Items.Add("No results!");
             }
 
-            foreach (var item in messages.Reverse())
+            foreach (var item in messageSummaries.Reverse())
             {
                 toolStrip1.Visible = true;
                 Inbox.Items.Add(FormatInboxMessageText(item));
@@ -635,7 +683,6 @@ namespace Email_Client_01
                 e.SuppressKeyPress = true;
             }
         }
-
 
         private void AddFilter(string searchQuery)
         {
@@ -658,16 +705,16 @@ namespace Email_Client_01
             var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
 
             // the 5 commented lines here about the SelecteDIndexChanged and selectedItem is if we do not want to load in the messages as we select them
-/*          var selectedFolder = Folders.SelectedItem;
-            Folders.SelectedIndexChanged -= Folders_SelectedIndexChanged;*/
+            /*          var selectedFolder = Folders.SelectedItem;
+                        Folders.SelectedIndexChanged -= Folders_SelectedIndexChanged;*/
             string? DestinationFolder = "";
-            if(!(Utility.RadioListBoxInput(Folders, ref DestinationFolder) == DialogResult.OK))
+            if (!(Utility.RadioListBoxInput(Folders, ref DestinationFolder) == DialogResult.OK))
             {
-/*                Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;*/
+                /*                Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;*/
                 return;
             }
-/*            Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;
-            Folders.SelectedItem = selectedFolder;*/
+            /*            Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;
+                        Folders.SelectedItem = selectedFolder;*/
 
             // this should mutate DestinationFolder to the stringified selected item of the data source
             // In our case the folder name is something like: "[Folder.Fullname, Displayed name]";
@@ -676,7 +723,7 @@ namespace Email_Client_01
             // Mutate the string to the "Folder.Fullname" part only
             DestinationFolder = DestinationFolder.Substring(1, DestinationFolder.IndexOf(",") - 1);
 
-            
+
             string FilterName = "";
             if (!(Utility.InputBox("Add Filter", "Filter Name: ", ref FilterName) == DialogResult.OK))
             {
@@ -690,7 +737,7 @@ namespace Email_Client_01
                 return;
             }
 
-            if(string.IsNullOrEmpty(FilterName))
+            if (string.IsNullOrEmpty(FilterName))
             {
                 MessageBox.Show("Please enter a valid filter name");
                 return;
@@ -724,7 +771,7 @@ namespace Email_Client_01
             // sort by destination folder, so we can filter all mails to the same folder in one swoop. 
             FilterList.Sort((x, y) =>
             {
-                if(!string.IsNullOrEmpty(x.DestinationFolder))
+                if (!string.IsNullOrEmpty(x.DestinationFolder))
                     return x.DestinationFolder.CompareTo(y.DestinationFolder);
                 return 0;
             });
@@ -757,14 +804,13 @@ namespace Email_Client_01
 
 
             // LOADING MESSAGES: Load the initial folder back
-            if(InitialFolder != Folders.SelectedValue)
+            if (InitialFolder != Folders.SelectedValue)
             {
                 Folders.SelectedItem = InitialFolder;
                 RetrieveMessagesFromFolder();
             }
-            
-
         }
+
         private void SearchButton_Click(object sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(SearchButton.Text))
@@ -904,7 +950,6 @@ namespace Email_Client_01
         }
 
 
-
         private async void Inbox_MouseDown(object sender, MouseEventArgs e)
         {
             // ensure that we are able to distinguish double clicks from this type of mouse down. 
@@ -940,7 +985,74 @@ namespace Email_Client_01
             }
         }
 
+        private void updateFoldersUnreadCount(IMessageSummary? movedItem, object? FoldersLBItem = null, IMailFolder? TargetFolder = null)
+        {
+            // Modify the folder unread counts
+            if (foldersMap == null) return; // cannot modify something that is not there
+            if (movedItem?.Flags != null && movedItem.Flags.Value.HasFlag(MessageFlags.Seen)) return; // does not need to update count as mail is already seen
+            if (folder == null || folder.FullName == null) return; // this should never happen;
 
+
+            // find the listbox folder which has the unread count from the IMailFolder
+
+
+            // [Gmail]/Spam <--- ActualFolder.FullName
+
+            string fullFolderName = "";
+
+            // if we did not pass the folder listbox item, but we pass the targeted folder, we need to find the corresponding listbox item.
+            if (FoldersLBItem == null && TargetFolder != null)
+            {
+                foreach (var item in Folders.Items)
+                {
+                    string? itemString = item.ToString();             //[[Gmail]/Spam, Spam (68)] <-- ListBox string entries 
+                    if (string.IsNullOrEmpty(itemString)) continue;
+                    var firstPart = itemString.Substring(1, itemString.IndexOf(',') - 1); // Get first part [Gmail]/Spam as these are the ActualFolder.FullName
+                    if (firstPart == TargetFolder?.Name)   // If match with ActualFolder
+                    {
+                        fullFolderName = itemString; // The entire "[[Gmail]/Spam, Spam (68)]"
+                        break;
+                    }
+                }
+
+            }
+            else if (FoldersLBItem != null)
+            {
+                string? folderItem = FoldersLBItem.ToString();
+                if (!string.IsNullOrEmpty(folderItem)) fullFolderName = folderItem;
+            }
+
+
+            // Update currently open folder
+            // Here displayedName will be of the form "[[Gmail]/Spam, Spam (68)]", and folder.FullName is the "[Gmail]/Spam" part.
+            string displayedName = foldersMap[folder.FullName].Substring(folder.FullName.LastIndexOf(',') + 1); // get part after comma
+            displayedName = displayedName.Remove(displayedName.Length - 1);  // remove the last bracket ]
+            int number = int.Parse(displayedName.Split('(', ')')[1]); // fetch the number part
+            number -= 1; // update
+            foldersMap[folder.FullName] = (displayedName.Split('(', ')')[0] + "(" + number.ToString() + ")").Trim(); //remove extra spaces and form new string.
+
+
+            // If these are not null, we are moving a mail to this folder. We update this too then.
+            if (FoldersLBItem != null && TargetFolder != null)
+            {
+                displayedName = fullFolderName.Substring(fullFolderName.LastIndexOf(',') + 1); // We get "Spam (25)]", so we need to remove last character
+                displayedName = displayedName.Remove(displayedName.Length - 1);
+                number = int.Parse(displayedName.Split('(', ')')[1]); // get number between parentheses
+                number += 1;
+                foldersMap[TargetFolder.FullName] = (displayedName.Split('(', ')')[0] + "(" + number.ToString() + ")").Trim();
+            }
+
+
+            // Modifying listboxes with assigned datasources is very restricted. So we just reassign it. 
+            Folders.DataSource = new BindingSource(foldersMap, null);
+
+
+        }
+
+
+
+
+        // what to do on successful drag and drop
         // what to do on successful drag and drop
         private async void Folders_DragDrop(object sender, DragEventArgs e)
         {
@@ -951,17 +1063,25 @@ namespace Email_Client_01
             if (folderIdx < 0 || folderIdx > Folders.Items.Count) return;
 
             // Currently we get the folder name like this as: "[Folder.Fullname, Displayed name]";
-            var folderName = Folders.Items[folderIdx].ToString();
-            if (string.IsNullOrEmpty(folderName)) return;
+            string? fullFolderName = Folders.Items[folderIdx].ToString();
+            if (string.IsNullOrEmpty(fullFolderName)) return;
+
+
 
             // we want the Folder.Fullname part
             // tokenize the string at "," and get the first part minus first character
-            folderName = folderName.Substring(1, folderName.IndexOf(",") - 1);
+            string folderName = fullFolderName.Substring(1, fullFolderName.IndexOf(",") - 1);
 
             // find index of message to be moved:
             if (e.Data == null) return;
             // get the passed index in mail of mail to move from inbox.
             var InboxIdx = (int)e.Data.GetData(e.Data.GetFormats()[0]);
+
+
+
+
+            // the message selected in the inbox folder (message to be moved)
+            var selectedItem = messageSummaries[messageSummaries.Count - 1 - InboxIdx];
 
 
             this.Cursor = Cursors.WaitCursor;
@@ -976,13 +1096,24 @@ namespace Email_Client_01
                 {
                     if (f.FullName == folderName)
                     {
+                        // Move mail
                         await folder.OpenAsync(FolderAccess.ReadWrite);
-                        await folder.MoveToAsync(messageSummaries[messageSummaries.Count - 1 - InboxIdx].UniqueId, f);
+                        await folder.MoveToAsync(selectedItem.UniqueId, f);
+
+
+                        // Ensure that if we move an unread mail that the displayed unread counts are updated in the respective folders;
+                        updateFoldersUnreadCount(selectedItem, Folders.Items[folderIdx], f);
+
+
+
                         break;
                     }
                 }
 
             }
+
+
+
             catch (Exception ex)
             {
                 // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
@@ -1039,13 +1170,13 @@ namespace Email_Client_01
 
             if (ShowFiltersCheckbox.Checked && filterCount > 0)
             {
-                if(FilterListbox.Items.Count != filterCount)
+                if (FilterListbox.Items.Count != filterCount)
                 {
                     // remove the entries of listbox and add all. Few so performance cost is negligible. 
                     FilterListbox.Items.Clear();
-                    foreach(var filter in FilterList)
+                    foreach (var filter in FilterList)
                     {
-                        if(!string.IsNullOrEmpty(filter.Name)) 
+                        if (!string.IsNullOrEmpty(filter.Name))
                             FilterListbox.Items.Add(filter.Name);
                     }
                 }
@@ -1061,12 +1192,15 @@ namespace Email_Client_01
             }
         }
 
+
+
         private void RemoveFilterButton_Click(object sender, EventArgs e)
         {
             // get the filter name
+            if (FilterListbox.SelectedItem == null) return;
             string? filterName = FilterListbox.SelectedItem.ToString();
 
-            if(!string.IsNullOrEmpty(filterName))
+            if (!string.IsNullOrEmpty(filterName))
             {
                 // read existing json data
                 var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
@@ -1080,8 +1214,8 @@ namespace Email_Client_01
                 // Read the entire file and De-serialize to list of filters
                 var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
 
-                var filter = FilterList.Find(x=>x.Name == filterName);
-                if(filter != null && !string.IsNullOrEmpty(filter.Name))
+                var filter = FilterList.Find(x => x.Name == filterName);
+                if (filter != null && !string.IsNullOrEmpty(filter.Name))
                 {
                     FilterList.Remove(filter);
                     filterCount -= 1;
@@ -1093,7 +1227,7 @@ namespace Email_Client_01
                     FilterListbox.Items.Remove(filter.Name);
 
                     // no more filters so we don't show these ui elements. 
-                    if(FilterListbox.Items.Count < 1)
+                    if (FilterListbox.Items.Count < 1)
                     {
                         FilterListbox.Visible = false;
                         FilterLabel.Visible = false;
