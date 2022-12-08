@@ -567,13 +567,10 @@ namespace Email_Client_01
 
             if (messageSummaries.Count <= 0)
             {
-                toolStrip1.Visible = false;
                 Inbox.Items.Add("No results!");
             }
-
             foreach (var item in messageSummaries.Reverse())
             {
-                toolStrip1.Visible = true;
                 Inbox.Items.Add(FormatInboxMessageText(item));
             }
         }
@@ -754,77 +751,6 @@ namespace Email_Client_01
 
         }
 
-        /* IMailFolder GetTrashFolder(ImapClient client, CancellationToken cancellationToken)
-        {
-
-            // this capability is generally dperecated
-            if ((client.Capabilities & (ImapCapabilities.SpecialUse | ImapCapabilities.XList)) != 0)
-            {
-                var trashFolder = client.GetFolder(SpecialFolder.Trash);
-                return trashFolder;
-            }
-
-            else
-            {
-                string[] TrashFolderNames = { "Deleted", "Papirkurv", "Trash", "Bin", "Trashbin" };
-                var personal = client.GetFolder(client.PersonalNamespaces[0]);
-
-                foreach (var folder in personal.GetSubfolders(false, cancellationToken))
-                {
-                    foreach (var name in TrashFolderNames)
-                    {
-                        if (folder.Name == name)
-                            return folder;
-                    }
-                }
-            }
-
-            return null;
-        }*/
-
-        /* private async void MoveToTrashButton_Click(object sender, EventArgs e)
-         {
-             var msgIndex = Inbox.SelectedIndex;
-
-             // just a quick comparison to not use unnecessary time to establish an IMAP connection if nothing is selected.
-             if (msgIndex < 0 || msgIndex > Inbox.Items.Count)
-             {
-                 MessageBox.Show("Please select an email to move to the trash folder");
-                 return;
-             }
-             var msg = messageSummaries[messageSummaries.Count - 1 - msgIndex];
-
-
-             this.Cursor = Cursors.WaitCursor;
-             using (var client = await Utility.GetImapClient())
-             {
-                 try
-                 {
-                     var folder = await GetCurrentFolder(client);
-                     IMailFolder trashFolder = GetTrashFolder(client, CancellationToken.None);
-
-                     await folder.OpenAsync(FolderAccess.ReadWrite);
-
-
-                     if (trashFolder == null)
-                         return;
-
-                     await folder.MoveToAsync(msg.UniqueId, trashFolder);
-                     RefreshCurrentFolder();
-                 }
-                 catch (Exception ex)
-                 {
-                     MessageBox.Show(ex.Message);
-                 }
-                 finally
-                 {
-                     client?.DisconnectAsync(true);
-                     client?.Dispose();
-                     this.Cursor = Cursors.Default;
-                 }
-             }
-         }
- */
         private void Inbox_DrawItem(object sender, DrawItemEventArgs e)
         {
             //base.OnDrawItem(e);
@@ -1313,7 +1239,85 @@ namespace Email_Client_01
             }
         }
 
+        private void RefreshFoldersButton_Click(object sender, EventArgs e)
+        {
+            RetrieveFolders();
+        }
 
+        private async void CreateFolderButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string FolderName = "";
+                if (!(Utility.InputBox("Create New Folder", "Name of Folder: ", ref FolderName) == DialogResult.OK))
+                {
+                    return;
+                }
+
+                //TODO easily extendable to subfolders
+
+                // Could add waitcursors here but the call to create a toplevel folder is really fast...
+                var toplevel = client.GetFolder(client.PersonalNamespaces[0]);
+                var test = await toplevel.CreateAsync(FolderName, true);
+                RetrieveFolders(); // Load in all folders again, this function is quite slow but how often do you create new folders...
+            }
+            catch (Exception ex)
+            {
+                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
+                if (ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+
+        private async void DeleteFolderButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                //TODO easily extendable to subfolders
+
+                // Guard
+                if (foldersMap == null) return;
+
+                DialogResult result = MessageBox.Show("Are you sure you want to delete the current folder? The action cannot be undone.", "Delete Folder?", MessageBoxButtons.YesNo);
+                if (result == DialogResult.No)
+                    return;
+
+                if (folder == null) folder = GetCurrentFolder();
+
+                // Could add waitcursors here but the call to delete a toplevel folder is really fast...
+                await folder.DeleteAsync();
+
+
+                // Remove the folder from the listbox instead of reloading all folders, which is computationally expensive. 
+                // Folders have a datasource though, so we need to assign a new one to do this.
+                foldersMap.Remove(folder.FullName);
+                Folders.DataSource = new BindingSource(foldersMap, null);
+                
+
+                // Select another folder, here we just select the first one.
+                Folders.SelectedIndex = 0;
+
+            }
+            catch (Exception ex)
+            {
+                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
+                if (ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+
+        }
 
         // need somewhere to display active filters and option to remove any active filters (does not work backwards, only works for future filtering)
 

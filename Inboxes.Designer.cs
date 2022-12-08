@@ -30,13 +30,6 @@
 
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Inboxes));
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.DeleteButton = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.ToggleFlagButton = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.RefreshButton = new System.Windows.Forms.ToolStripButton();
             this.Inbox = new System.Windows.Forms.ListBox();
             this.label2 = new System.Windows.Forms.Label();
             this.Compose = new System.Windows.Forms.Button();
@@ -51,65 +44,10 @@
             this.FilterLabel = new System.Windows.Forms.Label();
             this.RemoveFilterButton = new System.Windows.Forms.Button();
             this.ShowFiltersCheckbox = new System.Windows.Forms.CheckBox();
-            this.toolStrip1.SuspendLayout();
+            this.RefreshFoldersButton = new System.Windows.Forms.Button();
+            this.CreateFolderButton = new System.Windows.Forms.Button();
+            this.DeleteFolderButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
-            // 
-            // toolStrip1
-            // 
-            this.toolStrip1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.toolStrip1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
-            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.None;
-            this.toolStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.DeleteButton,
-            this.toolStripSeparator2,
-            this.ToggleFlagButton,
-            this.toolStripSeparator1,
-            this.RefreshButton});
-            this.toolStrip1.Location = new System.Drawing.Point(463, 116);
-            this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 6, 0);
-            this.toolStrip1.Size = new System.Drawing.Size(254, 37);
-            this.toolStrip1.TabIndex = 5;
-            this.toolStrip1.Text = "toolStrip1";
-            // 
-            // DeleteButton
-            // 
-            this.DeleteButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.DeleteButton.Image = ((System.Drawing.Image)(resources.GetObject("DeleteButton.Image")));
-            this.DeleteButton.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
-            this.DeleteButton.Name = "DeleteButton";
-            this.DeleteButton.Size = new System.Drawing.Size(69, 28);
-            this.DeleteButton.Text = "Delete Email";
-            // 
-            // toolStripSeparator2
-            // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 37);
-            // 
-            // ToggleFlagButton
-            // 
-            this.ToggleFlagButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.ToggleFlagButton.Image = ((System.Drawing.Image)(resources.GetObject("ToggleFlagButton.Image")));
-            this.ToggleFlagButton.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
-            this.ToggleFlagButton.Name = "ToggleFlagButton";
-            this.ToggleFlagButton.Size = new System.Drawing.Size(69, 28);
-            this.ToggleFlagButton.Text = "FlagMessage";
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 37);
-            // 
-            // RefreshButton
-            // 
-            this.RefreshButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.RefreshButton.Image = ((System.Drawing.Image)(resources.GetObject("RefreshButton.Image")));
-            this.RefreshButton.ImageTransparentColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
-            this.RefreshButton.Name = "RefreshButton";
-            this.RefreshButton.Size = new System.Drawing.Size(69, 28);
-            this.RefreshButton.Text = "RefreshButton";
-            this.RefreshButton.Click += new System.EventHandler(this.RefreshPage_Click);
             // 
             // Inbox
             // 
@@ -117,7 +55,7 @@
             this.Inbox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.Inbox.FormattingEnabled = true;
             this.Inbox.ItemHeight = 48;
-            this.Inbox.Location = new System.Drawing.Point(411, 173);
+            this.Inbox.Location = new System.Drawing.Point(411, 178);
             this.Inbox.Margin = new System.Windows.Forms.Padding(6);
             this.Inbox.Name = "Inbox";
             this.Inbox.Size = new System.Drawing.Size(1835, 1060);
@@ -131,7 +69,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.label2.Location = new System.Drawing.Point(20, 29);
+            this.label2.Location = new System.Drawing.Point(20, 13);
             this.label2.Margin = new System.Windows.Forms.Padding(9, 0, 9, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(406, 96);
@@ -141,7 +79,7 @@
             // Compose
             // 
             this.Compose.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
-            this.Compose.Location = new System.Drawing.Point(33, 173);
+            this.Compose.Location = new System.Drawing.Point(33, 178);
             this.Compose.Margin = new System.Windows.Forms.Padding(9, 10, 9, 10);
             this.Compose.Name = "Compose";
             this.Compose.Size = new System.Drawing.Size(363, 106);
@@ -156,7 +94,7 @@
             this.Folders.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
             this.Folders.FormattingEnabled = true;
             this.Folders.ItemHeight = 48;
-            this.Folders.Location = new System.Drawing.Point(33, 315);
+            this.Folders.Location = new System.Drawing.Point(33, 320);
             this.Folders.Margin = new System.Windows.Forms.Padding(9, 10, 9, 10);
             this.Folders.Name = "Folders";
             this.Folders.Size = new System.Drawing.Size(355, 916);
@@ -249,7 +187,7 @@
             // 
             // RemoveFilterButton
             // 
-            this.RemoveFilterButton.Location = new System.Drawing.Point(696, 66);
+            this.RemoveFilterButton.Location = new System.Drawing.Point(696, 53);
             this.RemoveFilterButton.Name = "RemoveFilterButton";
             this.RemoveFilterButton.Size = new System.Drawing.Size(160, 57);
             this.RemoveFilterButton.TabIndex = 19;
@@ -269,12 +207,45 @@
             this.ShowFiltersCheckbox.UseVisualStyleBackColor = true;
             this.ShowFiltersCheckbox.CheckStateChanged += new System.EventHandler(this.ShowFiltersCheckbox_CheckStateChanged);
             // 
+            // RefreshFoldersButton
+            // 
+            this.RefreshFoldersButton.Location = new System.Drawing.Point(451, 16);
+            this.RefreshFoldersButton.Name = "RefreshFoldersButton";
+            this.RefreshFoldersButton.Size = new System.Drawing.Size(225, 69);
+            this.RefreshFoldersButton.TabIndex = 21;
+            this.RefreshFoldersButton.Text = "Refresh";
+            this.RefreshFoldersButton.UseVisualStyleBackColor = true;
+            this.RefreshFoldersButton.Click += new System.EventHandler(this.RefreshFoldersButton_Click);
+            // 
+            // CreateFolderButton
+            // 
+            this.CreateFolderButton.Location = new System.Drawing.Point(451, 91);
+            this.CreateFolderButton.Name = "CreateFolderButton";
+            this.CreateFolderButton.Size = new System.Drawing.Size(225, 69);
+            this.CreateFolderButton.TabIndex = 22;
+            this.CreateFolderButton.Text = "Create Folder";
+            this.CreateFolderButton.UseVisualStyleBackColor = true;
+            this.CreateFolderButton.Click += new System.EventHandler(this.CreateFolderButton_Click);
+            // 
+            // DeleteFolderButton
+            // 
+            this.DeleteFolderButton.Location = new System.Drawing.Point(220, 100);
+            this.DeleteFolderButton.Name = "DeleteFolderButton";
+            this.DeleteFolderButton.Size = new System.Drawing.Size(225, 69);
+            this.DeleteFolderButton.TabIndex = 23;
+            this.DeleteFolderButton.Text = "Delete Folder";
+            this.DeleteFolderButton.UseVisualStyleBackColor = true;
+            this.DeleteFolderButton.Click += new System.EventHandler(this.DeleteFolderButton_Click);
+            // 
             // Inboxes
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(20F, 48F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.ClientSize = new System.Drawing.Size(2286, 1274);
+            this.Controls.Add(this.DeleteFolderButton);
+            this.Controls.Add(this.CreateFolderButton);
+            this.Controls.Add(this.RefreshFoldersButton);
             this.Controls.Add(this.ShowFiltersCheckbox);
             this.Controls.Add(this.RemoveFilterButton);
             this.Controls.Add(this.FilterLabel);
@@ -289,25 +260,16 @@
             this.Controls.Add(this.Compose);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.Inbox);
-            this.Controls.Add(this.toolStrip1);
             this.Margin = new System.Windows.Forms.Padding(9, 10, 9, 10);
             this.Name = "Inboxes";
             this.Text = "Prime Email";
             this.Load += new System.EventHandler(this.Form1_Load);
-            this.toolStrip1.ResumeLayout(false);
-            this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
         #endregion
-        private ToolStrip toolStrip1;
-        private ToolStripButton DeleteButton;
-        private ToolStripSeparator toolStripSeparator2;
-        private ToolStripButton ToggleFlagButton;
-        private ToolStripSeparator toolStripSeparator1;
-        private ToolStripButton RefreshButton;
         private ListBox Inbox;
         private Label label2;
         private Button Compose;
@@ -322,5 +284,8 @@
         private Label FilterLabel;
         private Button RemoveFilterButton;
         private CheckBox ShowFiltersCheckbox;
+        private Button RefreshFoldersButton;
+        private Button CreateFolderButton;
+        private Button DeleteFolderButton;
     }
 }
