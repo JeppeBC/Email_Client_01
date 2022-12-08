@@ -627,7 +627,7 @@ namespace Email_Client_01
 
         private void InboxGrid_DoubleClick(object sender, EventArgs e)
         {
-            //opens Reading_email
+            //opens the specified email
             ReadMessage(sender, e);
         }
 
@@ -659,6 +659,7 @@ namespace Email_Client_01
         
         private void PriorityGrid_DoubleClick(object sender, DataGridViewCellEventArgs e)
         {   
+            // opens the specified email when doubleclicked in Prioritygrid
             ReadMessage(sender, e);
         }
     }
