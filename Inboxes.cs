@@ -6,6 +6,7 @@ using MimeKit;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.X509;
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.DirectoryServices;
 using System.Drawing.Design;
@@ -457,60 +458,6 @@ namespace Email_Client_01
 
         // delete element from inbox (does not put in trashfolder, deletes entirely)
 
-        private async void DeleteButton_click(object sender, EventArgs e)
-        {
-            var msgIndex = Inbox.SelectedIndex;
-            // quick check so we do not waste unnecessary time to establish an imap connection in case of errors.
-            if (msgIndex < 0 || msgIndex > Inbox.Items.Count)
-            {
-                MessageBox.Show("No email is selected for deletion.");
-                return;
-            }
-
-            var msg = messageSummaries[messageSummaries.Count - 1 - msgIndex];
-
-
-            DialogResult result = MessageBox.Show("Are you sure you want to delete this message? The action cannot be undone.", "Delete Message?", MessageBoxButtons.YesNo);
-            if (result == DialogResult.No)
-                return;
-
-            this.Cursor = Cursors.WaitCursor;
-            try
-            {
-                if (folder == null) folder = GetCurrentFolder();
-                if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
-
-                // Delete the message
-                await folder.AddFlagsAsync(msg.UniqueId, MessageFlags.Deleted, true);
-                await folder.ExpungeAsync();
-
-                // Instead of calling RefreshCurrentFolder(), we just remove it from the current listbox as this is faster
-                // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
-                Inbox.Items.Remove(Inbox.SelectedItem);
-
-                // if the message is unread, we update the unread count of the folder
-                updateFoldersUnreadCount(msg, TargetFolder: folder);
-
-            }
-            catch (Exception ex)
-            {
-                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
-                if (ex is ImapProtocolException || ex is IOException)
-                {
-                    await Utility.ReconnectAsync(client);
-                }
-                else
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
-            finally
-            {
-                this.Cursor = Cursors.Default;
-            }
-        }
-
-
         private void RefreshPage_Click(object sender, EventArgs e)
         {
             // #TODO make this only refresh the current folder to save time?
@@ -536,47 +483,7 @@ namespace Email_Client_01
 
 
 
-        private async void ToggleFlagButton_Click(object sender, EventArgs e)
-        {
-            var messageIndex = Inbox.SelectedIndex;
-            if (messageIndex < 0) return; // failsafe
-            var message = messageSummaries[messageSummaries.Count - 1 - messageIndex];
 
-            this.Cursor = Cursors.WaitCursor;
-            try
-            {
-                if (folder == null) folder = GetCurrentFolder();
-                if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
-
-                // toggle the flag
-                if (message.Flags != null && message.Flags.Value.HasFlag(MessageFlags.Flagged))
-                {
-                    await folder.RemoveFlagsAsync(message.UniqueId, MessageFlags.Flagged, false);
-                }
-                else
-                {
-                    await folder.AddFlagsAsync(message.UniqueId, MessageFlags.Flagged, false);
-                }
-
-                RefreshCurrentFolder();
-            }
-            catch (Exception ex)
-            {
-                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
-                if (ex is ImapProtocolException || ex is IOException)
-                {
-                    await Utility.ReconnectAsync(client);
-                }
-                else
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
-            finally
-            {
-                this.Cursor = Cursors.Default;
-            }
-        }
 
 
 
@@ -1235,6 +1142,177 @@ namespace Email_Client_01
                 }
             }
         }
+
+
+        private void Inbox_MouseUp(object sender, MouseEventArgs e)
+        {
+
+            if (e.Button == MouseButtons.Right)
+            {
+                var itemIndex = Inbox.IndexFromPoint(e.Location);
+                if (itemIndex < 0 || itemIndex > Inbox.Items.Count) return;
+
+                Inbox.SelectedIndex = itemIndex;
+
+                var ContextMenu = new ContextMenuStrip();
+                ContextMenu.Items.Clear();
+
+
+                var DeleteItem = new ToolStripMenuItem("Delete");
+                DeleteItem.Click += new EventHandler(DeleteMail);
+                ContextMenu.Items.Add(DeleteItem);
+
+                var FlagItem = new ToolStripMenuItem("Flag");
+                FlagItem.Click += new EventHandler(ToggleFlagMail);
+                ContextMenu.Items.Add(FlagItem);
+
+                var UnreadItem = new ToolStripMenuItem("Mark as Unread");
+                UnreadItem.Click += new EventHandler(MarkMailAsUnread);
+                ContextMenu.Items.Add(UnreadItem);
+
+                Inbox.ContextMenuStrip = ContextMenu;
+                Inbox.ContextMenuStrip.Show(Inbox, e.Location);
+
+            }
+        }
+
+        private async void MarkMailAsUnread(object? sender, EventArgs e)
+        {
+            var msgIndex = Inbox.SelectedIndex;
+            if(msgIndex < 0 || msgIndex > Inbox.Items.Count) // this should not happen
+            {
+                MessageBox.Show("No email to mark as unread");
+                return;
+            }
+            var msg = messageSummaries[messageSummaries.Count - 1 - msgIndex];
+
+            // Message is already unread 
+            if (msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen)) return;
+
+            this.Cursor = Cursors.WaitCursor;
+            try
+            {
+                if (folder == null) folder = GetCurrentFolder();
+                if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
+
+                // Mark the message as unread
+                await folder.RemoveFlagsAsync(msg.UniqueId, MessageFlags.Seen, false);
+
+                // instead of reloading the entire folder to capture this (UNREAD) change,
+                // we just manually forcefully update that one element in the listbox (this will automatically happen on refresh)
+                Inbox.Items[msgIndex] = "(UNREAD) " + Inbox.Items[msgIndex];
+
+            }
+            catch (Exception ex)
+            {
+                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
+                if (ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+        private async void DeleteMail(object? sender, EventArgs e)
+        {
+            var msgIndex = Inbox.SelectedIndex;
+            // quick check so we do not waste unnecessary time to establish an imap connection in case of errors.
+            if (msgIndex < 0 || msgIndex > Inbox.Items.Count) // dont know how this would appear, but just in case
+            {
+                MessageBox.Show("No email is selected for deletion.");
+                return;
+            }
+            var msg = messageSummaries[messageSummaries.Count - 1 - msgIndex];
+            DialogResult result = MessageBox.Show("Are you sure you want to delete this message? The action cannot be undone.", "Delete Message?", MessageBoxButtons.YesNo);
+            if (result == DialogResult.No)
+                return;
+
+            this.Cursor = Cursors.WaitCursor;
+            try
+            {
+                if (folder == null) folder = GetCurrentFolder();
+                if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
+
+                // Delete the message
+                await folder.AddFlagsAsync(msg.UniqueId, MessageFlags.Deleted, true);
+                await folder.ExpungeAsync();
+
+                // Instead of calling RefreshCurrentFolder(), we just remove it from the current listbox as this is faster
+                // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
+                Inbox.Items.Remove(Inbox.SelectedItem);
+
+                // if the message is unread, we update the unread count of the folder
+                updateFoldersUnreadCount(msg, TargetFolder: folder);
+
+            }
+            catch (Exception ex)
+            {
+                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
+                if (ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+        private async void ToggleFlagMail(object? sender, EventArgs e)
+        {
+            var messageIndex = Inbox.SelectedIndex;
+            if (messageIndex < 0) return; // failsafe
+            var message = messageSummaries[messageSummaries.Count - 1 - messageIndex];
+
+            this.Cursor = Cursors.WaitCursor;
+            try
+            {
+                if (folder == null) folder = GetCurrentFolder();
+                if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
+
+                // toggle the flag
+                if (message.Flags != null && message.Flags.Value.HasFlag(MessageFlags.Flagged))
+                {
+                    await folder.RemoveFlagsAsync(message.UniqueId, MessageFlags.Flagged, false);
+                }
+                else
+                {
+                    await folder.AddFlagsAsync(message.UniqueId, MessageFlags.Flagged, false);
+                }
+
+                RefreshCurrentFolder();
+            }
+            catch (Exception ex)
+            {
+                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
+                if (ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
+        }
+
 
 
         // need somewhere to display active filters and option to remove any active filters (does not work backwards, only works for future filtering)
