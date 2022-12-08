@@ -317,14 +317,13 @@ namespace Email_Client_01
                         // this takes slightly less than 200 ms, for loop included for a few mails. Mostly just the call to fecth. 
                         // fetch summaries before moving to different folder
 
-                        /*                    foreach (var summary in folder.Fetch(listUIDs, MessageSummaryItems.Flags))
-                                            {
-                                                MessageBox.Show("SUMMARY");
-                                                updateFoldersUnreadCount(summary, TargetFolder: f);
-                                            }
+                        foreach (var summary in folder.Fetch(listUIDs, MessageSummaryItems.Flags))
+                        {
+                            MessageBox.Show("SUMMARY");
+                            updateFoldersUnreadCount(summary, TargetFolder: f);
+                        }
 
 
-                                            MessageBox.Show(listUIDs.ToList().Count.ToString());*/
                         await folder.MoveToAsync(listUIDs, f);
 
                         break;
@@ -1094,18 +1093,17 @@ namespace Email_Client_01
                 // find the folder that has "folderName", list of folders is stored as an attribute from when we loaded in the folders.
                 foreach (var f in folders)
                 {
+                    // we find the correct folder and ensure that it is not either the special drafts- or sent folder.
                     if (f.FullName == folderName)
                     {
+                        if(f.Attributes.HasFlag(FolderAttributes.Drafts) ||f.Attributes.HasFlag(FolderAttributes.Sent)) break;
+                        
                         // Move mail
                         await folder.OpenAsync(FolderAccess.ReadWrite);
                         await folder.MoveToAsync(selectedItem.UniqueId, f);
 
-
                         // Ensure that if we move an unread mail that the displayed unread counts are updated in the respective folders;
-                        updateFoldersUnreadCount(selectedItem, Folders.Items[folderIdx], f);
-
-
-
+                        updateFoldersUnreadCount(selectedItem, FoldersLBItem: Folders.Items[folderIdx], TargetFolder: f);
                         break;
                     }
                 }
