@@ -671,7 +671,8 @@ namespace Email_Client_01
             });
 
 
-            // sort by destination folder, so we can filter all mails to the same folder in one swoop. 
+            // sort by destination folder, so we could filter all mails to the same folder in one swoop. 
+            // not implemented currently but if we decide to go with batches. This is very efficient as the number of filters is small
             FilterList.Sort((x, y) =>
             {
                 if (!string.IsNullOrEmpty(x.DestinationFolder))
@@ -1041,7 +1042,6 @@ namespace Email_Client_01
                     // create the file
                     File.Create(filepath).Close();
                 }
-
                 // Read the entire file and De-serialize to list of filters
                 var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
 
@@ -1291,17 +1291,57 @@ namespace Email_Client_01
                 if (folder == null) folder = GetCurrentFolder();
 
                 // Could add waitcursors here but the call to delete a toplevel folder is really fast...
+                var folderName = folder.FullName;
                 await folder.DeleteAsync();
+                // Select another folder, here we just select the first one.
+                Folders.SelectedIndex = 0;
+                
 
 
                 // Remove the folder from the listbox instead of reloading all folders, which is computationally expensive. 
                 // Folders have a datasource though, so we need to assign a new one to do this.
-                foldersMap.Remove(folder.FullName);
+                foldersMap.Remove(folderName);
                 Folders.DataSource = new BindingSource(foldersMap, null);
                 
 
-                // Select another folder, here we just select the first one.
-                Folders.SelectedIndex = 0;
+                // Check if we have a filter to the deleted folder, in which case we should delete this.
+                // read existing json data
+                var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
+                // if file does not exist
+                if (!File.Exists(filepath))
+                {
+                    // create the file
+                    File.Create(filepath).Close();
+                }
+                // Read the entire file and De-serialize to list of filters
+                var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
+
+                // FilterList.ToList() here because we are modifying the list as we increment. If we don't do this we get the 
+                // "Collection was modified, enumeration operation may not execute" exception.
+                foreach(var filter in FilterList.ToList())
+                {
+                    if(filter.DestinationFolder == null || filter.DestinationFolder == folderName)
+                    {
+                        // delete the filter 
+                        FilterList.Remove(filter);
+                        filterCount -= 1;
+
+
+                        if (string.IsNullOrEmpty(filter.Name)) return;
+                        // remove from listbox too
+                        FilterListbox.Items.Remove(filter.Name);
+
+                        // no more filters so we don't show these ui elements. 
+                        if (FilterListbox.Items.Count < 1)
+                        {
+                            FilterListbox.Visible = false;
+                            FilterLabel.Visible = false;
+                            RemoveFilterButton.Visible = false;
+                        }
+                    }
+                }
+                // We need to serialize and write the updated version to file
+                Utility.JsonFileWriter.Write<List<Filter>>(filepath, FilterList);
 
             }
             catch (Exception ex)
