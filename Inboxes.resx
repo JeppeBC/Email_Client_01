@@ -64,7 +64,7 @@
   <data name="DeleteButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAABWkSURBVHhe7Z17/L73XMfX+agDE0UHxCyTiZKyWFFKcmrk
+        YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAABWkSURBVHhe7Z17/L73XMfX+agDE0UHxCyTiZKyWFFKcmrk
         MCGNpEc0as2YESWVaZtJiWhDQ6scIrOy6URLhkJLs7RmSufS+fXcY1/dj+/jdX2u67rv93Vd3/v+vZ6P
         x/Mfvu/dv/tzfz7X9Tm8P5/PYWEQnyY/Vx4lHyHPkG+Ql8n/XdD/lpfLN8mz5cPkkfI68lNlCBtBJbqe
         fLy8RLpKeND8T3mRfKT8bPkpMoTRfJbkiXqxdBXtoEtD4C11P/npMoTB0IX4fukq1rb5b/JJMo0g9PIJ
@@ -163,7 +163,7 @@
   <data name="ToggleFlagButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAABH/SURBVHhe7Z0J9H3VFMf/Iho1oqwmUim0qmVoEA2kuUQI
+        YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAABH/SURBVHhe7Z0J9H3VFMf/Iho1oqwmUim0qmVoEA2kuUQI
         SdEgzaF5HpXmiTRpEEktSqMm0ZzmMhRK86RSqSS+X96z7nrr+4bz3r3n7HPu/qz1WQur3HN+7+z37j13
         n72nOI7jOI7jOAN4PVwf/vC//81xnP+zJLwL/hveyv/BcZwpU6aBh8B/QQaHB4jjdJgX3gS7geEB4jgd
         VoJPwt7g8ABxWs/msHpL1asHiNNKXge/DVVQVPUAcVrH1PAMqAKiVw8Qp1Vwp+oCqIJB6QHitIYZ4OVQ
@@ -246,7 +246,7 @@
   <data name="RefreshButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAAUAAAAFACAYAAADNkKWqAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAABzDSURBVHhe7Z0PxPbl2ccz83pNMpNJJkmSJEmSJJkkk0yS
+        YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAABzDSURBVHhe7Z0PxPbl2ccz83pNMpNJJkmSJEmSJJkkk0yS
         JMkkSZKZJIkkkySZSR5Jkse8kiSTSZJJJplJkkeSTGZmZmbmtff7eXuvt7u78/7/+13XeZy/z4ePtfbs
         ue/r9+e8zvM8jvM4ThIRERERERERERERERERERERERERERERERERERERERERERERERERERERERERERER
         ERERkY3zrXhqPDdeFq+LN8e74kPxqfhifD3+Ln4YT8TP4hfxr/Ef8b/jv//vP/8V/x7/HD+PH8X34pvx
@@ -375,7 +375,7 @@
   <data name="MoveToTrashButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAEKSURBVEhL3ZG9DsFQHMXvczDZvIOtXsHObuhqkViI3Quw
+        YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAEKSURBVEhL3ZG9DsFQHMXvczDZvIOtXsHObuhqkViI3Quw
         6CYmNoMYJJ0NBiFFIoIytOuf0+TeXP3yde+iyS+3OcP53Z4y3/dJJ4HAsiwyTVMp6BQCBIZhKAWdEcHV
         vSlBmeB82NFy1KLluEWOPRC5MoHdMWhazwi4RJlALgf4EuT6BI+5kCsTrGddUY658E+QvyXYHq9UnRyC
         U87f4aUApcXhnrI9Jzg/laQKFntXlHM+lSQK5psL5fvbp/JvJLGCQqmSWM5JkiCT84igXGtSrruKLQ0T
