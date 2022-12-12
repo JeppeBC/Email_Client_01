@@ -47,21 +47,25 @@
             this.SearchContentCheck = new System.Windows.Forms.CheckBox();
             this.PrioritySelecter = new System.Windows.Forms.ComboBox();
             this.InboxGrid = new System.Windows.Forms.DataGridView();
+            this.Flags = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Sender = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Subject = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Date = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.emailBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.emailSenderBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.PriorityGrid = new System.Windows.Forms.DataGridView();
             this.Remove = new System.Windows.Forms.DataGridViewButtonColumn();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Flags = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Sender = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Subject = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Date = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.panel3 = new System.Windows.Forms.Panel();
+            this.panel2 = new System.Windows.Forms.Panel();
             this.toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.InboxGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.emailBindingSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.emailSenderBindingSource)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PriorityGrid)).BeginInit();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // toolStrip1
@@ -266,6 +270,38 @@
             this.InboxGrid.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.InboxGrid_Click);
             this.InboxGrid.CellContentDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.InboxGrid_DoubleClick);
             // 
+            // Flags
+            // 
+            this.Flags.FillWeight = 10F;
+            this.Flags.HeaderText = "Flags";
+            this.Flags.MinimumWidth = 8;
+            this.Flags.Name = "Flags";
+            this.Flags.Width = 72;
+            // 
+            // Sender
+            // 
+            this.Sender.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Sender.FillWeight = 31.57895F;
+            this.Sender.HeaderText = "Sender";
+            this.Sender.MinimumWidth = 8;
+            this.Sender.Name = "Sender";
+            // 
+            // Subject
+            // 
+            this.Subject.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Subject.FillWeight = 31.57895F;
+            this.Subject.HeaderText = "Subject";
+            this.Subject.MinimumWidth = 8;
+            this.Subject.Name = "Subject";
+            // 
+            // Date
+            // 
+            this.Date.FillWeight = 10F;
+            this.Date.HeaderText = "Date";
+            this.Date.MinimumWidth = 8;
+            this.Date.Name = "Date";
+            this.Date.Width = 70;
+            // 
             // emailBindingSource
             // 
             this.emailBindingSource.DataSource = typeof(Email_Client_01.Email);
@@ -314,37 +350,33 @@
             this.dataGridViewTextBoxColumn2.MinimumWidth = 8;
             this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
             // 
-            // Flags
+            // panel1
             // 
-            this.Flags.FillWeight = 10F;
-            this.Flags.HeaderText = "Flags";
-            this.Flags.MinimumWidth = 8;
-            this.Flags.Name = "Flags";
-            this.Flags.Width = 89;
+            this.panel1.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.panel1.AutoSize = true;
+            this.panel1.Controls.Add(this.panel3);
+            this.panel1.Location = new System.Drawing.Point(-1, -1);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(925, 538);
+            this.panel1.TabIndex = 20;
             // 
-            // Sender
+            // panel3
             // 
-            this.Sender.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Sender.FillWeight = 31.57895F;
-            this.Sender.HeaderText = "Sender";
-            this.Sender.MinimumWidth = 8;
-            this.Sender.Name = "Sender";
+            this.panel3.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.panel3.AutoSize = true;
+            this.panel3.Location = new System.Drawing.Point(235, 73);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(687, 462);
+            this.panel3.TabIndex = 22;
             // 
-            // Subject
+            // panel2
             // 
-            this.Subject.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Subject.FillWeight = 31.57895F;
-            this.Subject.HeaderText = "Subject";
-            this.Subject.MinimumWidth = 8;
-            this.Subject.Name = "Subject";
-            // 
-            // Date
-            // 
-            this.Date.FillWeight = 10F;
-            this.Date.HeaderText = "Date";
-            this.Date.MinimumWidth = 8;
-            this.Date.Name = "Date";
-            this.Date.Width = 150;
+            this.panel2.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.panel2.AutoSize = true;
+            this.panel2.Location = new System.Drawing.Point(2, 72);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(229, 455);
+            this.panel2.TabIndex = 21;
             // 
             // Inboxes
             // 
@@ -365,6 +397,8 @@
             this.Controls.Add(this.Compose);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.toolStrip1);
+            this.Controls.Add(this.panel1);
+            this.Controls.Add(this.panel2);
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.Name = "Inboxes";
             this.Text = "Prime Email";
@@ -375,6 +409,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.emailBindingSource)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.emailSenderBindingSource)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.PriorityGrid)).EndInit();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -408,5 +444,8 @@
         private DataGridViewTextBoxColumn Sender;
         private DataGridViewTextBoxColumn Subject;
         private DataGridViewTextBoxColumn Date;
+        private Panel panel1;
+        private Panel panel3;
+        private Panel panel2;
     }
 }
