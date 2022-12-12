@@ -15,12 +15,13 @@ using EmailValidation; // package
 using MailKit.Net.Imap;
 using MailKit.Search;
 using Org.BouncyCastle.Asn1.X509;
+using System.Net.Mail;
 
 namespace Email_Client_01
 {
     public partial class NewMail : Form
     {
-        List<string> attachmentPaths;
+        BindingList<Attachment> Attachments;
 
         // draft specific
         bool MailIsDraft = false;
@@ -33,14 +34,21 @@ namespace Email_Client_01
             InitializeComponent();
             
             this.client = client;
-            attachmentPaths = new();
+            Attachments = new();
+
+            BindingList<Attachment> BL = new BindingList<Attachment>();
+            BL.ListChanged += new ListChangedEventHandler(attachments_changed);
+            Attachments = BL;
+            AttachmentsListBox.DataSource = Attachments;
+            AttachmentsListBox.DisplayMember = "name";
 
         }
 
         public NewMail(MimeMessage msg, ImapClient client)
         {
             InitializeComponent();
-            attachmentPaths = new();
+            Attachments = new();
+
 
             this.client = client;
             RecipientTextBox.Text = msg.To.ToString();
@@ -48,17 +56,13 @@ namespace Email_Client_01
             MessageBodyTextBox.Text = msg.TextBody;
             CCTextBox.Text = msg.Cc.ToString();
 
-
-            foreach(var attach in msg.Attachments)
-            {
-                MessageBox.Show(attach.ToString());
-            }
+            // Do attachment stuff here too TODO:
         }
 
         public NewMail(MimeMessage msg, bool isDraft, ImapClient client)
         {
             InitializeComponent();
-            attachmentPaths = new();
+            Attachments = new();
 
             this.client = client;
             MailIsDraft = isDraft;
@@ -71,6 +75,15 @@ namespace Email_Client_01
             {
                 DraftID = msg.MessageId;
             }
+        }
+
+
+        private void attachments_changed(object? sender, ListChangedEventArgs e)
+        {
+            bool show = Attachments.Count > 0; 
+            AttachmentLabel.Visible = show;
+            AttachmentsListBox.Visible = show;
+            RemoveAttachmentButton.Visible = show;
         }
 
         private void RecipientsMouseOver(object sender, EventArgs e)
@@ -110,18 +123,15 @@ namespace Email_Client_01
                 {
                     string fileSelected = fileDialog.FileName;
 
-                    // add it to the mime message
-                    attachmentPaths.Add(fileSelected);
-
-                    // add to listbox and show the listbox if it is currently hidden.
-                    AttachmentLabel.Visible = true;
-                    AttachmentsListBox.Visible = true;
-                    RemoveAttachmentButton.Visible = true;
-                    AttachmentSizeLabel.Visible = true;
-
                     // Shorten the file name to not include directories
                     string fileSelectedShort = fileSelected.Substring(fileSelected.LastIndexOf('\\') + 1) + " ";
-                    AttachmentsListBox.Items.Add(fileSelectedShort);
+
+
+                    Attachments.Add(new Attachment()
+                    {
+                        filepath = fileSelected,
+                        name = fileSelectedShort,
+                    });
                 }
             }
         }
@@ -242,7 +252,8 @@ namespace Email_Client_01
             var Content = MessageBodyTextBox.Text;
 
 
-            Email email = new Email(To, CC, Subject, Content, attachmentPaths);
+            List<string?> attachmentFilepaths = Attachments.Select(a => a.filepath).ToList();
+            Email email = new Email(To, CC, Subject, Content, attachmentFilepaths);
 
             var s = new EmailSender();
             s.sendEmail(email);
@@ -339,28 +350,14 @@ namespace Email_Client_01
         {
             try
             {
-                // Remove the attachment from the listbox
-                var idx = AttachmentsListBox.SelectedIndex;
-
-                // failsafe
-                if (idx < 0) return;
-                AttachmentsListBox.Items.RemoveAt(idx);
-
-                // Remove the attachment from the list to be constructed as mime message
-                attachmentPaths.RemoveAt(idx);
+                if (AttachmentsListBox.SelectedItem == null) return;
+                var attachment = Attachments[AttachmentsListBox.SelectedIndex];
+                if (attachment == null) return;
+                Attachments.Remove(attachment);
             }
             catch
             {
                 MessageBox.Show("No Attachment selected!");
-            }
-
-            // if no more attachments hide the listbox, label and button
-            if (attachmentPaths.Count <= 0)
-            {
-                RemoveAttachmentButton.Visible = false;
-                AttachmentLabel.Visible = false;
-                AttachmentsListBox.Visible = false;
-                AttachmentSizeLabel.Visible = false;
             }
         }
 
@@ -375,9 +372,9 @@ namespace Email_Client_01
 
             public string Content { get; set; }
 
-            public List<string> Attachments { get; set; }
+            public List<string?> Attachments { get; set; }
 
-            public Email(string[] to, string[]? cc, string subject, string content, List<string> attachments)
+            public Email(string[] to, string[]? cc, string subject, string content, List<string?> attachments)
 
             {
                 To = new List<MailboxAddress>();

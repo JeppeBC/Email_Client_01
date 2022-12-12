@@ -159,7 +159,7 @@ namespace Email_Client_01
 
                     text.Write(message.TextBody);
 
-
+                    
 
 
                     builder.TextBody = text.ToString();

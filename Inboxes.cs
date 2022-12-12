@@ -147,6 +147,13 @@ namespace Email_Client_01
             return instance ??= new Inboxes(client);
         }
 
+
+        // get the instance, does not create one
+        public static Inboxes? GetInstance()
+        {
+            return instance;
+        }
+
         // retrives all the folder names and add to the listbox
         private async void RetrieveFolders()
         {
@@ -926,8 +933,9 @@ namespace Email_Client_01
         private bool isFolderDisplayAllCount(IMailFolder? f)
         {
             if (f == null) return false;
-            if (f.Attributes.HasFlag(FolderAttributes.Drafts)    ||
-                f.Attributes.HasFlag(FolderAttributes.Flagged)   ||
+
+            // could add f.Attributes.HasFlag(FolderAttributes.Drafts) here if we wanted this for drafts.
+            if (f.Attributes.HasFlag(FolderAttributes.Flagged)   ||
                 f.Attributes.HasFlag(FolderAttributes.Important)
                 ) return true;
             return false;
@@ -1149,10 +1157,13 @@ namespace Email_Client_01
                 // Mark the message as unread
                 await folder.RemoveFlagsAsync(msg.UniqueId, MessageFlags.Seen, false);
 
-                // instead of reloading the entire folder to capture this (UNREAD) change,
+                // instead of reloading the entire folder using RefreshCurrenFolder() or RetrieveMessagesFromFolder() to capture this (UNREAD) change,
                 // we just manually forcefully update that one element in the listbox (this will automatically happen on refresh)
                 Inbox.Items[msgIndex] = "(UNREAD) " + Inbox.Items[msgIndex];
+                // To prevent us from prefixing (UNREAD) multiple times we need to update the messagesummaries however
+                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
+                IncrementFolderCount(folder);
             }
             catch (Exception ex)
             {
