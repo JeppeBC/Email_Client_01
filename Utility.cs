@@ -20,6 +20,8 @@ namespace Email_Client_01
         public static readonly string ImapServer = "imap.gmail.com";
         public static readonly int ImapPort = 993;
 
+        public static readonly string JsonFilePath = Path.Combine(Path.GetTempPath(), "filters.json");
+
 
 
         public static async Task<ImapClient> GetImapClient()

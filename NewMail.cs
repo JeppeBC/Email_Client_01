@@ -47,6 +47,12 @@ namespace Email_Client_01
             SubjectTextBox.Text = msg.Subject;
             MessageBodyTextBox.Text = msg.TextBody;
             CCTextBox.Text = msg.Cc.ToString();
+
+
+            foreach(var attach in msg.Attachments)
+            {
+                MessageBox.Show(attach.ToString());
+            }
         }
 
         public NewMail(MimeMessage msg, bool isDraft, ImapClient client)
@@ -111,6 +117,7 @@ namespace Email_Client_01
                     AttachmentLabel.Visible = true;
                     AttachmentsListBox.Visible = true;
                     RemoveAttachmentButton.Visible = true;
+                    AttachmentSizeLabel.Visible = true;
 
                     // Shorten the file name to not include directories
                     string fileSelectedShort = fileSelected.Substring(fileSelected.LastIndexOf('\\') + 1) + " ";
@@ -353,6 +360,7 @@ namespace Email_Client_01
                 RemoveAttachmentButton.Visible = false;
                 AttachmentLabel.Visible = false;
                 AttachmentsListBox.Visible = false;
+                AttachmentSizeLabel.Visible = false;
             }
         }
 
@@ -583,6 +591,7 @@ namespace Email_Client_01
             finally
             {
                 this.Cursor = Cursors.Default;
+                this.Close();
             }
         }
     }

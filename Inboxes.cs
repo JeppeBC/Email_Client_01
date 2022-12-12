@@ -15,7 +15,6 @@ using System.Security.Cryptography;
 using System.Timers;
 using System.Windows.Forms;
 using System.Xml.Linq;
-using static Email_Client_01.Utility;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 
@@ -34,16 +33,49 @@ namespace Email_Client_01
         bool loadingFolders = false;
         bool loadingMessages = false;
         IMailFolder? folder; // current folder (mostly bookkeeping for loading)
-        int filterCount = 0;
 
-        // storing folders in a dictionary.
-        Dictionary<string, string>? foldersMap;
+        BindingList<Filter> FilterList;
+
+        BindingList<Folder> FolderList;
+
 
 
         // private construtor as we employ singleton pattern
         private Inboxes(ImapClient client)
         {
+            InitializeComponent();
+
             this.client = client;
+
+            // filepath of filter.json file
+            // if file does not exist
+            if (!File.Exists(Utility.JsonFilePath))
+            {
+                // create the file
+                File.Create(Utility.JsonFilePath).Close();
+            }
+            // Read the entire file and De-serialize to list of filters
+            var Filters = Utility.JsonFileReader.Read<List<Filter>>(Utility.JsonFilePath) ?? new List<Filter>();
+
+
+
+            // Update the jsonfile when form closes
+            this.FormClosed += (s, args) =>
+            {
+                Utility.JsonFileWriter.Write<List<Filter>>(Utility.JsonFilePath, Filters);
+            };
+
+            BindingList<Filter> BindingListFilters = new BindingList<Filter>(Filters);
+            BindingListFilters.ListChanged += new ListChangedEventHandler(filters_changed);
+            FilterList = BindingListFilters;
+            FilterListbox.DataSource = FilterList;
+            FilterListbox.DisplayMember = "Name";
+
+            BindingList<Folder> BindingListFolders = new BindingList<Folder>();
+            BindingListFolders.ListChanged += new ListChangedEventHandler(folders_changed);
+            FolderList = BindingListFolders;
+            Folders.DataSource = FolderList;
+            Folders.DisplayMember = "ListBoxName";
 
             // Add timer as a way of enforcing that this client connection does not time out naturally.
             // Normally this can happen anywhere between 10, 15, 20, 25 or even 30 min. It is not very consistent. 
@@ -54,10 +86,52 @@ namespace Email_Client_01
 
             folder = null;
 
-            InitializeComponent();
             // todo change this to the idle, active and ui threads. Add checks that this connection does not break / expire
             RetrieveFolders();
         }
+
+        void filters_changed(object? sender, ListChangedEventArgs e)
+        {
+            // show the item if checkbox is checked
+            if (ShowFiltersCheckbox.Checked && FilterList.Count > 0)
+            {
+                FilterListbox.Visible = true;
+                FilterLabel.Visible = true;
+                RemoveFilterButton.Visible = true;
+            }
+            else
+            {
+                FilterListbox.Visible = false;
+                FilterLabel.Visible = false;
+                RemoveFilterButton.Visible = false;
+            }
+
+
+            /*            switch (e.ListChangedType)
+                        {
+            *//*            case ListChangedType.ItemAdded:
+                            FilterListbox.Refresh();
+                            break;
+                        case ListChangedType.ItemChanged:
+                            FilterListbox.Refresh();
+                            break;
+                        case ListChangedType.ItemDeleted:
+                            FilterListbox.Refresh();
+                            break;
+                        case ListChangedType.ItemMoved:
+                            FilterListbox.Refresh();
+                            break;*//*
+                            default:
+                                break;
+                                // some more minor ones, etc.
+                        }*/
+        }
+
+        private void folders_changed(object? sender, ListChangedEventArgs e)
+        {
+/*            MessageBox.Show("folders changed");*/
+        }
+
 
         private void OnTimedEvent(object? sender, ElapsedEventArgs e)
         {
@@ -74,7 +148,6 @@ namespace Email_Client_01
         }
 
         // retrives all the folder names and add to the listbox
-        // retrives all the folder names and add to the listbox
         private async void RetrieveFolders()
         {
             this.Cursor = Cursors.WaitCursor;
@@ -84,36 +157,47 @@ namespace Email_Client_01
                 // Load in the folders from imap into a list
                 folders = await client.GetFoldersAsync(new FolderNamespace('.', ""));
 
-                // storing folders in a dictionary.
-                foldersMap = new Dictionary<string, string>();
+                FolderList.Clear();
 
 
                 foreach (var folder in folders)
                 {
                     if (folder.Exists)
                     {
-                        int unreadCount = 0;
 
                         // counting number of unread messages, the time this takes is noticeable #TODO
                         folder.Open(FolderAccess.ReadOnly);
 
-                        foreach (var uid in folder.Search(SearchQuery.NotSeen))
-                        {
-                            unreadCount++;
-                        }
+
 
                         var folderName = folder.FullName.Substring(folder.FullName.LastIndexOf("/") + 1);
-                        folderName += " (" + unreadCount + ")";
-                        foldersMap.Add(key: folder.FullName, value: folderName); // add to dictionary. 
+
+
+                        if (!isFolderUnreadBlacklisted(folder))
+                        {
+                            int unreadCount = 0;
+                            foreach (var uid in folder.Search(SearchQuery.NotSeen))
+                            {
+                                unreadCount++;
+                            }
+                            folderName += " (" + unreadCount + ")";
+                        }
+                        // show the number of items in the following folders:
+                        if(isFolderDisplayAllCount(folder))
+                        {
+                            if (folder.Count > 0) folderName += " (" + folder.Count + ")";
+                        }
+
+
+
+                        FolderList.Add(new Folder()
+                        {
+                            FullName = folder.FullName,
+                            ListBoxName = folderName
+                        }); ;
                         folder.Close();
                     }
                 }
-
-                // Designating a data source for the listbox. 
-                Folders.DataSource = new BindingSource(foldersMap, null);
-                // The value and keys
-                Folders.DisplayMember = "Value";
-                Folders.ValueMember = "Key";
 
                 RetrieveMessagesFromFolder();
             }
@@ -259,7 +343,7 @@ namespace Email_Client_01
 
         private IMailFolder GetCurrentFolder()
         {
-            return client.GetFolder(Folders.SelectedValue.ToString());
+            return client.GetFolder(FolderList[Folders.SelectedIndex].FullName);
         }
 
 
@@ -286,55 +370,51 @@ namespace Email_Client_01
 
                 await folder.OpenAsync(FolderAccess.ReadWrite);
 
-                var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
-                // if file does not exist
-                if (!File.Exists(filepath))
-                {
-                    // create the file
-                    File.Create(filepath).Close();
-                }
-                // Read the entire file and De-serialize to list of filters
-                var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
-
-
                 // optional TODO optimize the search queries so we can do these in batches.
                 // Each call to search takes about 200ms per filter (of course depending on the number of mails it is filtering)
-                foreach (var filter in FilterList)
+
+                // Notably we do not really care about the unread blacklist here, but it happens to be most of the special folders we also don't want to filter
+                // Namely: Sent, drafts, trashcan, all, flagged
+                if (!isFolderUnreadBlacklisted(folder))
                 {
-                    foreach (var f in folders) // find the IMailFolder from string DestinationFolder
+                    foreach (var filter in FilterList)
                     {
-                        if (f == folder) continue; // no point in moving to the same folder as we are currently in
-                        if (f.FullName != filter.DestinationFolder || !f.Exists) continue;
-                        var query = GetSearchQueryFromFilter(filter);
-                        if (query == null) continue;
-
-                        // find all the mails to be moved
-
-                        // takes like 150-200 ms per filter, slightly (almost negligible) extra ammount from moving the mail.
-                        var listUIDs = await folder.SearchAsync(query.And(SearchQuery.DeliveredAfter(Properties.Time.Default.Date)));
-
-                        //TODO FIx this
-
-                        // this takes slightly less than 200 ms, for loop included for a few mails. Mostly just the call to fecth. 
-                        // fetch summaries before moving to different folder
-
-                        foreach (var summary in folder.Fetch(listUIDs, MessageSummaryItems.Flags))
+                        foreach (var f in folders) // find the IMailFolder from string DestinationFolder
                         {
-                            MessageBox.Show("SUMMARY");
-                            updateFoldersUnreadCount(summary, TargetFolder: f);
+                            if (f == folder) continue; // no point in moving to the same folder as we are currently in
+                            if (f.FullName != filter.DestinationFolder || !f.Exists) continue;
+                            var query = GetSearchQueryFromFilter(filter);
+                            if (query == null) continue;
+
+                            // find all the mails to be moved
+                            // takes like 150-200 ms per filter, slightly (almost negligible) extra ammount from moving the mail.
+                            var listUIDs = await folder.SearchAsync(query.And(SearchQuery.DeliveredAfter(Properties.Time.Default.Date)));
+
+                            // TODO: Document this in report.
+                            // All the mails since last login should be unread by default, so we don't need the 200ms overhead of calling fetch.
+                            // This method is seen below:on the flags as seen below:
+                            /*                            foreach (var summary in folder.Fetch(listUIDs, MessageSummaryItems.Flags))
+                                                        {
+                                                            if (summary.Flags == null || summary.Flags.Value.HasFlag(MessageFlags.Seen)) continue;
+                                                            IncrementFolderUnreadCount(f, decrement: false); // we move an unread  mail to f, so update.
+                                                        }*/
+
+
+
+                            await folder.MoveToAsync(listUIDs, f);
+
+                            // update the unread count on folder f. We are moving (unread) mails to f
+                            IncrementFolderCount(f, value: listUIDs.Count());
+                            
+                            break;
+
                         }
-
-
-                        await folder.MoveToAsync(listUIDs, f);
-
-                        break;
-
                     }
-                }
 
+                }
                 // load in the mails after filtering
                 messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
-
+                int unreadCount = 0;
 
                 if (messageSummaries.Count <= 0)
                 {
@@ -359,8 +439,15 @@ namespace Email_Client_01
                     foreach (var item in messageSummaries.Reverse())
                     {
                         Inbox.Items.Add(FormatInboxMessageText(item));
+
+                        // make sure the folder count is correct
+                        if (isFolderUnreadBlacklisted(folder)) continue;
+                        if (item.Flags != null && !item.Flags.Value.HasFlag(MessageFlags.Seen)) unreadCount += 1;
                     }
                 }
+                // display the unread count if not blacklisted
+                if (isFolderDisplayAllCount(folder)) UpdateFolderCount(folder, folder.Count);
+                else if(!isFolderUnreadBlacklisted(folder)) UpdateFolderCount(folder, unreadCount);
 
             }
             catch (Exception ex)
@@ -412,7 +499,7 @@ namespace Email_Client_01
                     Inbox.Items[messageId] = currentString.Replace("(UNREAD)", "").Trim();
 
                     // Update the unread count
-                    updateFoldersUnreadCount(messageItem, TargetFolder: folder);
+                    IncrementFolderCount(folder, decrement: true);
 
                     // Add read flag
                     await folder.AddFlagsAsync(messageItem.UniqueId, MessageFlags.Seen, true);
@@ -480,14 +567,6 @@ namespace Email_Client_01
                 RetrieveMessagesFromFolder(sender, e);
             }
         }
-
-
-
-
-
-
-
-
 
 
         private async void search(string searchQuery)
@@ -593,20 +672,6 @@ namespace Email_Client_01
             var InitialFolder = Folders.SelectedItem;
 
 
-            // read existing json data
-            var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
-
-
-            // if file does not exist
-            if (!File.Exists(filepath))
-            {
-                // create the file
-                File.Create(filepath).Close();
-            }
-
-            // Read the entire file and De-serialize to list of filters
-            var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
-
             // the 5 commented lines here about the SelecteDIndexChanged and selectedItem is if we do not want to load in the messages as we select them
             /*          var selectedFolder = Folders.SelectedItem;
                         Folders.SelectedIndexChanged -= Folders_SelectedIndexChanged;*/
@@ -671,40 +736,8 @@ namespace Email_Client_01
             });
 
 
-            // sort by destination folder, so we could filter all mails to the same folder in one swoop. 
-            // not implemented currently but if we decide to go with batches. This is very efficient as the number of filters is small
-            FilterList.Sort((x, y) =>
-            {
-                if (!string.IsNullOrEmpty(x.DestinationFolder))
-                    return x.DestinationFolder.CompareTo(y.DestinationFolder);
-                return 0;
-            });
 
 
-            // Update json file with new deserialized object
-            Utility.JsonFileWriter.Write<List<Filter>>(filepath, FilterList);
-
-            // Update the listbox immediately, so we don't have to rely on the guard and untick and tick the show checkbox
-            FilterListbox.Items.Add(FilterName);
-            filterCount += 1;
-
-            // show the item if checkbox is checked
-            if (ShowFiltersCheckbox.Checked && filterCount > 0)
-            {
-                if (FilterListbox.Items.Count != filterCount)
-                {
-                    // remove the entries of listbox and add all. Few so performance cost is negligible. 
-                    FilterListbox.Items.Clear();
-                    foreach (var filter in FilterList)
-                    {
-                        if (!string.IsNullOrEmpty(filter.Name))
-                            FilterListbox.Items.Add(filter.Name);
-                    }
-                }
-                FilterListbox.Visible = true;
-                FilterLabel.Visible = true;
-                RemoveFilterButton.Visible = true;
-            }
 
 
             // LOADING MESSAGES: Load the initial folder back
@@ -818,78 +851,94 @@ namespace Email_Client_01
             }
         }
 
-        private void updateFoldersUnreadCount(IMessageSummary? movedItem, object? FoldersLBItem = null, IMailFolder? TargetFolder = null)
+
+        private void UpdateFolderCount(IMailFolder? folder, int unread)
         {
-            // Modify the folder unread counts
-            if (foldersMap == null) return; // cannot modify something that is not there
-            if (movedItem?.Flags != null && movedItem.Flags.Value.HasFlag(MessageFlags.Seen)) return; // does not need to update count as mail is already seen
-            if (folder == null || folder.FullName == null) return; // this should never happen;
+            if (folder == null) return;
 
 
-            // find the listbox folder which has the unread count from the IMailFolder
+            Folder? folderInList;
+            string DisplayedName = "";
+            int idx;
 
+            folderInList = FolderList.First(item => item.FullName == folder?.FullName);
+            if (folderInList == null || string.IsNullOrEmpty(folderInList.ListBoxName)) return; // guard
+            DisplayedName = folderInList.ListBoxName;
+            idx = FolderList.IndexOf(folderInList);
 
-            // [Gmail]/Spam <--- ActualFolder.FullName
-
-            string fullFolderName = "";
-
-            // if we did not pass the folder listbox item, but we pass the targeted folder, we need to find the corresponding listbox item.
-            if (FoldersLBItem == null && TargetFolder != null)
-            {
-                foreach (var item in Folders.Items)
-                {
-                    string? itemString = item.ToString();             //[[Gmail]/Spam, Spam (68)] <-- ListBox string entries 
-                    if (string.IsNullOrEmpty(itemString)) continue;
-                    var firstPart = itemString.Substring(1, itemString.IndexOf(',') - 1); // Get first part [Gmail]/Spam as these are the ActualFolder.FullName
-                    if (firstPart == TargetFolder?.Name)   // If match with ActualFolder
-                    {
-                        fullFolderName = itemString; // The entire "[[Gmail]/Spam, Spam (68)]"
-                        break;
-                    }
-                }
-
-            }
-            else if (FoldersLBItem != null)
-            {
-                string? folderItem = FoldersLBItem.ToString();
-                if (!string.IsNullOrEmpty(folderItem)) fullFolderName = folderItem;
-            }
-
-
-            // Update currently open folder
-            // Here displayedName will be of the form "[[Gmail]/Spam, Spam (68)]", and folder.FullName is the "[Gmail]/Spam" part.
-            string displayedName = foldersMap[folder.FullName].Substring(folder.FullName.LastIndexOf(',') + 1); // get part after comma
-            displayedName = displayedName.Remove(displayedName.Length - 1);  // remove the last bracket ]
-            int number = int.Parse(displayedName.Split('(', ')')[1]); // fetch the number part
-            number -= 1; // update
-            foldersMap[folder.FullName] = (displayedName.Split('(', ')')[0] + "(" + number.ToString() + ")").Trim(); //remove extra spaces and form new string.
-
-
-            // If these are not null, we are moving a mail to this folder. We update this too then.
-            if (FoldersLBItem != null && TargetFolder != null)
-            {
-                displayedName = fullFolderName.Substring(fullFolderName.LastIndexOf(',') + 1); // We get "Spam (25)]", so we need to remove last character
-                displayedName = displayedName.Remove(displayedName.Length - 1);
-                number = int.Parse(displayedName.Split('(', ')')[1]); // get number between parentheses
-                number += 1;
-                foldersMap[TargetFolder.FullName] = (displayedName.Split('(', ')')[0] + "(" + number.ToString() + ")").Trim();
-            }
-
-
-            // Modifying listboxes with assigned datasources is very restricted. So we just reassign it. 
-            Folders.DataSource = new BindingSource(foldersMap, null);
-
+            // turning off the index selected here, or we get an error because when modifying a property of the data source bindinglist it automatically selects a new index briefly
+            // (enough to cause error/exception as this index is out of bounds)
+            Folders.SelectedIndexChanged -= Folders_SelectedIndexChanged;
+            FolderList[idx].ListBoxName = (DisplayedName.Split('(', ')')[0] + "(" + unread.ToString() + ")");
+            Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;
 
         }
 
+        private void IncrementFolderCount(IMailFolder? folder, bool decrement = false, int value = 1)
+        {
+            if (folder == null) return;
 
 
+            Folder? folderInList;
+            string DisplayedName = "";
+            int number;
+            int idx;
 
-        // what to do on successful drag and drop
+            folderInList = FolderList.First(item => item.FullName == folder?.FullName);
+            if (folderInList == null || string.IsNullOrEmpty(folderInList.ListBoxName)) return; // guard
+            DisplayedName = folderInList.ListBoxName;
+            // we have moved one mail to this target folder, so we should update the display / view
+            number = int.Parse(DisplayedName.Split('(', ')')[1]); // get number between parentheses
+            number = decrement ? number - value : number + value;
+            idx = FolderList.IndexOf(folderInList);
+
+            // turning off the index selected here, or we get an error because when modifying a property of the data source bindinglist it automatically selects a new index briefly
+            // (enough to cause error/exception as this index is out of bounds)
+            Folders.SelectedIndexChanged -= Folders_SelectedIndexChanged;
+            FolderList[idx].ListBoxName = (DisplayedName.Split('(', ')')[0] + "(" + number.ToString() + ")");
+            Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;
+        }
+
+       private bool isFolderUnreadBlacklisted(IMailFolder? f)
+        {
+            if (f == null) return false;
+            if (f.Attributes.HasFlag(FolderAttributes.Trash)     ||
+                f.Attributes.HasFlag(FolderAttributes.Drafts)    ||
+                f.Attributes.HasFlag(FolderAttributes.Sent)      || 
+                f.Attributes.HasFlag(FolderAttributes.All)       ||
+                f.Attributes.HasFlag(FolderAttributes.Flagged)   ||
+                f.Attributes.HasFlag(FolderAttributes.Important) ||
+                f.Attributes.HasFlag(FolderAttributes.Archive)
+                ) return true;
+            return false;
+        }
+
+        private bool isFolderDragDropBlacklisted(IMailFolder? f)
+        {
+            if (f == null) return false;
+            if (f.Attributes.HasFlag(FolderAttributes.Drafts) ||
+                f.Attributes.HasFlag(FolderAttributes.Sent) ||
+                f.Attributes.HasFlag(FolderAttributes.All)
+                ) return true;
+            return false;
+        }
+
+        private bool isFolderDisplayAllCount(IMailFolder? f)
+        {
+            if (f == null) return false;
+            if (f.Attributes.HasFlag(FolderAttributes.Drafts)    ||
+                f.Attributes.HasFlag(FolderAttributes.Flagged)   ||
+                f.Attributes.HasFlag(FolderAttributes.Important)
+                ) return true;
+            return false;
+        }
+
+  
+
+
         // what to do on successful drag and drop
         private async void Folders_DragDrop(object sender, DragEventArgs e)
         {
-
             // get mouse position relative to the folders listbox
             Point relativeCursorPoint = Folders.PointToClient(Control.MousePosition);
             var folderIdx = Folders.IndexFromPoint(relativeCursorPoint);
@@ -903,10 +952,11 @@ namespace Email_Client_01
 
             // we want the Folder.Fullname part
             // tokenize the string at "," and get the first part minus first character
-            string folderName = fullFolderName.Substring(1, fullFolderName.IndexOf(",") - 1);
+            string? folderName = FolderList[folderIdx].FullName;
 
             // find index of message to be moved:
             if (e.Data == null) return;
+            if (string.IsNullOrEmpty(folderName)) return;
             // get the passed index in mail of mail to move from inbox.
             var InboxIdx = (int)e.Data.GetData(e.Data.GetFormats()[0]);
 
@@ -930,14 +980,48 @@ namespace Email_Client_01
                     // we find the correct folder and ensure that it is not either the special drafts- or sent folder.
                     if (f.FullName == folderName)
                     {
-                        if(f.Attributes.HasFlag(FolderAttributes.Drafts) ||f.Attributes.HasFlag(FolderAttributes.Sent)) break;
-                        
+                        if(isFolderDragDropBlacklisted(f))
+                        {
+                            MessageBox.Show($"Not allowed to drag and drop mails to special folder \"{f.FullName}\"\nYour Email will be loaded into the current folder again on refresh");
+                            break;
+                        }
+
                         // Move mail
                         await folder.OpenAsync(FolderAccess.ReadWrite);
                         await folder.MoveToAsync(selectedItem.UniqueId, f);
 
-                        // Ensure that if we move an unread mail that the displayed unread counts are updated in the respective folders;
-                        updateFoldersUnreadCount(selectedItem, FoldersLBItem: Folders.Items[folderIdx], TargetFolder: f);
+                        // Instead of calling RefreshCurrentFolder() or RetrieveMessagesFromFolder(), we just remove it from the current listbox as this is faster (this is done by drag and drop automatically)
+                        // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
+
+                        // update messageSummaries so futuure operations without loading all messages work as intended
+                        messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags); 
+
+/*                        RetrieveMessagesFromFolder(); // updates the current folder unread count too, so we only need to worry about the target folder*/
+
+
+
+                        // Update current folder count
+                        if (isFolderDisplayAllCount(folder))
+                        {
+                            IncrementFolderCount(folder, decrement: true);
+                        }
+                        else if (!isFolderUnreadBlacklisted(folder))
+                        {
+                            if (selectedItem.Flags != null && !selectedItem.Flags.Value.HasFlag(MessageFlags.Seen))
+                                IncrementFolderCount(folder, decrement: true);
+                        }
+
+                        // Update target folder if applicable
+                        if (isFolderDisplayAllCount(f))
+                        {
+                            IncrementFolderCount(f);
+                        }
+                        else if(!isFolderUnreadBlacklisted(f))
+                        {
+                            if (selectedItem.Flags != null && !selectedItem.Flags.Value.HasFlag(MessageFlags.Seen))
+                                IncrementFolderCount(f);
+                        }
+
                         break;
                     }
                 }
@@ -985,33 +1069,8 @@ namespace Email_Client_01
 
         private void ShowFiltersCheckbox_CheckStateChanged(object sender, EventArgs e)
         {
-            // read existing json data
-            var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
-            // if file does not exist
-            if (!File.Exists(filepath))
+            if (ShowFiltersCheckbox.Checked && FilterList.Count > 0)
             {
-                // create the file
-                File.Create(filepath).Close();
-            }
-
-            // Read the entire file and De-serialize to list of filters
-            var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
-
-            filterCount = FilterList.Count();
-
-
-            if (ShowFiltersCheckbox.Checked && filterCount > 0)
-            {
-                if (FilterListbox.Items.Count != filterCount)
-                {
-                    // remove the entries of listbox and add all. Few so performance cost is negligible. 
-                    FilterListbox.Items.Clear();
-                    foreach (var filter in FilterList)
-                    {
-                        if (!string.IsNullOrEmpty(filter.Name))
-                            FilterListbox.Items.Add(filter.Name);
-                    }
-                }
                 FilterListbox.Visible = true;
                 FilterLabel.Visible = true;
                 RemoveFilterButton.Visible = true;
@@ -1030,43 +1089,9 @@ namespace Email_Client_01
         {
             // get the filter name
             if (FilterListbox.SelectedItem == null) return;
-            string? filterName = FilterListbox.SelectedItem.ToString();
-
-            if (!string.IsNullOrEmpty(filterName))
-            {
-                // read existing json data
-                var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
-                // if file does not exist
-                if (!File.Exists(filepath))
-                {
-                    // create the file
-                    File.Create(filepath).Close();
-                }
-                // Read the entire file and De-serialize to list of filters
-                var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
-
-                var filter = FilterList.Find(x => x.Name == filterName);
-                if (filter != null && !string.IsNullOrEmpty(filter.Name))
-                {
-                    FilterList.Remove(filter);
-                    filterCount -= 1;
-
-                    // We need to serialize and write the updated version to file
-                    Utility.JsonFileWriter.Write<List<Filter>>(filepath, FilterList);
-
-                    // remove from listbox too
-                    FilterListbox.Items.Remove(filter.Name);
-
-                    // no more filters so we don't show these ui elements. 
-                    if (FilterListbox.Items.Count < 1)
-                    {
-                        FilterListbox.Visible = false;
-                        FilterLabel.Visible = false;
-                        RemoveFilterButton.Visible = false;
-                    }
-
-                }
-            }
+            var filter = FilterList[FilterListbox.SelectedIndex];
+            if (filter == null) return;
+            FilterList.Remove(filter);
         }
 
 
@@ -1105,7 +1130,7 @@ namespace Email_Client_01
         private async void MarkMailAsUnread(object? sender, EventArgs e)
         {
             var msgIndex = Inbox.SelectedIndex;
-            if(msgIndex < 0 || msgIndex > Inbox.Items.Count) // this should not happen
+            if (msgIndex < 0 || msgIndex > Inbox.Items.Count) // this should not happen
             {
                 MessageBox.Show("No email to mark as unread");
                 return;
@@ -1171,13 +1196,17 @@ namespace Email_Client_01
                 await folder.AddFlagsAsync(msg.UniqueId, MessageFlags.Deleted, true);
                 await folder.ExpungeAsync();
 
-                // Instead of calling RefreshCurrentFolder(), we just remove it from the current listbox as this is faster
+
+                // Instead of calling RefreshCurrentFolder() or RetrieveMessagesFromFolder(), we just remove it from the current listbox as this is faster
                 // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
                 Inbox.Items.Remove(Inbox.SelectedItem);
+                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
                 // if the message is unread, we update the unread count of the folder
-                updateFoldersUnreadCount(msg, TargetFolder: folder);
-
+                if (msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen) && !isFolderUnreadBlacklisted(folder)) 
+                {
+                    IncrementFolderCount(folder, decrement: true);
+                }
             }
             catch (Exception ex)
             {
@@ -1282,66 +1311,39 @@ namespace Email_Client_01
                 //TODO easily extendable to subfolders
 
                 // Guard
-                if (foldersMap == null) return;
+                if (FolderList == null) return;
 
                 DialogResult result = MessageBox.Show("Are you sure you want to delete the current folder? The action cannot be undone.", "Delete Folder?", MessageBoxButtons.YesNo);
                 if (result == DialogResult.No)
                     return;
 
+                // folder is the imap folder.
                 if (folder == null) folder = GetCurrentFolder();
 
+
                 // Could add waitcursors here but the call to delete a toplevel folder is really fast...
-                var folderName = folder.FullName;
                 await folder.DeleteAsync();
+
+                // if we get here, we should also delete it locally and not just on the server.
+                // get the folder
+                if (Folders.SelectedItem == null) return;
+                Folder FolderInList = FolderList[Folders.SelectedIndex];
+                if (FolderInList == null) return;
+                FolderList.Remove(FolderInList);
+
                 // Select another folder, here we just select the first one.
                 Folders.SelectedIndex = 0;
-                
-
-
-                // Remove the folder from the listbox instead of reloading all folders, which is computationally expensive. 
-                // Folders have a datasource though, so we need to assign a new one to do this.
-                foldersMap.Remove(folderName);
-                Folders.DataSource = new BindingSource(foldersMap, null);
-                
-
-                // Check if we have a filter to the deleted folder, in which case we should delete this.
-                // read existing json data
-                var filepath = Path.Combine(Path.GetTempPath(), "filters.json");
-                // if file does not exist
-                if (!File.Exists(filepath))
-                {
-                    // create the file
-                    File.Create(filepath).Close();
-                }
-                // Read the entire file and De-serialize to list of filters
-                var FilterList = Utility.JsonFileReader.Read<List<Filter>>(filepath) ?? new List<Filter>();
 
                 // FilterList.ToList() here because we are modifying the list as we increment. If we don't do this we get the 
                 // "Collection was modified, enumeration operation may not execute" exception.
-                foreach(var filter in FilterList.ToList())
+                foreach (var filter in FilterList.ToList())
                 {
-                    if(filter.DestinationFolder == null || filter.DestinationFolder == folderName)
+                    if (filter.DestinationFolder == null || filter.DestinationFolder == FolderInList.FullName)
                     {
                         // delete the filter 
                         FilterList.Remove(filter);
-                        filterCount -= 1;
-
-
-                        if (string.IsNullOrEmpty(filter.Name)) return;
-                        // remove from listbox too
-                        FilterListbox.Items.Remove(filter.Name);
-
-                        // no more filters so we don't show these ui elements. 
-                        if (FilterListbox.Items.Count < 1)
-                        {
-                            FilterListbox.Visible = false;
-                            FilterLabel.Visible = false;
-                            RemoveFilterButton.Visible = false;
-                        }
                     }
                 }
-                // We need to serialize and write the updated version to file
-                Utility.JsonFileWriter.Write<List<Filter>>(filepath, FilterList);
 
             }
             catch (Exception ex)

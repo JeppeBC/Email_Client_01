@@ -42,6 +42,7 @@
             this.AttachmentLabel = new System.Windows.Forms.Label();
             this.RemoveAttachmentButton = new System.Windows.Forms.Button();
             this.SaveDraftButton = new System.Windows.Forms.Button();
+            this.AttachmentSizeLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label2
@@ -181,7 +182,7 @@
             // 
             // RemoveAttachmentButton
             // 
-            this.RemoveAttachmentButton.Location = new System.Drawing.Point(1977, 1074);
+            this.RemoveAttachmentButton.Location = new System.Drawing.Point(1977, 1120);
             this.RemoveAttachmentButton.Name = "RemoveAttachmentButton";
             this.RemoveAttachmentButton.Size = new System.Drawing.Size(213, 153);
             this.RemoveAttachmentButton.TabIndex = 14;
@@ -200,12 +201,22 @@
             this.SaveDraftButton.UseVisualStyleBackColor = true;
             this.SaveDraftButton.Click += new System.EventHandler(this.SaveDraftButton_Click);
             // 
+            // AttachmentSizeLabel
+            // 
+            this.AttachmentSizeLabel.AutoSize = true;
+            this.AttachmentSizeLabel.Location = new System.Drawing.Point(1967, 1047);
+            this.AttachmentSizeLabel.Name = "AttachmentSizeLabel";
+            this.AttachmentSizeLabel.Size = new System.Drawing.Size(91, 48);
+            this.AttachmentSizeLabel.TabIndex = 16;
+            this.AttachmentSizeLabel.Text = "Size:";
+            // 
             // NewMail
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(20F, 48F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.ClientSize = new System.Drawing.Size(2286, 1440);
+            this.Controls.Add(this.AttachmentSizeLabel);
             this.Controls.Add(this.SaveDraftButton);
             this.Controls.Add(this.RemoveAttachmentButton);
             this.Controls.Add(this.AttachmentLabel);
@@ -243,5 +254,6 @@
         private Label AttachmentLabel;
         private Button RemoveAttachmentButton;
         private Button SaveDraftButton;
+        private Label AttachmentSizeLabel;
     }
 }

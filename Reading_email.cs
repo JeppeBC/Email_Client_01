@@ -131,14 +131,15 @@ namespace Email_Client_01
         {
             var ForwardedMessage = new MimeMessage();
 
-/*            ForwardedMessage.ReplyTo.AddRange(message.ReplyTo);*/
+            /*            ForwardedMessage.ReplyTo.AddRange(message.ReplyTo);*/
 
+            var builder = new BodyBuilder();
+            // Add attachments 
+            foreach(var attachment in message.Attachments)
+            {
+                builder.Attachments.Add(attachment);
+            }
 
-            // set the reply subject
-            if (!message.Subject.StartsWith("FWD:", StringComparison.OrdinalIgnoreCase))
-                ForwardedMessage.Subject = "FWD:" + message.Subject;
-            else
-                ForwardedMessage.Subject = message.Subject;
 
 
             // quote the original message text
@@ -158,12 +159,24 @@ namespace Email_Client_01
 
                     text.Write(message.TextBody);
 
-                    ForwardedMessage.Body = new TextPart("plain")
+
+
+
+                    builder.TextBody = text.ToString();
+/*                    ForwardedMessage.Body = new TextPart("plain")
                     {
                         Text = text.ToString()
-                    };
+                    };*/
                 }
             }
+
+            ForwardedMessage.Body = builder.ToMessageBody();
+
+            // set the reply subject
+            if (!message.Subject.StartsWith("FWD:", StringComparison.OrdinalIgnoreCase))
+                ForwardedMessage.Subject = "FWD:" + message.Subject;
+            else
+                ForwardedMessage.Subject = message.Subject;
 
             new NewMail(ForwardedMessage, client).Show();
         }
