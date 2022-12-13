@@ -254,7 +254,8 @@ namespace Email_Client_01
 
         // takes listbox, translates it into a radiolistbox and prompts the user to select one item.
         // SelectedFolder is mutated to match the user's choice. DialogResult returned. 
-        public static DialogResult RadioListBoxInput(ListBox lb, ref string? selectedFolder)
+        // DisplayMember is for class objects if they are stored in the list box, for specifying which attribute to show
+        public static DialogResult RadioListBoxInput(ListBox lb, string displayMember, string valueMember, ref string? selectedObject)
         {
             Form form = new Form();
             Label label = new Label();
@@ -267,9 +268,10 @@ namespace Email_Client_01
             // todo set maximum limit to protect form?
 
             RBL.DataSource = lb.DataSource;
-            // The value and keys
-            RBL.DisplayMember = "Value";
-            RBL.ValueMember = "Key";
+
+            // Currently just hardcoded
+            RBL.DisplayMember = displayMember;
+            RBL.ValueMember = valueMember;
 
             form.Text = "Folders";
             label.Text = "Please select a destination folder: ";
@@ -299,7 +301,7 @@ namespace Email_Client_01
             DialogResult dialogResult = form.ShowDialog();
 
 
-            selectedFolder = RBL.SelectedItem.ToString();
+            selectedObject = (string?) RBL.SelectedValue;
             return dialogResult;
         }
 

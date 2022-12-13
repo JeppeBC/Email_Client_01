@@ -107,15 +107,19 @@ namespace Email_Client_01
                 var sender = message.Sender ?? message.From.Mailboxes.FirstOrDefault();
 
                 quoted.WriteLine("On {0}, {1} wrote:", message.Date.ToString("f"), !string.IsNullOrEmpty(sender?.Name) ? sender.Name : sender?.Address);
-                using (var reader = new StringReader(message.TextBody))
+                if(!string.IsNullOrEmpty(message.TextBody))
                 {
-                    string? line;
-
-                    while ((line = reader.ReadLine()) != null)
+                    using (var reader = new StringReader(message.TextBody))
                     {
-                        quoted.Write("> ");
-                        quoted.WriteLine(line);
+                        string? line;
+
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            quoted.Write("> ");
+                            quoted.WriteLine(line);
+                        }
                     }
+
                 }
 
                 reply.Body = new TextPart("plain")

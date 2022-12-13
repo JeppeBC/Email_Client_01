@@ -47,6 +47,7 @@
             this.RefreshFoldersButton = new System.Windows.Forms.Button();
             this.CreateFolderButton = new System.Windows.Forms.Button();
             this.DeleteFolderButton = new System.Windows.Forms.Button();
+            this.FilterUnreadCheckbox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // Inbox
@@ -219,7 +220,7 @@
             // 
             // CreateFolderButton
             // 
-            this.CreateFolderButton.Location = new System.Drawing.Point(451, 91);
+            this.CreateFolderButton.Location = new System.Drawing.Point(264, 107);
             this.CreateFolderButton.Name = "CreateFolderButton";
             this.CreateFolderButton.Size = new System.Drawing.Size(225, 69);
             this.CreateFolderButton.TabIndex = 22;
@@ -229,7 +230,7 @@
             // 
             // DeleteFolderButton
             // 
-            this.DeleteFolderButton.Location = new System.Drawing.Point(220, 100);
+            this.DeleteFolderButton.Location = new System.Drawing.Point(33, 100);
             this.DeleteFolderButton.Name = "DeleteFolderButton";
             this.DeleteFolderButton.Size = new System.Drawing.Size(225, 69);
             this.DeleteFolderButton.TabIndex = 23;
@@ -237,12 +238,24 @@
             this.DeleteFolderButton.UseVisualStyleBackColor = true;
             this.DeleteFolderButton.Click += new System.EventHandler(this.DeleteFolderButton_Click);
             // 
+            // FilterUnreadCheckbox
+            // 
+            this.FilterUnreadCheckbox.AutoSize = true;
+            this.FilterUnreadCheckbox.Location = new System.Drawing.Point(517, 109);
+            this.FilterUnreadCheckbox.Name = "FilterUnreadCheckbox";
+            this.FilterUnreadCheckbox.Size = new System.Drawing.Size(278, 52);
+            this.FilterUnreadCheckbox.TabIndex = 24;
+            this.FilterUnreadCheckbox.Text = "Show Unread";
+            this.FilterUnreadCheckbox.UseVisualStyleBackColor = true;
+            this.FilterUnreadCheckbox.CheckedChanged += new System.EventHandler(this.FilterUnreadCheckbox_CheckedChanged);
+            // 
             // Inboxes
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(20F, 48F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.ClientSize = new System.Drawing.Size(2286, 1274);
+            this.Controls.Add(this.FilterUnreadCheckbox);
             this.Controls.Add(this.DeleteFolderButton);
             this.Controls.Add(this.CreateFolderButton);
             this.Controls.Add(this.RefreshFoldersButton);
@@ -287,5 +300,6 @@
         private Button RefreshFoldersButton;
         private Button CreateFolderButton;
         private Button DeleteFolderButton;
+        private CheckBox FilterUnreadCheckbox;
     }
 }
