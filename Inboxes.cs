@@ -29,12 +29,13 @@ namespace Email_Client_01
         List<string> filterNames = new();
         private static Inboxes instance = null!;
         private bool clicked = false; // for double clicks handling
-        ImapClient client;
+        private ImapClient client;
         bool loadingFolders = false;
         bool loadingMessages = false;
         IMailFolder? folder; // current folder (mostly bookkeeping for loading)
 
         BindingList<Filter> FilterList;
+        HashSet<string> FilterSet = new();
 
         BindingList<Folder> FolderList;
 
@@ -145,6 +146,13 @@ namespace Email_Client_01
         {
             // coalescing operator, return first non-null value; 
             return instance ??= new Inboxes(client);
+        }
+
+
+        // get the instance, does not create one
+        public static Inboxes? GetInstance()
+        {
+            return instance;
         }
 
         // retrives all the folder names and add to the listbox
@@ -377,7 +385,7 @@ namespace Email_Client_01
 
                 // Notably we do not really care about the unread blacklist here, but it happens to be most of the special folders we also don't want to filter
                 // Namely: Sent, drafts, trashcan, all, flagged
-                if (!isFolderUnreadBlacklisted(folder))
+                if (!isFilterBlacklisted(folder))
                 {
                     foreach (var filter in FilterList)
                     {
@@ -385,6 +393,9 @@ namespace Email_Client_01
                         {
                             if (f == folder) continue; // no point in moving to the same folder as we are currently in
                             if (f.FullName != filter.DestinationFolder || !f.Exists) continue;
+                            // should not allow creating filters to these folders in the first place, but a guard in case json file is manually modified perhaps.
+                            if (isFolderMoveMailToThisBlacklisted(f)) continue; 
+
                             var query = GetSearchQueryFromFilter(filter);
                             if (query == null) continue;
 
@@ -392,21 +403,32 @@ namespace Email_Client_01
                             // takes like 150-200 ms per filter, slightly (almost negligible) extra ammount from moving the mail.
                             var listUIDs = await folder.SearchAsync(query.And(SearchQuery.DeliveredAfter(Properties.Time.Default.Date)));
 
-                            // TODO: Document this in report.
-                            // All the mails since last login should be unread by default, so we don't need the 200ms overhead of calling fetch.
-                            // This method is seen below:on the flags as seen below:
-                            /*                            foreach (var summary in folder.Fetch(listUIDs, MessageSummaryItems.Flags))
-                                                        {
-                                                            if (summary.Flags == null || summary.Flags.Value.HasFlag(MessageFlags.Seen)) continue;
-                                                            IncrementFolderUnreadCount(f, decrement: false); // we move an unread  mail to f, so update.
-                                                        }*/
+                            if (listUIDs.Count <= 0) continue; // nothing to move so we dont need to do anything 
 
+                            // This similarly takes 100-200ms per filter, this following segment prevens the filter collisions
+                            // where you can have one filter move one mail to say spam and another one that moves the same mail to inbox or whatever.
+                            // In this scenario the user never sees the mail, but only the count go up and down when it is being moved. 
+                            // This block ensures that we only filter a mail at most once. However it is a somewhat expensive call as we access the imap client.
+                            // We do this as the Unique IDs are only folder specific, whereas the emailid is a globally unique identifier. 
+                            var messages = await folder.FetchAsync(listUIDs, MessageSummaryItems.UniqueId);
+                            foreach (var message in messages)
+                            {
+                                // Add the globally unique emailid to set. If present the method returns false
+                                // So if it is already present in the set, we remove the unique id from list of uids to be moved. 
+                                if (!FilterSet.Add(message.EmailId))
+                                {
+                                    listUIDs.Remove(listUIDs.First(id => id == message.UniqueId));
+                                }
+                            }
 
 
                             await folder.MoveToAsync(listUIDs, f);
 
+                            
+
                             // update the unread count on folder f. We are moving (unread) mails to f
                             IncrementFolderCount(f, value: listUIDs.Count());
+                            // We are moving a message before it is shown in the current listbox, so we do not need to update the count of current folder. 
                             
                             break;
 
@@ -418,7 +440,11 @@ namespace Email_Client_01
                 messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
                 int unreadCount = 0;
 
-                if (messageSummaries.Count <= 0)
+                if(FilterUnreadCheckbox.Checked && !isFolderWithoutUnreads(folder))
+                {
+                    unreadCount = ShowUnreadMails(messageSummaries);
+                }
+                else if (messageSummaries.Count <= 0)
                 {
                     Inbox.Items.Add("This folder is empty!");
                     InboxGrid.Rows.Add("This folder is empty!");
@@ -451,7 +477,7 @@ namespace Email_Client_01
                 }
                 // display the unread count if not blacklisted
                 if (isFolderDisplayAllCount(folder)) UpdateFolderCount(folder, folder.Count);
-                else if(!isFolderUnreadBlacklisted(folder)) UpdateFolderCount(folder, unreadCount);
+                else if(!isFolderUnreadBlacklisted(folder) && unreadCount > -1) UpdateFolderCount(folder, unreadCount);
 
             }
             catch (Exception ex)
@@ -683,7 +709,7 @@ namespace Email_Client_01
             /*          var selectedFolder = Folders.SelectedItem;
                         Folders.SelectedIndexChanged -= Folders_SelectedIndexChanged;*/
             string? DestinationFolder = "";
-            if (!(Utility.RadioListBoxInput(Folders, ref DestinationFolder) == DialogResult.OK))
+            if (!(Utility.RadioListBoxInput(Folders, "ListBoxName", "FullName", ref DestinationFolder) == DialogResult.OK))
             {
                 /*                Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;*/
                 return;
@@ -695,9 +721,18 @@ namespace Email_Client_01
             // In our case the folder name is something like: "[Folder.Fullname, Displayed name]";
             if (string.IsNullOrEmpty(DestinationFolder)) return; // guard
 
-            // Mutate the string to the "Folder.Fullname" part only
-            DestinationFolder = DestinationFolder.Substring(1, DestinationFolder.IndexOf(",") - 1);
-
+            foreach(var f in folders)
+            {
+                // Check if the folder is blacklisted from carelessly being moved mail to
+                if(f.FullName == DestinationFolder && isFolderMoveMailToThisBlacklisted(f))
+                {
+                    MessageBox.Show($"Not allowed to filter mails to special folder {f.FullName}.\nFilter not saved.");
+                    return;
+                }
+            }
+/*
+            // We check that the destination folder is not a special folder we should not allow mails to be moved to carelessly:
+            if (isFolderMoveMailToThisBlacklisted(DestinationFolder)) return;*/
 
             string FilterName = "";
             if (!(Utility.InputBox("Add Filter", "Filter Name: ", ref FilterName) == DialogResult.OK))
@@ -744,10 +779,8 @@ namespace Email_Client_01
 
 
 
-
-
-
-            // LOADING MESSAGES: Load the initial folder back
+            // LOADING MESSAGES: Load the initial folder back, if the data sources have been bugged out for some reason
+            // ensure that the correct folder is opened at the end. 
             if (InitialFolder != Folders.SelectedValue)
             {
                 Folders.SelectedItem = InitialFolder;
@@ -920,7 +953,32 @@ namespace Email_Client_01
             return false;
         }
 
-        private bool isFolderDragDropBlacklisted(IMailFolder? f)
+        private bool isFolderWithoutUnreads(IMailFolder? f)
+        {
+            if (f == null) return false;
+            if (f.Attributes.HasFlag(FolderAttributes.Sent) ||
+               f.Attributes.HasFlag(FolderAttributes.Drafts)
+               ) return true;
+            return false;
+        }
+
+        // At the moment one-to-one identical with the function above, however we can imagine these could end up doing two different things
+        // so we make them into separate functions. 
+        private bool isFilterBlacklisted(IMailFolder? f)
+        {
+            if (f == null) return false;
+            if(f.Attributes.HasFlag(FolderAttributes.Trash) ||
+                f.Attributes.HasFlag(FolderAttributes.Drafts) ||
+                f.Attributes.HasFlag(FolderAttributes.Sent) ||
+                f.Attributes.HasFlag(FolderAttributes.All) ||
+                f.Attributes.HasFlag(FolderAttributes.Flagged) ||
+                f.Attributes.HasFlag(FolderAttributes.Important) ||
+                f.Attributes.HasFlag(FolderAttributes.Archive)
+                ) return true;
+            return false;
+        }
+
+        private bool isFolderMoveMailToThisBlacklisted(IMailFolder? f)
         {
             if (f == null) return false;
             if (f.Attributes.HasFlag(FolderAttributes.Drafts) ||
@@ -933,8 +991,9 @@ namespace Email_Client_01
         private bool isFolderDisplayAllCount(IMailFolder? f)
         {
             if (f == null) return false;
-            if (f.Attributes.HasFlag(FolderAttributes.Drafts)    ||
-                f.Attributes.HasFlag(FolderAttributes.Flagged)   ||
+
+            // could add f.Attributes.HasFlag(FolderAttributes.Drafts) here if we wanted this for drafts.
+            if (f.Attributes.HasFlag(FolderAttributes.Flagged)   ||
                 f.Attributes.HasFlag(FolderAttributes.Important)
                 ) return true;
             return false;
@@ -987,7 +1046,7 @@ namespace Email_Client_01
                     // we find the correct folder and ensure that it is not either the special drafts- or sent folder.
                     if (f.FullName == folderName)
                     {
-                        if(isFolderDragDropBlacklisted(f))
+                        if(isFolderMoveMailToThisBlacklisted(f))
                         {
                             MessageBox.Show($"Not allowed to drag and drop mails to special folder \"{f.FullName}\"\nYour Email will be loaded into the current folder again on refresh");
                             break;
@@ -1156,10 +1215,11 @@ namespace Email_Client_01
                 // Mark the message as unread
                 await folder.RemoveFlagsAsync(msg.UniqueId, MessageFlags.Seen, false);
 
-                // instead of reloading the entire folder to capture this (UNREAD) change,
+                // instead of reloading the entire folder using RefreshCurrenFolder() or RetrieveMessagesFromFolder() to capture this (UNREAD) change,
                 // we just manually forcefully update that one element in the listbox (this will automatically happen on refresh)
                 InboxGrid.Rows[InboxGrid.CurrentRow.Index].Cells[0].Value = "(UNREAD) ";
 
+                IncrementFolderCount(folder);
             }
             catch (Exception ex)
             {
@@ -1253,9 +1313,11 @@ namespace Email_Client_01
                 else
                 {
                     await folder.AddFlagsAsync(message.UniqueId, MessageFlags.Flagged, false);
+                    Inbox.Items[messageIndex] = "(FLAGGED) " + Inbox.Items[messageIndex];
+                    messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
                 }
 
-                RefreshCurrentFolder();
+
             }
             catch (Exception ex)
             {
@@ -1315,7 +1377,6 @@ namespace Email_Client_01
         {
             try
             {
-                //TODO easily extendable to subfolders
 
                 // Guard
                 if (FolderList == null) return;
@@ -1366,18 +1427,12 @@ namespace Email_Client_01
                 }
             }
 
-        }
-
-        private void InboxGrid_Click(object sender, EventArgs e)
+        private List<UniqueId> GetUnreadMailsCurrentFolder(IList<IMessageSummary> msgSummaries)
         {
-            InboxGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        }
-
-        private void InboxGrid_DoubleClick(object sender, EventArgs e)
-        {
-            ReadMessage(sender, e);
-        }
-
+            // get all the unread mails.
+            var unreadMails = messageSummaries.Where(msg => msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen));
+            var listUIDs = unreadMails.Select(msg => msg.UniqueId);
+            return listUIDs.ToList();
         private void PriorityClicked(object sender, EventArgs e)
         {
 
@@ -1452,11 +1507,28 @@ namespace Email_Client_01
 
         // need somewhere to display active filters and option to remove any active filters (does not work backwards, only works for future filtering)
 
+        private int ShowUnreadMails(IList<IMessageSummary> msgSummaries)
+        {
+            var uids = GetUnreadMailsCurrentFolder(msgSummaries);
+            if (folder == null) return -1;
+            ShowSearchResult(folder, uids);
+            return uids.Count;
 
-        // TODO: Option to create new folders
-        // TODO: option to delete folders
+        }
 
-        // TODO: Change folder clicking from index changed to double click (so we can allow for selecting a folder without opening it)
+        private void FilterUnreadCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (folder == null) return;
+            if (folder.Attributes.HasFlag(FolderAttributes.Sent) || folder.Attributes.HasFlag(FolderAttributes.Drafts)) return; // Never any unread mails in these folders, so dont do anything
 
+            if (FilterUnreadCheckbox.Checked)
+            {
+                ShowUnreadMails(messageSummaries);
+            }
+            else
+            {
+                RetrieveMessagesFromFolder();
+            }
+        }
     }
 }

@@ -15,17 +15,22 @@ using EmailValidation; // package
 using MailKit.Net.Imap;
 using MailKit.Search;
 using Org.BouncyCastle.Asn1.X509;
+using System.Net.Mail;
+using Microsoft.VisualBasic.ApplicationServices;
 
 namespace Email_Client_01
 {
     public partial class NewMail : Form
     {
-        List<string> attachmentPaths;
+        BindingList<Attachment> Attachments = new();
 
         // draft specific
         bool MailIsDraft = false;
         string? DraftID;
-        ImapClient client; 
+        ImapClient client;
+
+        // Forward and reply to get the attachments.
+        IEnumerable<MimeEntity>? nonlocalAttachments; 
         
 
         public NewMail(ImapClient client)
@@ -33,14 +38,18 @@ namespace Email_Client_01
             InitializeComponent();
             
             this.client = client;
-            attachmentPaths = new();
+
+            BindingList<Attachment> BL = new BindingList<Attachment>();
+            BL.ListChanged += new ListChangedEventHandler(attachments_changed);
+            Attachments = BL;
+            AttachmentsListBox.DataSource = Attachments;
+            AttachmentsListBox.DisplayMember = "name";
 
         }
 
         public NewMail(MimeMessage msg, ImapClient client)
         {
             InitializeComponent();
-            attachmentPaths = new();
 
             this.client = client;
             RecipientTextBox.Text = msg.To.ToString();
@@ -49,16 +58,31 @@ namespace Email_Client_01
             CCTextBox.Text = msg.Cc.ToString();
 
 
-            foreach(var attach in msg.Attachments)
+            BindingList<Attachment> BL = new BindingList<Attachment>();
+            BL.ListChanged += new ListChangedEventHandler(attachments_changed);
+            Attachments = BL;
+            AttachmentsListBox.DataSource = Attachments;
+            AttachmentsListBox.DisplayMember = "name";
+
+            nonlocalAttachments = msg.Attachments;
+
+            foreach (var attachment in nonlocalAttachments)
             {
-                MessageBox.Show(attach.ToString());
+                Attachments.Add(new Attachment()
+                {
+                    name = attachment.ContentDisposition?.FileName,
+                    filepath = "",
+                });
             }
+
+
+
         }
 
+        // could be combined with the constructor above. But having one more is no issue. 
         public NewMail(MimeMessage msg, bool isDraft, ImapClient client)
         {
             InitializeComponent();
-            attachmentPaths = new();
 
             this.client = client;
             MailIsDraft = isDraft;
@@ -67,10 +91,37 @@ namespace Email_Client_01
             MessageBodyTextBox.Text = msg.TextBody;
             CCTextBox.Text = msg.Cc.ToString();
 
-            if(isDraft)
+
+
+            BindingList<Attachment> BL = new BindingList<Attachment>();
+            BL.ListChanged += new ListChangedEventHandler(attachments_changed);
+            Attachments = BL;
+            AttachmentsListBox.DataSource = Attachments;
+            AttachmentsListBox.DisplayMember = "name";
+            nonlocalAttachments = msg.Attachments;
+            if (isDraft)
             {
                 DraftID = msg.MessageId;
             }
+
+            foreach (var attachment in nonlocalAttachments)
+            {
+                Attachments.Add(new Attachment()
+                {
+                    name = attachment.ContentDisposition?.FileName,
+                    filepath = "",
+                });
+            }
+
+        }
+
+
+        private void attachments_changed(object? sender, ListChangedEventArgs e)
+        {
+            bool show = Attachments.Count > 0; 
+            AttachmentLabel.Visible = show;
+            AttachmentsListBox.Visible = show;
+            RemoveAttachmentButton.Visible = show;
         }
 
         private void RecipientsMouseOver(object sender, EventArgs e)
@@ -110,18 +161,15 @@ namespace Email_Client_01
                 {
                     string fileSelected = fileDialog.FileName;
 
-                    // add it to the mime message
-                    attachmentPaths.Add(fileSelected);
-
-                    // add to listbox and show the listbox if it is currently hidden.
-                    AttachmentLabel.Visible = true;
-                    AttachmentsListBox.Visible = true;
-                    RemoveAttachmentButton.Visible = true;
-                    AttachmentSizeLabel.Visible = true;
-
                     // Shorten the file name to not include directories
                     string fileSelectedShort = fileSelected.Substring(fileSelected.LastIndexOf('\\') + 1) + " ";
-                    AttachmentsListBox.Items.Add(fileSelectedShort);
+
+
+                    Attachments.Add(new Attachment()
+                    {
+                        filepath = fileSelected,
+                        name = fileSelectedShort,
+                    });
                 }
             }
         }
@@ -235,14 +283,16 @@ namespace Email_Client_01
 
             if(Subject == null) // another gaurd 
             {
-                MessageBox.Show("Invalid subject found");
+                MessageBox.Show("Invalid subject");
                 return;
             }
 
             var Content = MessageBodyTextBox.Text;
 
 
-            Email email = new Email(To, CC, Subject, Content, attachmentPaths);
+            List<string?> attachmentFilepaths = Attachments.Select(a => a.filepath).ToList();
+            attachmentFilepaths.RemoveAll(fp => string.IsNullOrEmpty(fp)); // remove all the null cases, and empty cases that corresponds to the nonlocal attachments.
+            Email email = new Email(To, CC, Subject, Content, attachmentFilepaths, nonlocalAttachments);
 
             var s = new EmailSender();
             s.sendEmail(email);
@@ -339,28 +389,27 @@ namespace Email_Client_01
         {
             try
             {
-                // Remove the attachment from the listbox
-                var idx = AttachmentsListBox.SelectedIndex;
+           
+                if (AttachmentsListBox.SelectedItem == null) return;
+                var attachment = Attachments[AttachmentsListBox.SelectedIndex];
+                if (attachment == null) return;
+                Attachments.Remove(attachment);
 
-                // failsafe
-                if (idx < 0) return;
-                AttachmentsListBox.Items.RemoveAt(idx);
+                // currently we are using the same Attachments list for both nonlocal and local attachments, only difference being the filepath is empty for nonlocal.
+                // we should remove the mimeentity part if we remove a file that has empty filepath
+                if (string.IsNullOrEmpty(attachment.name)) return; // guard
+                if(attachment.filepath == "")
+                {
+                    string FileName = attachment.name;
+                    // Cannot delete from an IEnumerable collection, so we use linq to instead create a new list with all but the 
+                    // removed element
+                    nonlocalAttachments = nonlocalAttachments?.Where(a => a.ContentDisposition.FileName != FileName).ToList();
 
-                // Remove the attachment from the list to be constructed as mime message
-                attachmentPaths.RemoveAt(idx);
+                }
             }
             catch
             {
                 MessageBox.Show("No Attachment selected!");
-            }
-
-            // if no more attachments hide the listbox, label and button
-            if (attachmentPaths.Count <= 0)
-            {
-                RemoveAttachmentButton.Visible = false;
-                AttachmentLabel.Visible = false;
-                AttachmentsListBox.Visible = false;
-                AttachmentSizeLabel.Visible = false;
             }
         }
 
@@ -375,10 +424,11 @@ namespace Email_Client_01
 
             public string Content { get; set; }
 
-            public List<string> Attachments { get; set; }
+            public List<string?> LocalAttachments { get; set; }
 
-            public Email(string[] to, string[]? cc, string subject, string content, List<string> attachments)
+            public IEnumerable<MimeEntity>? nonlocalAttachments { get; set; }
 
+            public Email(string[] to, string[]? cc, string subject, string content, List<string?> localAttachments, IEnumerable<MimeEntity>? nonLocal = null)
             {
                 To = new List<MailboxAddress>();
                 // username and address, #TODO currently we do not have aliases but extend this once we do
@@ -400,9 +450,11 @@ namespace Email_Client_01
 
 
 
+
                 Subject = subject;
                 Content = content;
-                Attachments = attachments;
+                LocalAttachments = localAttachments;
+                nonlocalAttachments = nonLocal;
             }
         }
 
@@ -430,9 +482,17 @@ namespace Email_Client_01
                 {
                     TextBody = email.Content // TODO formatting needed here???
                 };
-                foreach (var attachment in email.Attachments)
+                foreach (var attachment in email.LocalAttachments)
                 {
                     builder.Attachments.Add(attachment);
+                }
+
+                if(email.nonlocalAttachments != null)
+                {
+                    foreach(var attachment in email.nonlocalAttachments)
+                    {
+                        builder.Attachments.Add(attachment);
+                    }
                 }
 
                 emailMessage.Body = builder.ToMessageBody();                        // TODO add alias/username

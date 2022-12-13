@@ -59,6 +59,7 @@
             this.Date = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.InboxGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PriorityGrid)).BeginInit();
+            this.FilterUnreadCheckbox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // Inbox
@@ -367,6 +368,17 @@
             this.Date.Name = "Date";
             this.Date.Width = 125;
             // 
+            // FilterUnreadCheckbox
+            // 
+            this.FilterUnreadCheckbox.AutoSize = true;
+            this.FilterUnreadCheckbox.Location = new System.Drawing.Point(517, 109);
+            this.FilterUnreadCheckbox.Name = "FilterUnreadCheckbox";
+            this.FilterUnreadCheckbox.Size = new System.Drawing.Size(278, 52);
+            this.FilterUnreadCheckbox.TabIndex = 24;
+            this.FilterUnreadCheckbox.Text = "Show Unread";
+            this.FilterUnreadCheckbox.UseVisualStyleBackColor = true;
+            this.FilterUnreadCheckbox.CheckedChanged += new System.EventHandler(this.FilterUnreadCheckbox_CheckedChanged);
+            // 
             // Inboxes
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -432,5 +444,6 @@
         private DataGridViewTextBoxColumn Sender;
         private DataGridViewTextBoxColumn Subject;
         private DataGridViewTextBoxColumn Date;
+        private CheckBox FilterUnreadCheckbox;
     }
 }
