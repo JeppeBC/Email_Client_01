@@ -160,7 +160,7 @@
             this.AttachmentsListBox.FormattingEnabled = true;
             this.AttachmentsListBox.ItemHeight = 20;
             this.AttachmentsListBox.Location = new System.Drawing.Point(781, 229);
-            this.AttachmentsListBox.Margin = new System.Windows.Forms.Padding(1, 1, 1, 1);
+            this.AttachmentsListBox.Margin = new System.Windows.Forms.Padding(1);
             this.AttachmentsListBox.Name = "AttachmentsListBox";
             this.AttachmentsListBox.Size = new System.Drawing.Size(109, 204);
             this.AttachmentsListBox.TabIndex = 12;
@@ -192,7 +192,7 @@
             // SaveDraftButton
             // 
             this.SaveDraftButton.Location = new System.Drawing.Point(605, 566);
-            this.SaveDraftButton.Margin = new System.Windows.Forms.Padding(1, 1, 1, 1);
+            this.SaveDraftButton.Margin = new System.Windows.Forms.Padding(1);
             this.SaveDraftButton.Name = "SaveDraftButton";
             this.SaveDraftButton.Size = new System.Drawing.Size(106, 29);
             this.SaveDraftButton.TabIndex = 15;
@@ -205,7 +205,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
-            this.ClientSize = new System.Drawing.Size(2286, 1440);
+            this.ClientSize = new System.Drawing.Size(951, 607);
             this.Controls.Add(this.SaveDraftButton);
             this.Controls.Add(this.RemoveAttachmentButton);
             this.Controls.Add(this.AttachmentLabel);

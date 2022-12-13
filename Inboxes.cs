@@ -1426,13 +1426,14 @@ namespace Email_Client_01
                     MessageBox.Show(ex.Message);
                 }
             }
-
+        }
         private List<UniqueId> GetUnreadMailsCurrentFolder(IList<IMessageSummary> msgSummaries)
         {
             // get all the unread mails.
             var unreadMails = messageSummaries.Where(msg => msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen));
             var listUIDs = unreadMails.Select(msg => msg.UniqueId);
             return listUIDs.ToList();
+        }
         private void PriorityClicked(object sender, EventArgs e)
         {
 
