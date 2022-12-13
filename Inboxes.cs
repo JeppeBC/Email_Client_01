@@ -356,6 +356,7 @@ namespace Email_Client_01
         private async void RetrieveMessagesFromFolder(object sender = null!, EventArgs e = null!)
         {
             Inbox.Items.Clear();
+            InboxGrid.Rows.Clear();
 
             if (loadingMessages) return; // ensure we don't start loading another batch of messages before we are done loading the current batch. Even prevents queueing of many folders that need to be loaded in
 
@@ -364,6 +365,7 @@ namespace Email_Client_01
             try
             {
                 Inbox.Items.Clear();
+                InboxGrid.Rows.Clear();
 
                 folder = GetCurrentFolder();
                 if (!folder.Exists) return;
@@ -419,6 +421,7 @@ namespace Email_Client_01
                 if (messageSummaries.Count <= 0)
                 {
                     Inbox.Items.Add("This folder is empty!");
+                    InboxGrid.Rows.Add("This folder is empty!");
                 }
                 else if (folder.Attributes.HasFlag(FolderAttributes.Drafts))
                 {
@@ -439,6 +442,7 @@ namespace Email_Client_01
                     foreach (var item in messageSummaries.Reverse())
                     {
                         Inbox.Items.Add(FormatInboxMessageText(item));
+                        InboxGrid.Rows.Add(GetFlags(item), item.Envelope.Sender, item.Envelope.Subject, item.Envelope.Date);
 
                         // make sure the folder count is correct
                         if (isFolderUnreadBlacklisted(folder)) continue;
@@ -479,9 +483,9 @@ namespace Email_Client_01
         private async void ReadMessage(object sender, EventArgs e)
         {
             // Get the specific message
-            var messageId = (((ListBox)sender).SelectedIndex); // 2 parenthesis warns about missing ';' for some reason.
-            if (messageId < 0) return; // failsafe
-            var messageItem = messageSummaries[messageSummaries.Count - messageId - 1];
+            var messageId = (((DataGridView)sender).SelectedRows.ToString); // 2 parenthesis warns about missing ';' for some reason.
+            //if (messageId < 0) return; // failsafe
+            var messageItem = messageSummaries[messageSummaries.Count - InboxGrid.SelectedRows[0].Index - 1];
 
             this.Cursor = Cursors.WaitCursor;
             try
@@ -494,9 +498,9 @@ namespace Email_Client_01
                 if (messageItem.Flags != null && !messageItem.Flags.Value.HasFlag(MessageFlags.Seen))
                 {
                     // Mutate the message in the listbox, so it no longer says unread
-                    string currentString = (string)Inbox.Items[messageId];
+                    string currentString = InboxGrid.SelectedRows[0].Cells[0].Value.ToString();
                     // Remove (UNREAD) if present in the inbox view
-                    Inbox.Items[messageId] = currentString.Replace("(UNREAD)", "").Trim();
+                    InboxGrid.SelectedRows[0].Cells[0].Value = currentString.Replace("(UNREAD)", "").Trim();
 
                     // Update the unread count
                     IncrementFolderCount(folder, decrement: true);
@@ -642,15 +646,18 @@ namespace Email_Client_01
         private void ShowSearchResult(IMailFolder folder, IList<UniqueId> uids)
         {
             Inbox.Items.Clear();
+            InboxGrid.Rows.Clear();
             messageSummaries = folder.Fetch(uids, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
             if (messageSummaries.Count <= 0)
             {
                 Inbox.Items.Add("No results!");
+                InboxGrid.Rows.Add("No results!");
             }
             foreach (var item in messageSummaries.Reverse())
             {
                 Inbox.Items.Add(FormatInboxMessageText(item));
+                InboxGrid.Rows.Add(GetFlags(item), item.Envelope.Sender, item.Envelope.Subject, item.Envelope.Date);
             }
         }
 
@@ -1129,8 +1136,8 @@ namespace Email_Client_01
 
         private async void MarkMailAsUnread(object? sender, EventArgs e)
         {
-            var msgIndex = Inbox.SelectedIndex;
-            if (msgIndex < 0 || msgIndex > Inbox.Items.Count) // this should not happen
+            var msgIndex = InboxGrid.CurrentRow.Index;
+            if (msgIndex < 0 || msgIndex > InboxGrid.Rows.Count) // this should not happen
             {
                 MessageBox.Show("No email to mark as unread");
                 return;
@@ -1151,7 +1158,7 @@ namespace Email_Client_01
 
                 // instead of reloading the entire folder to capture this (UNREAD) change,
                 // we just manually forcefully update that one element in the listbox (this will automatically happen on refresh)
-                Inbox.Items[msgIndex] = "(UNREAD) " + Inbox.Items[msgIndex];
+                InboxGrid.Rows[InboxGrid.CurrentRow.Index].Cells[0].Value = "(UNREAD) ";
 
             }
             catch (Exception ex)
@@ -1174,9 +1181,9 @@ namespace Email_Client_01
 
         private async void DeleteMail(object? sender, EventArgs e)
         {
-            var msgIndex = Inbox.SelectedIndex;
+            var msgIndex = InboxGrid.CurrentRow.Index;
             // quick check so we do not waste unnecessary time to establish an imap connection in case of errors.
-            if (msgIndex < 0 || msgIndex > Inbox.Items.Count) // dont know how this would appear, but just in case
+            if (msgIndex < 0 || msgIndex > InboxGrid.Rows.Count) // dont know how this would appear, but just in case
             {
                 MessageBox.Show("No email is selected for deletion.");
                 return;
@@ -1199,7 +1206,7 @@ namespace Email_Client_01
 
                 // Instead of calling RefreshCurrentFolder() or RetrieveMessagesFromFolder(), we just remove it from the current listbox as this is faster
                 // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
-                Inbox.Items.Remove(Inbox.SelectedItem);
+                InboxGrid.Rows.Remove(InboxGrid.CurrentRow);
                 messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
                 // if the message is unread, we update the unread count of the folder
@@ -1228,7 +1235,7 @@ namespace Email_Client_01
 
         private async void ToggleFlagMail(object? sender, EventArgs e)
         {
-            var messageIndex = Inbox.SelectedIndex;
+            var messageIndex = InboxGrid.CurrentRow.Index; ;
             if (messageIndex < 0) return; // failsafe
             var message = messageSummaries[messageSummaries.Count - 1 - messageIndex];
 
@@ -1360,6 +1367,88 @@ namespace Email_Client_01
             }
 
         }
+
+        private void InboxGrid_Click(object sender, EventArgs e)
+        {
+            InboxGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        }
+
+        private void InboxGrid_DoubleClick(object sender, EventArgs e)
+        {
+            ReadMessage(sender, e);
+        }
+
+        private void PriorityClicked(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Priority_Clicked(object sender, EventArgs e)
+        {
+            // Take selected email and selected priority
+            object Selecteditem = PrioritySelecter.SelectedItem;
+
+            object PriorityMsg = InboxGrid.SelectedRows[0].Cells[2].Value;
+
+            // Display the selected mail in listbox "Priority" as "priority + subject of email"
+            PriorityGrid.Rows.Add("", Selecteditem, PriorityMsg);
+
+            PriorityGrid.Sort(PriorityGrid.Columns[1], ListSortDirection.Ascending);
+        }
+
+        private void PriorityGrid_Click(object sender, DataGridViewCellEventArgs e)
+        {
+            PriorityGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+
+            if (e.ColumnIndex == 0)
+                PriorityGrid.Rows.RemoveAt(e.RowIndex);
+        }
+
+        private void PriorityGrid_DoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            // opens the specified email when doubleclicked in Prioritygrid
+            InboxGrid.ClearSelection();
+            var subject = PriorityGrid.SelectedRows[0].Cells[2].Value;
+            
+            foreach (DataGridViewRow row in InboxGrid.Rows)
+            {
+                if (subject == InboxGrid.Rows[row.Index].Cells[2].Value)
+                    row.Selected = true;
+            }
+            
+            ReadMessage(sender, e);
+
+        }
+
+        private void InboxGrid_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                var itemIndex = InboxGrid.CurrentRow.Index;
+                if (itemIndex < 0 || itemIndex > InboxGrid.SelectedRows.Count) return;
+
+                var ContextMenu = new ContextMenuStrip();
+                ContextMenu.Items.Clear();
+
+                var DeleteItem = new ToolStripMenuItem("Delete");
+                DeleteItem.Click += new EventHandler(DeleteMail);
+                ContextMenu.Items.Add(DeleteItem);
+
+                var FlagItem = new ToolStripMenuItem("Flag");
+                FlagItem.Click += new EventHandler(ToggleFlagMail);
+                ContextMenu.Items.Add(FlagItem);
+
+                var UnreadItem = new ToolStripMenuItem("Mark as Unread");
+                UnreadItem.Click += new EventHandler(MarkMailAsUnread);
+                ContextMenu.Items.Add(UnreadItem);
+
+                InboxGrid.ContextMenuStrip = ContextMenu;
+                InboxGrid.ContextMenuStrip.Show(Inbox, e.Location);
+
+            }
+        }
+
+
 
         // need somewhere to display active filters and option to remove any active filters (does not work backwards, only works for future filtering)
 
