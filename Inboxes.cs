@@ -1451,6 +1451,15 @@ namespace Email_Client_01
 
             PriorityGrid.Sort(PriorityGrid.Columns[1], ListSortDirection.Ascending);
         }
+        private void InboxGrid_Click(object sender, EventArgs e)
+        {
+            InboxGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        }
+
+        private void InboxGrid_DoubleClick(object sender, EventArgs e)
+        {
+            ReadMessage(sender, e);
+        }
 
         private void PriorityGrid_Click(object sender, DataGridViewCellEventArgs e)
         {
@@ -1518,6 +1527,21 @@ namespace Email_Client_01
         }
 
         private void FilterUnreadCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (folder == null) return;
+            if (folder.Attributes.HasFlag(FolderAttributes.Sent) || folder.Attributes.HasFlag(FolderAttributes.Drafts)) return; // Never any unread mails in these folders, so dont do anything
+
+            if (FilterUnreadCheckbox.Checked)
+            {
+                ShowUnreadMails(messageSummaries);
+            }
+            else
+            {
+                RetrieveMessagesFromFolder();
+            }
+        }
+
+        private void FilterUnreadCheckbox_CheckChanged(object sender, EventArgs e)
         {
             if (folder == null) return;
             if (folder.Attributes.HasFlag(FolderAttributes.Sent) || folder.Attributes.HasFlag(FolderAttributes.Drafts)) return; // Never any unread mails in these folders, so dont do anything

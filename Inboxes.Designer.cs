@@ -53,13 +53,14 @@
             this.Priority = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Folders = new System.Windows.Forms.ListBox();
+            this.FilterUnreadCheckbox = new System.Windows.Forms.CheckBox();
+            this.FilterUnreadCheckbox1 = new System.Windows.Forms.CheckBox();
             this.Flags = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Sender = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Subject = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Date = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.InboxGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PriorityGrid)).BeginInit();
-            this.FilterUnreadCheckbox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // Inbox
@@ -149,7 +150,7 @@
             // 
             this.FilterListbox.FormattingEnabled = true;
             this.FilterListbox.ItemHeight = 20;
-            this.FilterListbox.Location = new System.Drawing.Point(431, 10);
+            this.FilterListbox.Location = new System.Drawing.Point(449, 10);
             this.FilterListbox.Margin = new System.Windows.Forms.Padding(1);
             this.FilterListbox.Name = "FilterListbox";
             this.FilterListbox.Size = new System.Drawing.Size(174, 64);
@@ -215,7 +216,7 @@
             // 
             // DeleteFolderButton
             // 
-            this.DeleteFolderButton.Location = new System.Drawing.Point(228, 71);
+            this.DeleteFolderButton.Location = new System.Drawing.Point(228, 76);
             this.DeleteFolderButton.Margin = new System.Windows.Forms.Padding(1);
             this.DeleteFolderButton.Name = "DeleteFolderButton";
             this.DeleteFolderButton.Size = new System.Drawing.Size(90, 29);
@@ -233,12 +234,12 @@
             this.Sender,
             this.Subject,
             this.Date});
-            this.InboxGrid.Location = new System.Drawing.Point(416, 154);
+            this.InboxGrid.Location = new System.Drawing.Point(297, 150);
             this.InboxGrid.Name = "InboxGrid";
             this.InboxGrid.RowHeadersVisible = false;
             this.InboxGrid.RowHeadersWidth = 51;
             this.InboxGrid.RowTemplate.Height = 29;
-            this.InboxGrid.Size = new System.Drawing.Size(569, 371);
+            this.InboxGrid.Size = new System.Drawing.Size(698, 384);
             this.InboxGrid.TabIndex = 24;
             this.InboxGrid.Click += new System.EventHandler(this.InboxGrid_Click);
             this.InboxGrid.DoubleClick += new System.EventHandler(this.InboxGrid_DoubleClick);
@@ -329,10 +330,32 @@
             this.Folders.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.Folders.FormattingEnabled = true;
             this.Folders.ItemHeight = 20;
-            this.Folders.Location = new System.Drawing.Point(13, 125);
+            this.Folders.Location = new System.Drawing.Point(11, 132);
             this.Folders.Name = "Folders";
             this.Folders.Size = new System.Drawing.Size(199, 204);
             this.Folders.TabIndex = 25;
+            // 
+            // FilterUnreadCheckbox
+            // 
+            this.FilterUnreadCheckbox.AutoSize = true;
+            this.FilterUnreadCheckbox.Location = new System.Drawing.Point(342, 81);
+            this.FilterUnreadCheckbox.Name = "FilterUnreadCheckbox";
+            this.FilterUnreadCheckbox.Size = new System.Drawing.Size(119, 24);
+            this.FilterUnreadCheckbox.TabIndex = 24;
+            this.FilterUnreadCheckbox.Text = "Show Unread";
+            this.FilterUnreadCheckbox.UseVisualStyleBackColor = true;
+            this.FilterUnreadCheckbox.CheckedChanged += new System.EventHandler(this.FilterUnreadCheckbox_CheckedChanged);
+            // 
+            // FilterUnreadCheckbox1
+            // 
+            this.FilterUnreadCheckbox1.AutoSize = true;
+            this.FilterUnreadCheckbox1.Location = new System.Drawing.Point(353, 81);
+            this.FilterUnreadCheckbox1.Name = "FilterUnreadCheckbox1";
+            this.FilterUnreadCheckbox1.Size = new System.Drawing.Size(119, 24);
+            this.FilterUnreadCheckbox1.TabIndex = 26;
+            this.FilterUnreadCheckbox1.Text = "Show Unread";
+            this.FilterUnreadCheckbox1.UseVisualStyleBackColor = true;
+            this.FilterUnreadCheckbox1.CheckedChanged += new System.EventHandler(this.FilterUnreadCheckbox_CheckChanged);
             // 
             // Flags
             // 
@@ -341,7 +364,7 @@
             this.Flags.HeaderText = "Flags";
             this.Flags.MinimumWidth = 6;
             this.Flags.Name = "Flags";
-            this.Flags.Width = 75;
+            this.Flags.Width = 125;
             // 
             // Sender
             // 
@@ -368,26 +391,15 @@
             this.Date.Name = "Date";
             this.Date.Width = 125;
             // 
-            // FilterUnreadCheckbox
-            // 
-            this.FilterUnreadCheckbox.AutoSize = true;
-            this.FilterUnreadCheckbox.Location = new System.Drawing.Point(517, 109);
-            this.FilterUnreadCheckbox.Name = "FilterUnreadCheckbox";
-            this.FilterUnreadCheckbox.Size = new System.Drawing.Size(278, 52);
-            this.FilterUnreadCheckbox.TabIndex = 24;
-            this.FilterUnreadCheckbox.Text = "Show Unread";
-            this.FilterUnreadCheckbox.UseVisualStyleBackColor = true;
-            this.FilterUnreadCheckbox.CheckedChanged += new System.EventHandler(this.FilterUnreadCheckbox_CheckedChanged);
-            // 
             // Inboxes
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.ClientSize = new System.Drawing.Size(1051, 599);
+            this.Controls.Add(this.FilterUnreadCheckbox1);
             this.Controls.Add(this.Folders);
             this.Controls.Add(this.PriorityGrid);
-            this.Controls.Add(this.InboxGrid);
             this.Controls.Add(this.PrioritySelecter);
             this.Controls.Add(this.FilterLabel);
             this.Controls.Add(this.label2);
@@ -404,6 +416,7 @@
             this.Controls.Add(this.SearchSenderCheck);
             this.Controls.Add(this.SearchButton);
             this.Controls.Add(this.SearchTextBox);
+            this.Controls.Add(this.InboxGrid);
             this.Controls.Add(this.Inbox);
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Inboxes";
@@ -440,10 +453,11 @@
         private DataGridViewTextBoxColumn Priority;
         private DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private ListBox Folders;
+        private CheckBox FilterUnreadCheckbox;
+        private CheckBox FilterUnreadCheckbox1;
         private DataGridViewTextBoxColumn Flags;
         private DataGridViewTextBoxColumn Sender;
         private DataGridViewTextBoxColumn Subject;
         private DataGridViewTextBoxColumn Date;
-        private CheckBox FilterUnreadCheckbox;
     }
 }
