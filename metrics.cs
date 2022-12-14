@@ -196,11 +196,10 @@ namespace Email_Client_01
             formsPlot1.Plot.Clear();
             BarPlot = formsPlot1.Plot.AddBar(y, positions);
             formsPlot1.Plot.XAxis.DateTimeFormat(false);
-            //formsPlot1.Plot.XTicks(positions, labels);
+            formsPlot1.Plot.XTicks(positions, labels);
             formsPlot1.Plot.AxisAuto();
             formsPlot1.Plot.SetAxisLimits(yMin: 0);
             formsPlot1.Refresh();
-            formsPlot1.Plot.Render();
         }
 
         // Date format
@@ -208,12 +207,12 @@ namespace Email_Client_01
         {
 
             formsPlot1.Plot.Clear();
+            formsPlot1.Plot.XAxis.AutomaticTickPositions();
             formsPlot1.Plot.XAxis.DateTimeFormat(true);
             BarPlot = formsPlot1.Plot.AddBar(y, positions);
             formsPlot1.Plot.AxisAuto();
             formsPlot1.Plot.SetAxisLimits(yMin: 0);
             formsPlot1.Refresh();
-            formsPlot1.Plot.Render();
         }
 
         private void Render_Metrics()
