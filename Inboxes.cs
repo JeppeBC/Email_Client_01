@@ -6,6 +6,8 @@ using System;
 using System.DirectoryServices;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using System.Diagnostics;
+using System.Text;
 
 namespace Email_Client_01
 {
@@ -619,8 +621,72 @@ namespace Email_Client_01
             }
         }
 
-        private void metrics_button_Click(object sender, EventArgs e)
+        private async void metrics_button_Click(object sender, EventArgs e)
         {
+            // Get summaries
+            // Check dates
+            // Create XML
+            using (var client = await Utility.GetImapClient())
+            {
+                try
+                {
+                    var folders = await client.GetFoldersAsync(new FolderNamespace('.', ""));
+                    var messages = new List<IMessageSummary>();
+                    var messages_sorted = new List<IMessageSummary>();
+                    MailboxAddress MyAddress = MailboxAddress.Parse(Utility.username);
+
+                    // Sent mails folder
+                    foreach (var folder in folders)
+                    {
+                        // Perhaps rewrite to accress from ID or something instead of name
+                        // All (including sent)
+                        if (folder.Exists && folder.Attributes.HasFlag(FolderAttributes.All))
+                        {
+                            folder.Open(FolderAccess.ReadOnly);
+                            var test = folder.Fetch(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                            messages.AddRange(test.ToList());
+                        }
+
+                        // Sent
+                        if (folder.Exists && folder.Attributes.HasFlag(FolderAttributes.Sent))
+                        {
+                            folder.Open(FolderAccess.ReadOnly);
+                            var test = folder.Fetch(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                            messages_sorted.AddRange(test.ToList());
+                        }
+                    }
+
+                    // Sort out sent mails from "All" folder
+                    foreach (var message in messages)
+                    {
+                        foreach (var from in message.Envelope.From)
+                        {
+                            // If not sent by myself
+                            if (!(((MailboxAddress)from).Address == MyAddress.Address))
+                            {
+                                messages_sorted.Add(message);
+                            }
+                        }
+                    }
+
+
+                    XML_Test.CreateXML(messages_sorted);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+                finally
+                {
+                    client?.DisconnectAsync(true);
+                    client?.Dispose();
+                    this.Cursor = Cursors.Default;
+
+                }
+            }
+
+
+            // Create metrics form
             metrics Metrics_Form = new metrics();
             Metrics_Form.Show();
         }
