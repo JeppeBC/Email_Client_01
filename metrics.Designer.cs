@@ -59,9 +59,9 @@
             // 
             // displayPeriodDateSelector
             // 
-            this.displayPeriodDateSelector.Location = new System.Drawing.Point(1398, 96);
+            this.displayPeriodDateSelector.Location = new System.Drawing.Point(1416, 96);
             this.displayPeriodDateSelector.Name = "displayPeriodDateSelector";
-            this.displayPeriodDateSelector.Size = new System.Drawing.Size(139, 23);
+            this.displayPeriodDateSelector.Size = new System.Drawing.Size(121, 23);
             this.displayPeriodDateSelector.TabIndex = 2;
             this.displayPeriodDateSelector.ValueChanged += new System.EventHandler(this.displayPeriodDateSelector_ValueChanged_1);
             // 

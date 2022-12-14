@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ScottPlot;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -189,14 +190,30 @@ namespace Email_Client_01
             return days;
         }
 
+        // Day labels
         private void Render_Plot(double[] positions, double[] y, string[] labels)
         {
             formsPlot1.Plot.Clear();
             BarPlot = formsPlot1.Plot.AddBar(y, positions);
-            formsPlot1.Plot.XTicks(positions, labels);
+            formsPlot1.Plot.XAxis.DateTimeFormat(false);
+            //formsPlot1.Plot.XTicks(positions, labels);
             formsPlot1.Plot.AxisAuto();
             formsPlot1.Plot.SetAxisLimits(yMin: 0);
             formsPlot1.Refresh();
+            formsPlot1.Plot.Render();
+        }
+
+        // Date format
+        private void Render_Plot(double[] positions, double[] y)
+        {
+
+            formsPlot1.Plot.Clear();
+            formsPlot1.Plot.XAxis.DateTimeFormat(true);
+            BarPlot = formsPlot1.Plot.AddBar(y, positions);
+            formsPlot1.Plot.AxisAuto();
+            formsPlot1.Plot.SetAxisLimits(yMin: 0);
+            formsPlot1.Refresh();
+            formsPlot1.Plot.Render();
         }
 
         private void Render_Metrics()
@@ -287,10 +304,11 @@ namespace Email_Client_01
                 int year = selected_date.Year;
                 int month = selected_date.Month;
                 int days_in_month = DateTime.DaysInMonth(year, month);
-                DateTime start = DateTime.ParseExact("01-"+month+"-"+year, "dd-MM-yyyy", ci);
-                DateTime end = DateTime.ParseExact(days_in_month+"-"+month+"-"+year, "dd-MM-yyyy", ci);
+                DateTime start = DateTime.Parse("01-"+month+"-"+year);
+                DateTime end = DateTime.Parse(days_in_month + "-" + month + "-" + year);
 
                 var days = Get_Days(start, end.AddDays(1));
+
 
                 // Get recieved and sent as list
                 var recieved = from e in days.Elements("Recieved")
@@ -299,16 +317,34 @@ namespace Email_Client_01
                 var sent = from e in days.Elements("Sent")
                                  select (double.Parse(e.Value));
 
-                // Convert to array
-                double[] recieved_array = recieved.Select(x => (double)x).ToArray();
-                double[] sent_array = sent.Select(x => (double)x).ToArray();
+
+                double[] recieved_array = new double[days_in_month];
+                double[] sent_array = new double[days_in_month];
+
+                if (recieved.Count() != 0 && sent.Count() != 0)
+                {
+                    // Convert to array
+                    recieved_array = recieved.Select(x => (double)x).ToArray();
+                    sent_array = sent.Select(x => (double)x).ToArray();
+                }
+
+                
 
 
                 // space every time point by 1 day from a starting point
-                double[] positions = new double[days_in_month];
-                for (int i = 0; i < days_in_month; i++)
+                double[] positions = new double[recieved_array.Length];
+                for (int i = 0; i < recieved_array.Length; i++)
                     positions[i] = start.AddDays(i).ToOADate();
 
+                if (mailTypeDropdown.SelectedIndex == 0)
+                {
+                    Render_Plot(positions, recieved_array);
+                }
+
+                else
+                {
+                    Render_Plot(positions, sent_array);
+                }
 
             }
             else
@@ -324,7 +360,7 @@ namespace Email_Client_01
         private void displayPeriodDropdown_SelectedIndexChanged(object sender, EventArgs e)
         {
             SetMyCustomFormat();
-            // Render_Metrics here
+            Render_Metrics();
         }
 
         private void displayPeriodDateSelector_ValueChanged_1(object sender, EventArgs e)
