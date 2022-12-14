@@ -31,6 +31,8 @@ namespace Email_Client_01
         private static Inboxes instance = null!;
         private bool clicked = false; // for double clicks handling
         private ImapClient client;
+
+        bool ClientInUse = false;
         bool loadingFolders = false;
         bool loadingMessages = false;
         IMailFolder? folder; // current folder (mostly bookkeeping for loading)
@@ -40,7 +42,7 @@ namespace Email_Client_01
 
         BindingList<Folder> FolderList;
 
-        IdleClient idle; 
+        IdleClient idle;
 
 
 
@@ -88,15 +90,25 @@ namespace Email_Client_01
             aTimer.Interval = 300000; // every 5 min, unit is milliseconds.
             aTimer.Enabled = true;
 
+
             folder = null;
 
-
-            // todo change this to the idle, active and ui threads. Add checks that this connection does not break / expire
-            RetrieveFolders();
-/*
             idle = new IdleClient(Utility.ImapServer, Utility.ImapPort, MailKit.Security.SecureSocketOptions.Auto, Utility.username!, Utility.password!);
             idle.InboxMessages.Attach(this);
-            idle.RunAsync();*/
+            idle.RunAsync();
+
+
+            RetrieveFolders();
+
+        }
+
+
+        private void OnTimedEvent(object? sender, ElapsedEventArgs e)
+        {
+            if (ClientInUse || loadingFolders || loadingMessages) return;
+            
+            // Dummy ping the server to prevent timing out
+            client.NoOp();
         }
 
         void filters_changed(object? sender, ListChangedEventArgs e)
@@ -114,40 +126,11 @@ namespace Email_Client_01
                 FilterLabel.Visible = false;
                 RemoveFilterButton.Visible = false;
             }
-
-
-
-
-            /*            switch (e.ListChangedType)
-                        {
-            *//*            case ListChangedType.ItemAdded:
-                            FilterListbox.Refresh();
-                            break;
-                        case ListChangedType.ItemChanged:
-                            FilterListbox.Refresh();
-                            break;
-                        case ListChangedType.ItemDeleted:
-                            FilterListbox.Refresh();
-                            break;
-                        case ListChangedType.ItemMoved:
-                            FilterListbox.Refresh();
-                            break;*//*
-                            default:
-                                break;
-                                // some more minor ones, etc.
-                        }*/
         }
 
         private void folders_changed(object? sender, ListChangedEventArgs e)
         {
 /*            MessageBox.Show("folders changed");*/
-        }
-
-
-        private void OnTimedEvent(object? sender, ElapsedEventArgs e)
-        {
-            // Dummy ping the server to prevent timing out
-            client.NoOp();
         }
 
 
@@ -169,9 +152,11 @@ namespace Email_Client_01
         private async void RetrieveFolders()
         {
             this.Cursor = Cursors.WaitCursor;
-            loadingFolders = true;
+            if (ClientInUse) return;
             try
             {
+                ClientInUse = true;
+                await Utility.ReconnectAsync(client);
                 // Load in the folders from imap into a list
                 folders = await client.GetFoldersAsync(new FolderNamespace('.', ""));
 
@@ -216,7 +201,6 @@ namespace Email_Client_01
                         folder.Close();
                     }
                 }
-
                 RetrieveMessagesFromFolder();
             }
             catch (Exception ex)
@@ -234,7 +218,7 @@ namespace Email_Client_01
             finally
             {
                 this.Cursor = Cursors.Default;
-                loadingFolders = false;
+                ClientInUse = false;
             }
 
         }
@@ -361,6 +345,12 @@ namespace Email_Client_01
 
         private IMailFolder GetCurrentFolder()
         {
+            if (Folders.SelectedIndex < 0)
+            {
+                Folders.SelectedIndex = 0;
+                return client.Inbox; // guard for when refresh, just 
+
+            }
             return client.GetFolder(FolderList[Folders.SelectedIndex].FullName);
         }
 
@@ -371,9 +361,16 @@ namespace Email_Client_01
         // retrives messages in a folder when it is double clicked. 
         // default parameters here because we send it another method that does not care.
         // retrives messages in a folder when it is double clicked. 
+
+        public void Reload()
+        {
+            RetrieveMessagesFromFolder();
+        }
+
         private async void RetrieveMessagesFromFolder(object sender = null!, EventArgs e = null!)
         {
             Inbox.Items.Clear();
+
 
             if (loadingMessages) return; // ensure we don't start loading another batch of messages before we are done loading the current batch. Even prevents queueing of many folders that need to be loaded in
 
@@ -381,7 +378,7 @@ namespace Email_Client_01
             loadingMessages = true;
             try
             {
-                Inbox.Items.Clear();
+                await Utility.ReconnectAsync(client); // if timed out, reconnect
 
                 folder = GetCurrentFolder();
                 if (!folder.Exists) return;
@@ -446,7 +443,7 @@ namespace Email_Client_01
 
                 }
                 // load in the mails after filtering
-                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                this.messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
                 int unreadCount = 0;
 
                 if(FilterUnreadCheckbox.Checked && !isFolderWithoutUnreads(folder))
@@ -520,15 +517,18 @@ namespace Email_Client_01
             if (messageId < 0) return; // failsafe
             var messageItem = messageSummaries[messageSummaries.Count - messageId - 1];
 
+            if (ClientInUse) return;
             this.Cursor = Cursors.WaitCursor;
             try
             {
+                ClientInUse = true;
+                await Utility.ReconnectAsync(client);
                 if (folder == null) folder = GetCurrentFolder();
 
                 if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
 
-                // if unread mail
-                if (messageItem.Flags != null && !messageItem.Flags.Value.HasFlag(MessageFlags.Seen))
+                // if unread mail (also cannot be draft)
+                if (messageItem.Flags != null && !messageItem.Flags.Value.HasFlag(MessageFlags.Seen) && !messageItem.Flags.Value.HasFlag(MessageFlags.Draft))
                 {
                     // Mutate the message in the listbox, so it no longer says unread
                     string currentString = (string)Inbox.Items[messageId];
@@ -563,6 +563,12 @@ namespace Email_Client_01
                 {
                     await Utility.ReconnectAsync(client);
                 }
+                if(ex is IndexOutOfRangeException) // this has not happened yet but in case it does
+                {
+                    folder = GetCurrentFolder();
+                    RetrieveMessagesFromFolder();
+                    Inbox.Refresh();
+                }
                 else
                 {
                     MessageBox.Show(ex.Message);
@@ -571,6 +577,7 @@ namespace Email_Client_01
             finally
             {
                 this.Cursor = Cursors.Default;
+                ClientInUse = false;
             }
         }
 
@@ -601,7 +608,15 @@ namespace Email_Client_01
         {
             if (!loadingFolders && sender != null)
             {
+/*                idle.Dispose();
+*//*                folder = GetCurrentFolder();*/
                 RetrieveMessagesFromFolder(sender, e);
+/*                if (folder == null) return;*/
+
+/*
+                idle = new IdleClient(Utility.ImapServer, Utility.ImapPort, MailKit.Security.SecureSocketOptions.Auto, Utility.username!, Utility.password!);
+                idle.InboxMessages.Attach(this);
+                idle.RunAsync(folder);*/
             }
         }
 
@@ -609,8 +624,11 @@ namespace Email_Client_01
         private async void search(string searchQuery)
         {
             this.Cursor = Cursors.WaitCursor;
+            if (ClientInUse) return;
             try
             {
+                ClientInUse = true;
+                await Utility.ReconnectAsync(client);
                 if (folder == null) folder = GetCurrentFolder();
                 if (!folder.IsOpen) folder.Open(FolderAccess.ReadWrite);
                 IList<UniqueId> uids = null!;
@@ -671,6 +689,7 @@ namespace Email_Client_01
             finally
             {
                 this.Cursor = Cursors.Default;
+                ClientInUse = false;
             }
         }
 
@@ -679,6 +698,8 @@ namespace Email_Client_01
         private void ShowSearchResult(IMailFolder folder, IList<UniqueId> uids)
         {
             Inbox.Items.Clear();
+            if (!folder.IsOpen) return;
+            if (ClientInUse || loadingMessages) return;
             messageSummaries = folder.Fetch(uids, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
             if (messageSummaries.Count <= 0)
@@ -1036,10 +1057,13 @@ namespace Email_Client_01
             // the message selected in the inbox folder (message to be moved)
             var selectedItem = messageSummaries[messageSummaries.Count - 1 - InboxIdx];
 
+            if (ClientInUse) return;
 
             this.Cursor = Cursors.WaitCursor;
             try
             {
+                ClientInUse = true;
+                await Utility.ReconnectAsync(client);
                 if (folder == null) folder = GetCurrentFolder();
 
 
@@ -1115,6 +1139,7 @@ namespace Email_Client_01
             finally
             {
                 this.Cursor = Cursors.Default;
+                ClientInUse = false;
             }
         }
 
@@ -1210,9 +1235,14 @@ namespace Email_Client_01
             // Message is already unread 
             if (msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen)) return;
 
+            if (ClientInUse) return;
+
+        
             this.Cursor = Cursors.WaitCursor;
             try
             {
+                ClientInUse = true;
+                await Utility.ReconnectAsync(client);
                 if (folder == null) folder = GetCurrentFolder();
                 if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
 
@@ -1242,11 +1272,15 @@ namespace Email_Client_01
             finally
             {
                 this.Cursor = Cursors.Default;
+                ClientInUse = false;
+                
             }
         }
 
         private async void DeleteMail(object? sender, EventArgs e)
         {
+            if (ClientInUse) return;
+
             var msgIndex = Inbox.SelectedIndex;
             // quick check so we do not waste unnecessary time to establish an imap connection in case of errors.
             if (msgIndex < 0 || msgIndex > Inbox.Items.Count) // dont know how this would appear, but just in case
@@ -1262,6 +1296,8 @@ namespace Email_Client_01
             this.Cursor = Cursors.WaitCursor;
             try
             {
+                ClientInUse = true;
+                await Utility.ReconnectAsync(client);
                 if (folder == null) folder = GetCurrentFolder();
                 if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
 
@@ -1296,11 +1332,13 @@ namespace Email_Client_01
             finally
             {
                 this.Cursor = Cursors.Default;
+                ClientInUse = false;
             }
         }
 
         private async void ToggleFlagMail(object? sender, EventArgs e)
         {
+            if (ClientInUse) return;
             var messageIndex = Inbox.SelectedIndex;
             if (messageIndex < 0) return; // failsafe
             var message = messageSummaries[messageSummaries.Count - 1 - messageIndex];
@@ -1308,6 +1346,8 @@ namespace Email_Client_01
             this.Cursor = Cursors.WaitCursor;
             try
             {
+                ClientInUse = true;
+                await Utility.ReconnectAsync(client);
                 if (folder == null) folder = GetCurrentFolder();
                 if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
 
@@ -1340,6 +1380,7 @@ namespace Email_Client_01
             finally
             {
                 this.Cursor = Cursors.Default;
+                ClientInUse = false;
             }
         }
 
@@ -1350,8 +1391,12 @@ namespace Email_Client_01
 
         private async void CreateFolderButton_Click(object sender, EventArgs e)
         {
+            if (ClientInUse) return;
             try
             {
+                ClientInUse = true;
+                await Utility.ReconnectAsync(client);
+
                 string FolderName = "";
                 if (!(Utility.InputBox("Create New Folder", "Name of Folder: ", ref FolderName) == DialogResult.OK))
                 {
@@ -1377,12 +1422,19 @@ namespace Email_Client_01
                     MessageBox.Show(ex.Message);
                 }
             }
+            finally
+            {
+                ClientInUse = false;
+            }
         }
 
         private async void DeleteFolderButton_Click(object sender, EventArgs e)
         {
+            if (ClientInUse) return;
             try
             {
+                ClientInUse = true;
+                await Utility.ReconnectAsync(client);
 
                 // Guard
                 if (FolderList == null) return;
@@ -1432,6 +1484,10 @@ namespace Email_Client_01
                     MessageBox.Show(ex.Message);
                 }
             }
+            finally
+            {
+                ClientInUse = false;
+            }
 
         }
 
@@ -1467,11 +1523,6 @@ namespace Email_Client_01
             {
                 RetrieveMessagesFromFolder();
             }
-        }
-
-        public void Reload()
-        {
-            RetrieveMessagesFromFolder();
         }
     }
 }

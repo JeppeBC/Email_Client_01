@@ -304,6 +304,7 @@ namespace Email_Client_01
                 this.Cursor = Cursors.WaitCursor;
                 try
                 {
+                    await Utility.ReconnectAsync(client);
                     var draftsFolder = await getDraftFolder(CancellationToken.None);
                     if(draftsFolder == null)
                     {
@@ -385,11 +386,11 @@ namespace Email_Client_01
 
         }
 
-        private void RemoveAttachmentButton_Click(object sender, EventArgs e)
+        private async void RemoveAttachmentButton_Click(object sender, EventArgs e)
         {
             try
             {
-           
+                await Utility.ReconnectAsync(client);
                 if (AttachmentsListBox.SelectedItem == null) return;
                 var attachment = Attachments[AttachmentsListBox.SelectedIndex];
                 if (attachment == null) return;
@@ -532,6 +533,7 @@ namespace Email_Client_01
         {
             try
             {
+                await Utility.ReconnectAsync(client);
                 string[] DraftFolderNames = { "Drafts", "Kladder", "Draft" };
                 if ((client.Capabilities & (ImapCapabilities.SpecialUse | ImapCapabilities.XList)) != 0)
                 {
@@ -625,6 +627,8 @@ namespace Email_Client_01
             this.Cursor = Cursors.WaitCursor;
             try
             {
+                await Utility.ReconnectAsync(client);
+
                 MimeMessage message = BuildDraftMessage();
                 IMailFolder? draftsFolder = await getDraftFolder(CancellationToken.None);
                 if(draftsFolder == null)

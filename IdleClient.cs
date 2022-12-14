@@ -137,7 +137,6 @@ namespace Email_Client_01
             foreach (var message in fetched)
             {
                 this.InboxMessages.MessageCountChanged++;
-                MessageBox.Show("coutn changed");
                 messages.Add(message);
             }
         }
@@ -193,7 +192,6 @@ namespace Email_Client_01
                 try
                 {
                     await WaitForNewMessagesAsync();
-
                     if (messagesArrived)
                     {
                         await FetchMessageSummariesAsync();
@@ -225,26 +223,28 @@ namespace Email_Client_01
             // disconnecting the IMAP client connection, and, if it does, the `client.Inbox`
             // property will no longer be accessible which means we won't be able to disconnect
             // our event handlers.
-            var inbox = client.Inbox;
+            var f = client.Inbox;
 
             // keep track of changes to the number of messages in the folder (this is how we'll tell if new messages have arrived).
-            inbox.CountChanged += OnCountChanged;
+            f.CountChanged += OnCountChanged;
 
             // keep track of messages being expunged so that when the CountChanged event fires, we can tell if it's
             // because new messages have arrived vs messages being removed (or some combination of the two).
-            inbox.MessageExpunged += OnMessageExpunged;
+            f.MessageExpunged += OnMessageExpunged;
 
             // keep track of flag changes
-            inbox.MessageFlagsChanged += OnMessageFlagsChanged;
+            f.MessageFlagsChanged += OnMessageFlagsChanged;
 
             await IdleAsync();
 
-            inbox.MessageFlagsChanged -= OnMessageFlagsChanged;
-            inbox.MessageExpunged -= OnMessageExpunged;
-            inbox.CountChanged -= OnCountChanged;
+            f.MessageFlagsChanged -= OnMessageFlagsChanged;
+            f.MessageExpunged -= OnMessageExpunged;
+            f.CountChanged -= OnCountChanged;
+
 
             await client.DisconnectAsync(true);
         }
+
 
         // Note: the CountChanged event will fire when new messages arrive in the folder and/or when messages are expunged.
         void OnCountChanged(object? sender, EventArgs e)
@@ -256,6 +256,7 @@ namespace Email_Client_01
             // larger than messages.Count, then it means that new messages have arrived.
             if (folder?.Count > messages.Count)
             {
+                MessageBox.Show("test");
                 int arrived = folder.Count - messages.Count;
 
                 if (arrived > 1)

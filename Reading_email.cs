@@ -215,6 +215,7 @@ namespace Email_Client_01
         {
             try
             {
+                await Utility.ReconnectAsync(client);
                 // Get the attachment index
                 var idx = AttachmentListBox.SelectedIndex;
                 var filename = AttachmentListBox.SelectedItem.ToString();
@@ -255,10 +256,11 @@ namespace Email_Client_01
             }
         }
 
-        private void DownloadAllAttachmentsButton_Click(object sender, EventArgs e)
+        private async void DownloadAllAttachmentsButton_Click(object sender, EventArgs e)
         {
             try
             {
+                await Utility.ReconnectAsync(client);
                 var downloadFolderPath = Utility.KnownFolders.GetPath(Utility.KnownFolder.Downloads);
                 for (int i = 0; i < AttachmentListBox.Items.Count; i++)
                 {
