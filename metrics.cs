@@ -33,8 +33,8 @@ namespace Email_Client_01
             ci = CultureInfo.InvariantCulture;
 
             // Initialize mode dropdown selector
-            comboBox1.SelectedIndex = 0;
-            comboBox2.SelectedIndex = 0;
+            displayPeriodDropdown.SelectedIndex = 0;
+            mailTypeDropdown.SelectedIndex = 0;
             SetMyCustomFormat();
 
 
@@ -150,37 +150,31 @@ namespace Email_Client_01
             formsPlot1.Refresh();*/
         }
 
-        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            SetMyCustomFormat();
-            // Render_Metrics here
-        }
-
         // Changes date selector depending on selected representation in combobox
         private void SetMyCustomFormat()
         {
 
             // Year
-            if (comboBox1.SelectedIndex == 0)
+            if (displayPeriodDropdown.SelectedIndex == 0)
             {
-                dateTimePicker1.Format = DateTimePickerFormat.Custom;
-                dateTimePicker1.CustomFormat = "yyyy";
-                dateTimePicker1.ShowUpDown = true;
+                displayPeriodDateSelector.Format = DateTimePickerFormat.Custom;
+                displayPeriodDateSelector.CustomFormat = "yyyy";
+                displayPeriodDateSelector.ShowUpDown = true;
             }
 
             // Month
-            else if (comboBox1.SelectedIndex == 1)
+            else if (displayPeriodDropdown.SelectedIndex == 1)
             {
-                dateTimePicker1.Format = DateTimePickerFormat.Custom;
-                dateTimePicker1.CustomFormat = "MM-yyyy";
-                dateTimePicker1.ShowUpDown = true;
+                displayPeriodDateSelector.Format = DateTimePickerFormat.Custom;
+                displayPeriodDateSelector.CustomFormat = "MM-yyyy";
+                displayPeriodDateSelector.ShowUpDown = true;
             }
 
             // Week
             else
             {
-                dateTimePicker1.Format = DateTimePickerFormat.Short;
-                dateTimePicker1.ShowUpDown = false;
+                displayPeriodDateSelector.Format = DateTimePickerFormat.Short;
+                displayPeriodDateSelector.ShowUpDown = false;
             }
         }
 
@@ -207,10 +201,10 @@ namespace Email_Client_01
 
         private void Render_Metrics()
         {
-            DateTime selected_date = dateTimePicker1.Value.Date;
+            DateTime selected_date = displayPeriodDateSelector.Value.Date;
 
             // Show for year
-            if (comboBox1.SelectedIndex == 0)
+            if (displayPeriodDropdown.SelectedIndex == 0)
             {
                 string[] month_labels = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
                 int year = selected_date.Year;
@@ -272,7 +266,7 @@ namespace Email_Client_01
                         sent_month_array[i] += double.Parse(e);
                     }
 
-                    if (comboBox2.SelectedIndex == 0)
+                    if (mailTypeDropdown.SelectedIndex == 0)
                     {
                         Render_Plot(positions, recieved_month_array, month_labels);
                     }
@@ -287,9 +281,35 @@ namespace Email_Client_01
                 }
             }
 
-            else if (comboBox1.SelectedIndex == 1)
+            else if (displayPeriodDropdown.SelectedIndex == 1)
             {
                 // Do month stuff
+                int year = selected_date.Year;
+                int month = selected_date.Month;
+                int days_in_month = DateTime.DaysInMonth(year, month);
+                DateTime start = DateTime.ParseExact("01-"+month+"-"+year, "dd-MM-yyyy", ci);
+                DateTime end = DateTime.ParseExact(days_in_month+"-"+month+"-"+year, "dd-MM-yyyy", ci);
+
+                var days = Get_Days(start, end.AddDays(1));
+
+                // Get recieved and sent as list
+                var recieved = from e in days.Elements("Recieved")
+                                          select (double.Parse(e.Value));
+
+                var sent = from e in days.Elements("Sent")
+                                 select (double.Parse(e.Value));
+
+                // Convert to array
+                double[] recieved_array = recieved.Select(x => (double)x).ToArray();
+                double[] sent_array = sent.Select(x => (double)x).ToArray();
+
+
+                // space every time point by 1 day from a starting point
+                double[] positions = new double[days_in_month];
+                for (int i = 0; i < days_in_month; i++)
+                    positions[i] = start.AddDays(i).ToOADate();
+
+
             }
             else
             {
@@ -299,12 +319,20 @@ namespace Email_Client_01
             return;
         }
 
-        private void dateTimePicker1_ValueChanged_1(object sender, EventArgs e)
+        /* Event handlers */
+
+        private void displayPeriodDropdown_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            SetMyCustomFormat();
+            // Render_Metrics here
+        }
+
+        private void displayPeriodDateSelector_ValueChanged_1(object sender, EventArgs e)
         {
             Render_Metrics();
         }
 
-        private void comboBox2_SelectedIndexChanged_1(object sender, EventArgs e)
+        private void mailTypeDropdown_SelectedIndexChanged_1(object sender, EventArgs e)
         {
             Render_Metrics();
         }

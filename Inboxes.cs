@@ -670,7 +670,7 @@ namespace Email_Client_01
                     }
 
 
-                    XML_Test.CreateXML(messages_sorted);
+                    Utility.CreateXML(messages_sorted);
                 }
                 catch (Exception ex)
                 {
