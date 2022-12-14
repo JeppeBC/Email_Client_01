@@ -113,7 +113,12 @@ namespace Email_Client_01
             CultureInfo ci = CultureInfo.InvariantCulture;
 
             // Hardcoded temp value
-            DateTime startdate = DateTime.ParseExact("01-01-2018", "dd-MM-yyyy", ci);
+            DateTime startdate = Properties.Settings.Default.dateLastLoaded;
+
+            if (startdate==DateTime.MinValue)
+            {
+                startdate = DateTime.ParseExact("01-01-2010", "dd-MM-yyyy", ci);
+            }
 
             // List of days, excluding current
             for (var dt = startdate; dt < DateTime.Today; dt = dt.AddDays(1))
@@ -169,6 +174,10 @@ namespace Email_Client_01
             }
 
             root.Save(myTempFile);
+
+            // Set setting, prohibiting multiple checks of same day later
+            Properties.Settings.Default.dateLastLoaded = DateTime.Today;
+            Properties.Settings.Default.Save();
         }
 
     }
