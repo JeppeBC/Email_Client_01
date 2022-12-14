@@ -3,6 +3,7 @@ using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Search;
 using MimeKit;
+using MimeKit.Cryptography;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.X509;
 using System;
@@ -38,6 +39,8 @@ namespace Email_Client_01
         HashSet<string> FilterSet = new();
 
         BindingList<Folder> FolderList;
+
+        IdleClient idle; 
 
 
 
@@ -87,8 +90,13 @@ namespace Email_Client_01
 
             folder = null;
 
+
             // todo change this to the idle, active and ui threads. Add checks that this connection does not break / expire
             RetrieveFolders();
+/*
+            idle = new IdleClient(Utility.ImapServer, Utility.ImapPort, MailKit.Security.SecureSocketOptions.Auto, Utility.username!, Utility.password!);
+            idle.InboxMessages.Attach(this);
+            idle.RunAsync();*/
         }
 
         void filters_changed(object? sender, ListChangedEventArgs e)
@@ -106,6 +114,8 @@ namespace Email_Client_01
                 FilterLabel.Visible = false;
                 RemoveFilterButton.Visible = false;
             }
+
+
 
 
             /*            switch (e.ListChangedType)
@@ -392,7 +402,7 @@ namespace Email_Client_01
                             if (f == folder) continue; // no point in moving to the same folder as we are currently in
                             if (f.FullName != filter.DestinationFolder || !f.Exists) continue;
                             // should not allow creating filters to these folders in the first place, but a guard in case json file is manually modified perhaps.
-                            if (isFolderMoveMailToThisBlacklisted(f)) continue; 
+                            if (isFolderMoveMailToThisBlacklisted(f)) continue;
 
                             var query = GetSearchQueryFromFilter(filter);
                             if (query == null) continue;
@@ -401,28 +411,29 @@ namespace Email_Client_01
                             // takes like 150-200 ms per filter, slightly (almost negligible) extra ammount from moving the mail.
                             var listUIDs = await folder.SearchAsync(query.And(SearchQuery.DeliveredAfter(Properties.Time.Default.Date)));
 
-                            if (listUIDs.Count <= 0) continue; // nothing to move so we dont need to do anything 
+
 
                             // This similarly takes 100-200ms per filter, this following segment prevens the filter collisions
                             // where you can have one filter move one mail to say spam and another one that moves the same mail to inbox or whatever.
                             // In this scenario the user never sees the mail, but only the count go up and down when it is being moved. 
                             // This block ensures that we only filter a mail at most once. However it is a somewhat expensive call as we access the imap client.
                             // We do this as the Unique IDs are only folder specific, whereas the emailid is a globally unique identifier. 
-                            var messages = await folder.FetchAsync(listUIDs, MessageSummaryItems.UniqueId);
-                            foreach (var message in messages)
+                            if (listUIDs.ToList().Count <= 0) continue;
+
+                            var summaries = folder.Fetch(listUIDs, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId);
+
+
+                            foreach(var sum in summaries)
                             {
-                                // Add the globally unique emailid to set. If present the method returns false
-                                // So if it is already present in the set, we remove the unique id from list of uids to be moved. 
-                                if (!FilterSet.Add(message.EmailId))
+                                // if the email is already in the filterset
+                                if(!FilterSet.Add(sum.EmailId))
                                 {
-                                    listUIDs.Remove(listUIDs.First(id => id == message.UniqueId));
+                                    // remove the corresponding uid from the list of uids to be moved.
+                                    listUIDs.Remove(listUIDs.Where(uid => uid == sum.UniqueId).FirstOrDefault());
                                 }
                             }
 
-
                             await folder.MoveToAsync(listUIDs, f);
-
-                            
 
                             // update the unread count on folder f. We are moving (unread) mails to f
                             IncrementFolderCount(f, value: listUIDs.Count());
@@ -435,7 +446,7 @@ namespace Email_Client_01
 
                 }
                 // load in the mails after filtering
-                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
                 int unreadCount = 0;
 
                 if(FilterUnreadCheckbox.Checked && !isFolderWithoutUnreads(folder))
@@ -668,7 +679,7 @@ namespace Email_Client_01
         private void ShowSearchResult(IMailFolder folder, IList<UniqueId> uids)
         {
             Inbox.Items.Clear();
-            messageSummaries = folder.Fetch(uids, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+            messageSummaries = folder.Fetch(uids, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
             if (messageSummaries.Count <= 0)
             {
@@ -1053,7 +1064,7 @@ namespace Email_Client_01
                         // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
 
                         // update messageSummaries so futuure operations without loading all messages work as intended
-                        messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags); 
+                        messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags); 
 
 /*                        RetrieveMessagesFromFolder(); // updates the current folder unread count too, so we only need to worry about the target folder*/
 
@@ -1212,7 +1223,7 @@ namespace Email_Client_01
                 // we just manually forcefully update that one element in the listbox (this will automatically happen on refresh)
                 Inbox.Items[msgIndex] = "(UNREAD) " + Inbox.Items[msgIndex];
                 // To prevent us from prefixing (UNREAD) multiple times we need to update the messagesummaries however
-                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
                 IncrementFolderCount(folder);
             }
@@ -1262,7 +1273,7 @@ namespace Email_Client_01
                 // Instead of calling RefreshCurrentFolder() or RetrieveMessagesFromFolder(), we just remove it from the current listbox as this is faster
                 // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
                 Inbox.Items.Remove(Inbox.SelectedItem);
-                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
                 // if the message is unread, we update the unread count of the folder
                 if (msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen) && !isFolderUnreadBlacklisted(folder)) 
@@ -1309,7 +1320,7 @@ namespace Email_Client_01
                 {
                     await folder.AddFlagsAsync(message.UniqueId, MessageFlags.Flagged, false);
                     Inbox.Items[messageIndex] = "(FLAGGED) " + Inbox.Items[messageIndex];
-                    messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                    messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
                 }
 
 
@@ -1456,6 +1467,11 @@ namespace Email_Client_01
             {
                 RetrieveMessagesFromFolder();
             }
+        }
+
+        public void Reload()
+        {
+            RetrieveMessagesFromFolder();
         }
     }
 }
