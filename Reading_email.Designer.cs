@@ -38,8 +38,6 @@
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
             this.ForwardButton = new System.Windows.Forms.Button();
-            this.button5 = new System.Windows.Forms.Button();
-            this.button6 = new System.Windows.Forms.Button();
             this.DateTextBox = new System.Windows.Forms.TextBox();
             this.DateLabel = new System.Windows.Forms.Label();
             this.CCTextBox = new System.Windows.Forms.TextBox();
@@ -50,14 +48,13 @@
             this.AttachmentsLabel = new System.Windows.Forms.Label();
             this.DownloadAttachmentButton = new System.Windows.Forms.Button();
             this.DownloadAllAttachmentsButton = new System.Windows.Forms.Button();
-            this.TrashButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // FromTextBox
             // 
             this.FromTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.FromTextBox.Location = new System.Drawing.Point(20, 24);
-            this.FromTextBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.FromTextBox.Margin = new System.Windows.Forms.Padding(2);
             this.FromTextBox.Name = "FromTextBox";
             this.FromTextBox.Size = new System.Drawing.Size(676, 27);
             this.FromTextBox.TabIndex = 0;
@@ -66,7 +63,7 @@
             // 
             this.SubjectTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.SubjectTextBox.Location = new System.Drawing.Point(20, 114);
-            this.SubjectTextBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.SubjectTextBox.Margin = new System.Windows.Forms.Padding(2);
             this.SubjectTextBox.Name = "SubjectTextBox";
             this.SubjectTextBox.Size = new System.Drawing.Size(676, 27);
             this.SubjectTextBox.TabIndex = 1;
@@ -106,7 +103,7 @@
             // 
             this.MessageTextBox.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.MessageTextBox.Location = new System.Drawing.Point(20, 160);
-            this.MessageTextBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.MessageTextBox.Margin = new System.Windows.Forms.Padding(2);
             this.MessageTextBox.Name = "MessageTextBox";
             this.MessageTextBox.Size = new System.Drawing.Size(676, 304);
             this.MessageTextBox.TabIndex = 5;
@@ -116,7 +113,7 @@
             // button1
             // 
             this.button1.Location = new System.Drawing.Point(838, 475);
-            this.button1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.button1.Margin = new System.Windows.Forms.Padding(2);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(97, 47);
             this.button1.TabIndex = 6;
@@ -127,7 +124,7 @@
             // button2
             // 
             this.button2.Location = new System.Drawing.Point(12, 475);
-            this.button2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.button2.Margin = new System.Windows.Forms.Padding(2);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(97, 47);
             this.button2.TabIndex = 7;
@@ -138,7 +135,7 @@
             // button3
             // 
             this.button3.Location = new System.Drawing.Point(114, 475);
-            this.button3.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.button3.Margin = new System.Windows.Forms.Padding(2);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(97, 47);
             this.button3.TabIndex = 8;
@@ -149,7 +146,7 @@
             // ForwardButton
             // 
             this.ForwardButton.Location = new System.Drawing.Point(216, 475);
-            this.ForwardButton.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.ForwardButton.Margin = new System.Windows.Forms.Padding(2);
             this.ForwardButton.Name = "ForwardButton";
             this.ForwardButton.Size = new System.Drawing.Size(97, 47);
             this.ForwardButton.TabIndex = 9;
@@ -157,30 +154,10 @@
             this.ForwardButton.UseVisualStyleBackColor = true;
             this.ForwardButton.Click += new System.EventHandler(this.ForwardButton_Click);
             // 
-            // button5
-            // 
-            this.button5.Location = new System.Drawing.Point(736, 475);
-            this.button5.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(97, 47);
-            this.button5.TabIndex = 10;
-            this.button5.Text = "Delete";
-            this.button5.UseVisualStyleBackColor = true;
-            // 
-            // button6
-            // 
-            this.button6.Location = new System.Drawing.Point(531, 475);
-            this.button6.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(127, 47);
-            this.button6.TabIndex = 11;
-            this.button6.Text = "Mark as unread";
-            this.button6.UseVisualStyleBackColor = true;
-            // 
             // DateTextBox
             // 
             this.DateTextBox.Location = new System.Drawing.Point(720, 24);
-            this.DateTextBox.Margin = new System.Windows.Forms.Padding(1, 1, 1, 1);
+            this.DateTextBox.Margin = new System.Windows.Forms.Padding(1);
             this.DateTextBox.Name = "DateTextBox";
             this.DateTextBox.Size = new System.Drawing.Size(204, 27);
             this.DateTextBox.TabIndex = 12;
@@ -198,7 +175,7 @@
             // CCTextBox
             // 
             this.CCTextBox.Location = new System.Drawing.Point(720, 68);
-            this.CCTextBox.Margin = new System.Windows.Forms.Padding(1, 1, 1, 1);
+            this.CCTextBox.Margin = new System.Windows.Forms.Padding(1);
             this.CCTextBox.Name = "CCTextBox";
             this.CCTextBox.Size = new System.Drawing.Size(205, 27);
             this.CCTextBox.TabIndex = 14;
@@ -207,7 +184,7 @@
             // ToTextBox
             // 
             this.ToTextBox.Location = new System.Drawing.Point(20, 68);
-            this.ToTextBox.Margin = new System.Windows.Forms.Padding(1, 1, 1, 1);
+            this.ToTextBox.Margin = new System.Windows.Forms.Padding(1);
             this.ToTextBox.Name = "ToTextBox";
             this.ToTextBox.Size = new System.Drawing.Size(676, 27);
             this.ToTextBox.TabIndex = 15;
@@ -238,7 +215,7 @@
             this.AttachmentListBox.FormattingEnabled = true;
             this.AttachmentListBox.ItemHeight = 20;
             this.AttachmentListBox.Location = new System.Drawing.Point(720, 160);
-            this.AttachmentListBox.Margin = new System.Windows.Forms.Padding(1, 1, 1, 1);
+            this.AttachmentListBox.Margin = new System.Windows.Forms.Padding(1);
             this.AttachmentListBox.Name = "AttachmentListBox";
             this.AttachmentListBox.Size = new System.Drawing.Size(205, 224);
             this.AttachmentListBox.TabIndex = 18;
@@ -258,7 +235,7 @@
             // DownloadAttachmentButton
             // 
             this.DownloadAttachmentButton.Location = new System.Drawing.Point(720, 390);
-            this.DownloadAttachmentButton.Margin = new System.Windows.Forms.Padding(1, 1, 1, 1);
+            this.DownloadAttachmentButton.Margin = new System.Windows.Forms.Padding(1);
             this.DownloadAttachmentButton.Name = "DownloadAttachmentButton";
             this.DownloadAttachmentButton.Size = new System.Drawing.Size(203, 29);
             this.DownloadAttachmentButton.TabIndex = 20;
@@ -270,7 +247,7 @@
             // DownloadAllAttachmentsButton
             // 
             this.DownloadAllAttachmentsButton.Location = new System.Drawing.Point(720, 425);
-            this.DownloadAllAttachmentsButton.Margin = new System.Windows.Forms.Padding(1, 1, 1, 1);
+            this.DownloadAllAttachmentsButton.Margin = new System.Windows.Forms.Padding(1);
             this.DownloadAllAttachmentsButton.Name = "DownloadAllAttachmentsButton";
             this.DownloadAllAttachmentsButton.Size = new System.Drawing.Size(202, 29);
             this.DownloadAllAttachmentsButton.TabIndex = 21;
@@ -279,24 +256,12 @@
             this.DownloadAllAttachmentsButton.Visible = false;
             this.DownloadAllAttachmentsButton.Click += new System.EventHandler(this.DownloadAllAttachmentsButton_Click);
             // 
-            // TrashButton
-            // 
-            this.TrashButton.Location = new System.Drawing.Point(661, 475);
-            this.TrashButton.Margin = new System.Windows.Forms.Padding(1, 1, 1, 1);
-            this.TrashButton.Name = "TrashButton";
-            this.TrashButton.Size = new System.Drawing.Size(71, 46);
-            this.TrashButton.TabIndex = 22;
-            this.TrashButton.Text = "Trash";
-            this.TrashButton.UseVisualStyleBackColor = true;
-            this.TrashButton.Click += new System.EventHandler(this.TrashButton_Click);
-            // 
             // Reading_email
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.ClientSize = new System.Drawing.Size(955, 530);
-            this.Controls.Add(this.TrashButton);
             this.Controls.Add(this.DownloadAllAttachmentsButton);
             this.Controls.Add(this.DownloadAttachmentButton);
             this.Controls.Add(this.AttachmentsLabel);
@@ -307,8 +272,6 @@
             this.Controls.Add(this.CCTextBox);
             this.Controls.Add(this.DateLabel);
             this.Controls.Add(this.DateTextBox);
-            this.Controls.Add(this.button6);
-            this.Controls.Add(this.button5);
             this.Controls.Add(this.ForwardButton);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
@@ -319,7 +282,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.SubjectTextBox);
             this.Controls.Add(this.FromTextBox);
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Reading_email";
             this.Text = "Read Email";
             this.ResumeLayout(false);
@@ -339,8 +302,6 @@
         private Button button2;
         private Button button3;
         private Button ForwardButton;
-        private Button button5;
-        private Button button6;
         private TextBox DateTextBox;
         private Label DateLabel;
         private TextBox CCTextBox;
@@ -351,6 +312,5 @@
         private Label AttachmentsLabel;
         private Button DownloadAttachmentButton;
         private Button DownloadAllAttachmentsButton;
-        private Button TrashButton;
     }
 }
