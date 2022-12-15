@@ -14,6 +14,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Properties\Time.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Time.settings</DependentUpon>
+      <AutoGen>True</AutoGen>
+    </Compile>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -46,9 +51,14 @@
     <PackageReference Include="EmailValidation" Version="1.0.8" />
     <PackageReference Include="MailKit" Version="3.4.2" />
     <PackageReference Include="ScottPlot.WinForms" Version="4.1.59" />
+    <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Properties\Time.settings">
+      <LastGenOutput>Time.Designer.cs</LastGenOutput>
+      <Generator>SettingsSingleFileGenerator</Generator>
+    </None>
     <None Update="Properties\Credentials.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Credentials.Designer.cs</LastGenOutput>

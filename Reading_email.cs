@@ -1,6 +1,8 @@
 ﻿using MailKit;
 using MailKit.Net.Imap;
 using MimeKit;
+using MimeKit.Utils;
+using static System.Net.Mime.MediaTypeNames;
 
 
 namespace Email_Client_01
@@ -8,11 +10,13 @@ namespace Email_Client_01
     public partial class Reading_email : Form
     {
         MimeMessage message = null!;
-        public Reading_email(MimeMessage msg)
+        ImapClient client;
+        public Reading_email(MimeMessage msg, ImapClient client)
         {
             InitializeComponent();
             message = msg;
             InitializeMessage();
+            this.client = client;
         }
 
         private void InitializeMessage()
@@ -34,7 +38,8 @@ namespace Email_Client_01
                 CCTextBox.Text = message.Cc.ToString();
             }
 
-            DateTextBox.Text = message.Date.ToString();
+
+            DateTextBox.Text = message.Date.LocalDateTime.ToString();
 
 
             if(message.Attachments.Any())
@@ -101,16 +106,20 @@ namespace Email_Client_01
             {
                 var sender = message.Sender ?? message.From.Mailboxes.FirstOrDefault();
 
-                quoted.WriteLine("On {0}, {1} wrote:", message.Date.ToString("f"), !string.IsNullOrEmpty(sender.Name) ? sender.Name : sender.Address);
-                using (var reader = new StringReader(message.TextBody))
+                quoted.WriteLine("On {0}, {1} wrote:", message.Date.ToString("f"), !string.IsNullOrEmpty(sender?.Name) ? sender.Name : sender?.Address);
+                if(!string.IsNullOrEmpty(message.TextBody))
                 {
-                    string line;
-
-                    while ((line = reader.ReadLine()) != null)
+                    using (var reader = new StringReader(message.TextBody))
                     {
-                        quoted.Write("> ");
-                        quoted.WriteLine(line);
+                        string? line;
+
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            quoted.Write("> ");
+                            quoted.WriteLine(line);
+                        }
                     }
+
                 }
 
                 reply.Body = new TextPart("plain")
@@ -119,9 +128,62 @@ namespace Email_Client_01
                 };
             }
 
-            new NewMail(reply).Show();
+            new NewMail(reply, client).Show();
         }
 
+        private void Forward(MimeMessage message)
+        {
+            var ForwardedMessage = new MimeMessage();
+
+            /*            ForwardedMessage.ReplyTo.AddRange(message.ReplyTo);*/
+
+            var builder = new BodyBuilder();
+            // Add attachments 
+            foreach(var attachment in message.Attachments)
+            {
+                builder.Attachments.Add(attachment);
+            }
+
+
+
+            // quote the original message text
+            using (var quoted = new StringWriter())
+            {
+                var sender = message.Sender ?? message.From.Mailboxes.FirstOrDefault();
+
+                using (var text = new StringWriter())
+                {
+                    text.WriteLine();
+                    text.WriteLine("-----Original Message-----");
+                    text.WriteLine("From: {0}", message.From);
+                    text.WriteLine("Sent: {0}", DateUtils.FormatDate(message.Date));
+                    text.WriteLine("To: {0}", message.To);
+                    text.WriteLine("Subject: {0}", message.Subject);
+                    text.WriteLine();
+
+                    text.Write(message.TextBody);
+
+                    
+
+
+                    builder.TextBody = text.ToString();
+/*                    ForwardedMessage.Body = new TextPart("plain")
+                    {
+                        Text = text.ToString()
+                    };*/
+                }
+            }
+
+            ForwardedMessage.Body = builder.ToMessageBody();
+
+            // set the reply subject
+            if (!message.Subject.StartsWith("FWD:", StringComparison.OrdinalIgnoreCase))
+                ForwardedMessage.Subject = "FWD:" + message.Subject;
+            else
+                ForwardedMessage.Subject = message.Subject;
+
+            new NewMail(ForwardedMessage, client).Show();
+        }
         private void label3_Click(object sender, EventArgs e)
         {
 
@@ -149,13 +211,15 @@ namespace Email_Client_01
             this.Close();
         }
 
-        private void DownloadAttachmentButton_Click(object sender, EventArgs e)
+        private async void DownloadAttachmentButton_Click(object sender, EventArgs e)
         {
             try
             {
                 // Get the attachment index
                 var idx = AttachmentListBox.SelectedIndex;
                 var filename = AttachmentListBox.SelectedItem.ToString();
+
+                if (string.IsNullOrEmpty(filename)) return; 
 
                 // Utility.GetDownloadsPath is windows specific? see the implementation
                 var downloadFolderPath = Utility.KnownFolders.GetPath(Utility.KnownFolder.Downloads);
@@ -177,9 +241,17 @@ namespace Email_Client_01
                 }
                 MessageBox.Show(filename + " was saved successfully to the downloads folder!");
             }
-            catch
+            catch(Exception ex)
             {
-                MessageBox.Show("No Attachment selected!");
+                // ImapProtocolExceptions often cause client disconnects, and IOExceptions always do.
+                if(ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }
         }
 
@@ -192,6 +264,8 @@ namespace Email_Client_01
                 {
                     var attachment = message.Attachments.ElementAt(i);
                     var filename = AttachmentListBox.Items[i].ToString(); // listbox items are filenames
+
+                    if (string.IsNullOrEmpty(filename)) return; // guard
                     var path = Path.Combine(downloadFolderPath, filename);
 
                     using (var stream = File.Create(path))
@@ -220,6 +294,11 @@ namespace Email_Client_01
         private void TrashButton_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void ForwardButton_Click(object sender, EventArgs e)
+        {
+            Forward(message);
         }
     }
 }
