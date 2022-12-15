@@ -59,6 +59,7 @@
             this.Folders = new System.Windows.Forms.ListBox();
             this.FilterUnreadCheckbox = new System.Windows.Forms.CheckBox();
             this.FilterUnreadCheckbox1 = new System.Windows.Forms.CheckBox();
+            this.Metrics = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.InboxGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PriorityGrid)).BeginInit();
             this.SuspendLayout();
@@ -197,7 +198,7 @@
             this.RefreshFoldersButton.Location = new System.Drawing.Point(228, 7);
             this.RefreshFoldersButton.Margin = new System.Windows.Forms.Padding(1);
             this.RefreshFoldersButton.Name = "RefreshFoldersButton";
-            this.RefreshFoldersButton.Size = new System.Drawing.Size(90, 29);
+            this.RefreshFoldersButton.Size = new System.Drawing.Size(90, 27);
             this.RefreshFoldersButton.TabIndex = 21;
             this.RefreshFoldersButton.Text = "Refresh";
             this.RefreshFoldersButton.UseVisualStyleBackColor = true;
@@ -205,10 +206,10 @@
             // 
             // CreateFolderButton
             // 
-            this.CreateFolderButton.Location = new System.Drawing.Point(228, 40);
+            this.CreateFolderButton.Location = new System.Drawing.Point(228, 36);
             this.CreateFolderButton.Margin = new System.Windows.Forms.Padding(1);
             this.CreateFolderButton.Name = "CreateFolderButton";
-            this.CreateFolderButton.Size = new System.Drawing.Size(90, 29);
+            this.CreateFolderButton.Size = new System.Drawing.Size(90, 27);
             this.CreateFolderButton.TabIndex = 22;
             this.CreateFolderButton.Text = "Create Folder";
             this.CreateFolderButton.UseVisualStyleBackColor = true;
@@ -216,7 +217,7 @@
             // 
             // DeleteFolderButton
             // 
-            this.DeleteFolderButton.Location = new System.Drawing.Point(228, 76);
+            this.DeleteFolderButton.Location = new System.Drawing.Point(228, 65);
             this.DeleteFolderButton.Margin = new System.Windows.Forms.Padding(1);
             this.DeleteFolderButton.Name = "DeleteFolderButton";
             this.DeleteFolderButton.Size = new System.Drawing.Size(90, 29);
@@ -235,13 +236,13 @@
             this.Sender,
             this.Subject,
             this.Date});
-            this.InboxGrid.Location = new System.Drawing.Point(297, 150);
+            this.InboxGrid.Location = new System.Drawing.Point(303, 168);
             this.InboxGrid.Name = "InboxGrid";
             this.InboxGrid.ReadOnly = true;
             this.InboxGrid.RowHeadersVisible = false;
             this.InboxGrid.RowHeadersWidth = 51;
             this.InboxGrid.RowTemplate.Height = 29;
-            this.InboxGrid.Size = new System.Drawing.Size(698, 384);
+            this.InboxGrid.Size = new System.Drawing.Size(721, 400);
             this.InboxGrid.TabIndex = 24;
             this.InboxGrid.Click += new System.EventHandler(this.InboxGrid_Click);
             this.InboxGrid.DoubleClick += new System.EventHandler(this.InboxGrid_DoubleClick);
@@ -398,12 +399,22 @@
             this.FilterUnreadCheckbox1.UseVisualStyleBackColor = true;
             this.FilterUnreadCheckbox1.CheckedChanged += new System.EventHandler(this.FilterUnreadCheckbox_CheckChanged);
             // 
+            // Metrics
+            // 
+            this.Metrics.Location = new System.Drawing.Point(228, 98);
+            this.Metrics.Name = "Metrics";
+            this.Metrics.Size = new System.Drawing.Size(90, 29);
+            this.Metrics.TabIndex = 27;
+            this.Metrics.Text = "Metrics";
+            this.Metrics.UseVisualStyleBackColor = true;
+            // 
             // Inboxes
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
             this.ClientSize = new System.Drawing.Size(1051, 599);
+            this.Controls.Add(this.Metrics);
             this.Controls.Add(this.FilterUnreadCheckbox1);
             this.Controls.Add(this.Folders);
             this.Controls.Add(this.PriorityGrid);
@@ -466,5 +477,6 @@
         private DataGridViewTextBoxColumn Sender;
         private DataGridViewTextBoxColumn Subject;
         private DataGridViewTextBoxColumn Date;
+        private Button Metrics;
     }
 }

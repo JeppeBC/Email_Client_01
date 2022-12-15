@@ -2,6 +2,7 @@ using Email_Client_01;
 using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Search;
+using Microsoft.VisualBasic;
 using MimeKit;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.X509;
@@ -1241,7 +1242,7 @@ namespace Email_Client_01
 
         private async void DeleteMail(object? sender, EventArgs e)
         {
-            var msgIndex = InboxGrid.CurrentRow.Index;
+            var msgIndex = InboxGrid.SelectedRows[0].Index;
             // quick check so we do not waste unnecessary time to establish an imap connection in case of errors.
             if (msgIndex < 0 || msgIndex > InboxGrid.Rows.Count) // dont know how this would appear, but just in case
             {
@@ -1263,10 +1264,21 @@ namespace Email_Client_01
                 await folder.AddFlagsAsync(msg.UniqueId, MessageFlags.Deleted, true);
                 await folder.ExpungeAsync();
 
+                if (PriorityGrid.Rows.Count > 0)
+                {
+                    for (int i=0; i<PriorityGrid.Rows.Count;i++)
+                    {
+                        if (PriorityGrid.Rows[i].Cells[2].Value == InboxGrid.Rows[InboxGrid.SelectedRows[0].Index].Cells[2].Value)
+                        {
+                            PriorityGrid.Rows[i].Selected = true;
+                            PriorityGrid.Rows.Remove(PriorityGrid.SelectedRows[0]);
+                        }
+                    }
+                }
 
                 // Instead of calling RefreshCurrentFolder() or RetrieveMessagesFromFolder(), we just remove it from the current listbox as this is faster
                 // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
-                InboxGrid.Rows.Remove(InboxGrid.CurrentRow);
+                InboxGrid.Rows.Remove(InboxGrid.SelectedRows[0]);
                 messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
                 // if the message is unread, we update the unread count of the folder
@@ -1274,6 +1286,7 @@ namespace Email_Client_01
                 {
                     IncrementFolderCount(folder, decrement: true);
                 }
+
             }
             catch (Exception ex)
             {
