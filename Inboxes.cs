@@ -1574,7 +1574,7 @@ namespace Email_Client_01
             }
         }
 
-        private async void metrics_button_Click(object sender, EventArgs e)
+        private async void MetricsButton_Click(object sender, EventArgs e)
         {
             // If XML needs to be updated
             if (Settings.Default.dateLastLoaded != DateTime.Today)

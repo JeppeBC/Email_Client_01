@@ -30,6 +30,7 @@
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Inboxes));
             this.Inbox = new System.Windows.Forms.ListBox();
             this.SearchTextBox = new System.Windows.Forms.TextBox();
             this.SearchButton = new System.Windows.Forms.Button();
@@ -59,7 +60,7 @@
             this.Folders = new System.Windows.Forms.ListBox();
             this.FilterUnreadCheckbox = new System.Windows.Forms.CheckBox();
             this.FilterUnreadCheckbox1 = new System.Windows.Forms.CheckBox();
-            this.Metrics = new System.Windows.Forms.Button();
+            this.MetricsButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.InboxGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PriorityGrid)).BeginInit();
             this.SuspendLayout();
@@ -70,10 +71,10 @@
             this.Inbox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.Inbox.FormattingEnabled = true;
             this.Inbox.ItemHeight = 48;
-            this.Inbox.Location = new System.Drawing.Point(228, 132);
+            this.Inbox.Location = new System.Drawing.Point(200, 99);
             this.Inbox.Margin = new System.Windows.Forms.Padding(2);
             this.Inbox.Name = "Inbox";
-            this.Inbox.Size = new System.Drawing.Size(796, 436);
+            this.Inbox.Size = new System.Drawing.Size(697, 292);
             this.Inbox.TabIndex = 6;
             this.Inbox.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.Inbox_DrawItem);
             this.Inbox.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.Inbox_MouseDoubleClick);
@@ -82,10 +83,10 @@
             // 
             // SearchTextBox
             // 
-            this.SearchTextBox.Location = new System.Drawing.Point(746, 40);
+            this.SearchTextBox.Location = new System.Drawing.Point(653, 30);
             this.SearchTextBox.Margin = new System.Windows.Forms.Padding(1);
             this.SearchTextBox.Name = "SearchTextBox";
-            this.SearchTextBox.Size = new System.Drawing.Size(214, 27);
+            this.SearchTextBox.Size = new System.Drawing.Size(188, 23);
             this.SearchTextBox.TabIndex = 11;
             this.SearchTextBox.Text = "Search in the current folder...";
             this.SearchTextBox.Click += new System.EventHandler(this.SearchTextBox_Click);
@@ -93,10 +94,10 @@
             // 
             // SearchButton
             // 
-            this.SearchButton.Location = new System.Drawing.Point(975, 31);
+            this.SearchButton.Location = new System.Drawing.Point(853, 23);
             this.SearchButton.Margin = new System.Windows.Forms.Padding(1);
             this.SearchButton.Name = "SearchButton";
-            this.SearchButton.Size = new System.Drawing.Size(66, 36);
+            this.SearchButton.Size = new System.Drawing.Size(58, 27);
             this.SearchButton.TabIndex = 12;
             this.SearchButton.Text = "Search";
             this.SearchButton.UseVisualStyleBackColor = true;
@@ -105,10 +106,10 @@
             // SearchSenderCheck
             // 
             this.SearchSenderCheck.AutoSize = true;
-            this.SearchSenderCheck.Location = new System.Drawing.Point(625, 10);
+            this.SearchSenderCheck.Location = new System.Drawing.Point(547, 8);
             this.SearchSenderCheck.Margin = new System.Windows.Forms.Padding(1);
             this.SearchSenderCheck.Name = "SearchSenderCheck";
-            this.SearchSenderCheck.Size = new System.Drawing.Size(77, 24);
+            this.SearchSenderCheck.Size = new System.Drawing.Size(62, 19);
             this.SearchSenderCheck.TabIndex = 13;
             this.SearchSenderCheck.Text = "Sender";
             this.SearchSenderCheck.UseVisualStyleBackColor = true;
@@ -116,10 +117,10 @@
             // SearchSubjectCheck
             // 
             this.SearchSubjectCheck.AutoSize = true;
-            this.SearchSubjectCheck.Location = new System.Drawing.Point(625, 36);
+            this.SearchSubjectCheck.Location = new System.Drawing.Point(547, 27);
             this.SearchSubjectCheck.Margin = new System.Windows.Forms.Padding(1);
             this.SearchSubjectCheck.Name = "SearchSubjectCheck";
-            this.SearchSubjectCheck.Size = new System.Drawing.Size(80, 24);
+            this.SearchSubjectCheck.Size = new System.Drawing.Size(65, 19);
             this.SearchSubjectCheck.TabIndex = 14;
             this.SearchSubjectCheck.Text = "Subject";
             this.SearchSubjectCheck.UseVisualStyleBackColor = true;
@@ -127,10 +128,10 @@
             // SearchContentCheck
             // 
             this.SearchContentCheck.AutoSize = true;
-            this.SearchContentCheck.Location = new System.Drawing.Point(625, 62);
+            this.SearchContentCheck.Location = new System.Drawing.Point(547, 46);
             this.SearchContentCheck.Margin = new System.Windows.Forms.Padding(1);
             this.SearchContentCheck.Name = "SearchContentCheck";
-            this.SearchContentCheck.Size = new System.Drawing.Size(83, 24);
+            this.SearchContentCheck.Size = new System.Drawing.Size(69, 19);
             this.SearchContentCheck.TabIndex = 15;
             this.SearchContentCheck.Text = "Content";
             this.SearchContentCheck.UseVisualStyleBackColor = true;
@@ -138,10 +139,10 @@
             // FilterCheckbox
             // 
             this.FilterCheckbox.AutoSize = true;
-            this.FilterCheckbox.Location = new System.Drawing.Point(739, 7);
+            this.FilterCheckbox.Location = new System.Drawing.Point(647, 5);
             this.FilterCheckbox.Margin = new System.Windows.Forms.Padding(1);
             this.FilterCheckbox.Name = "FilterCheckbox";
-            this.FilterCheckbox.Size = new System.Drawing.Size(120, 24);
+            this.FilterCheckbox.Size = new System.Drawing.Size(96, 19);
             this.FilterCheckbox.TabIndex = 16;
             this.FilterCheckbox.Text = "Add to Filters";
             this.FilterCheckbox.UseVisualStyleBackColor = true;
@@ -150,31 +151,31 @@
             // FilterListbox
             // 
             this.FilterListbox.FormattingEnabled = true;
-            this.FilterListbox.ItemHeight = 20;
-            this.FilterListbox.Location = new System.Drawing.Point(449, 10);
+            this.FilterListbox.ItemHeight = 15;
+            this.FilterListbox.Location = new System.Drawing.Point(393, 8);
             this.FilterListbox.Margin = new System.Windows.Forms.Padding(1);
             this.FilterListbox.Name = "FilterListbox";
-            this.FilterListbox.Size = new System.Drawing.Size(174, 64);
+            this.FilterListbox.Size = new System.Drawing.Size(153, 49);
             this.FilterListbox.TabIndex = 17;
             this.FilterListbox.Visible = false;
             // 
             // FilterLabel
             // 
             this.FilterLabel.AutoSize = true;
-            this.FilterLabel.Location = new System.Drawing.Point(353, 6);
+            this.FilterLabel.Location = new System.Drawing.Point(309, 4);
             this.FilterLabel.Margin = new System.Windows.Forms.Padding(1, 0, 1, 0);
             this.FilterLabel.Name = "FilterLabel";
-            this.FilterLabel.Size = new System.Drawing.Size(51, 20);
+            this.FilterLabel.Size = new System.Drawing.Size(41, 15);
             this.FilterLabel.TabIndex = 18;
             this.FilterLabel.Text = "Filters:";
             this.FilterLabel.Visible = false;
             // 
             // RemoveFilterButton
             // 
-            this.RemoveFilterButton.Location = new System.Drawing.Point(353, 31);
+            this.RemoveFilterButton.Location = new System.Drawing.Point(309, 23);
             this.RemoveFilterButton.Margin = new System.Windows.Forms.Padding(1);
             this.RemoveFilterButton.Name = "RemoveFilterButton";
-            this.RemoveFilterButton.Size = new System.Drawing.Size(76, 29);
+            this.RemoveFilterButton.Size = new System.Drawing.Size(66, 22);
             this.RemoveFilterButton.TabIndex = 19;
             this.RemoveFilterButton.Text = "Remove";
             this.RemoveFilterButton.UseVisualStyleBackColor = true;
@@ -184,10 +185,10 @@
             // ShowFiltersCheckbox
             // 
             this.ShowFiltersCheckbox.AutoSize = true;
-            this.ShowFiltersCheckbox.Location = new System.Drawing.Point(861, 6);
+            this.ShowFiltersCheckbox.Location = new System.Drawing.Point(753, 4);
             this.ShowFiltersCheckbox.Margin = new System.Windows.Forms.Padding(1);
             this.ShowFiltersCheckbox.Name = "ShowFiltersCheckbox";
-            this.ShowFiltersCheckbox.Size = new System.Drawing.Size(110, 24);
+            this.ShowFiltersCheckbox.Size = new System.Drawing.Size(89, 19);
             this.ShowFiltersCheckbox.TabIndex = 20;
             this.ShowFiltersCheckbox.Text = "Show Filters";
             this.ShowFiltersCheckbox.UseVisualStyleBackColor = true;
@@ -195,10 +196,10 @@
             // 
             // RefreshFoldersButton
             // 
-            this.RefreshFoldersButton.Location = new System.Drawing.Point(228, 7);
+            this.RefreshFoldersButton.Location = new System.Drawing.Point(200, 5);
             this.RefreshFoldersButton.Margin = new System.Windows.Forms.Padding(1);
             this.RefreshFoldersButton.Name = "RefreshFoldersButton";
-            this.RefreshFoldersButton.Size = new System.Drawing.Size(90, 27);
+            this.RefreshFoldersButton.Size = new System.Drawing.Size(79, 20);
             this.RefreshFoldersButton.TabIndex = 21;
             this.RefreshFoldersButton.Text = "Refresh";
             this.RefreshFoldersButton.UseVisualStyleBackColor = true;
@@ -206,10 +207,10 @@
             // 
             // CreateFolderButton
             // 
-            this.CreateFolderButton.Location = new System.Drawing.Point(228, 36);
+            this.CreateFolderButton.Location = new System.Drawing.Point(200, 27);
             this.CreateFolderButton.Margin = new System.Windows.Forms.Padding(1);
             this.CreateFolderButton.Name = "CreateFolderButton";
-            this.CreateFolderButton.Size = new System.Drawing.Size(90, 27);
+            this.CreateFolderButton.Size = new System.Drawing.Size(79, 20);
             this.CreateFolderButton.TabIndex = 22;
             this.CreateFolderButton.Text = "Create Folder";
             this.CreateFolderButton.UseVisualStyleBackColor = true;
@@ -217,10 +218,10 @@
             // 
             // DeleteFolderButton
             // 
-            this.DeleteFolderButton.Location = new System.Drawing.Point(228, 65);
+            this.DeleteFolderButton.Location = new System.Drawing.Point(200, 49);
             this.DeleteFolderButton.Margin = new System.Windows.Forms.Padding(1);
             this.DeleteFolderButton.Name = "DeleteFolderButton";
-            this.DeleteFolderButton.Size = new System.Drawing.Size(90, 29);
+            this.DeleteFolderButton.Size = new System.Drawing.Size(79, 22);
             this.DeleteFolderButton.TabIndex = 23;
             this.DeleteFolderButton.Text = "Delete Folder";
             this.DeleteFolderButton.UseVisualStyleBackColor = true;
@@ -236,13 +237,14 @@
             this.Sender,
             this.Subject,
             this.Date});
-            this.InboxGrid.Location = new System.Drawing.Point(303, 168);
+            this.InboxGrid.Location = new System.Drawing.Point(265, 126);
+            this.InboxGrid.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.InboxGrid.Name = "InboxGrid";
             this.InboxGrid.ReadOnly = true;
             this.InboxGrid.RowHeadersVisible = false;
             this.InboxGrid.RowHeadersWidth = 51;
             this.InboxGrid.RowTemplate.Height = 29;
-            this.InboxGrid.Size = new System.Drawing.Size(721, 400);
+            this.InboxGrid.Size = new System.Drawing.Size(631, 300);
             this.InboxGrid.TabIndex = 24;
             this.InboxGrid.Click += new System.EventHandler(this.InboxGrid_Click);
             this.InboxGrid.DoubleClick += new System.EventHandler(this.InboxGrid_DoubleClick);
@@ -290,20 +292,20 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.label2.Location = new System.Drawing.Point(13, 10);
+            this.label2.Location = new System.Drawing.Point(11, 8);
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(171, 41);
+            this.label2.Size = new System.Drawing.Size(138, 32);
             this.label2.TabIndex = 8;
             this.label2.Text = "Prime Mail";
             // 
             // Compose
             // 
             this.Compose.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
-            this.Compose.Location = new System.Drawing.Point(13, 62);
-            this.Compose.Margin = new System.Windows.Forms.Padding(4);
+            this.Compose.Location = new System.Drawing.Point(11, 46);
+            this.Compose.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Compose.Name = "Compose";
-            this.Compose.Size = new System.Drawing.Size(199, 56);
+            this.Compose.Size = new System.Drawing.Size(174, 42);
             this.Compose.TabIndex = 9;
             this.Compose.Text = "Compose";
             this.Compose.UseVisualStyleBackColor = false;
@@ -319,9 +321,10 @@
             "3rd",
             "4th",
             "5th"});
-            this.PrioritySelecter.Location = new System.Drawing.Point(12, 356);
+            this.PrioritySelecter.Location = new System.Drawing.Point(10, 267);
+            this.PrioritySelecter.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.PrioritySelecter.Name = "PrioritySelecter";
-            this.PrioritySelecter.Size = new System.Drawing.Size(199, 28);
+            this.PrioritySelecter.Size = new System.Drawing.Size(175, 23);
             this.PrioritySelecter.TabIndex = 0;
             this.PrioritySelecter.Text = "Priorities";
             this.PrioritySelecter.SelectedIndexChanged += new System.EventHandler(this.Priority_Clicked);
@@ -336,12 +339,13 @@
             this.remove,
             this.Priority,
             this.dataGridViewTextBoxColumn1});
-            this.PriorityGrid.Location = new System.Drawing.Point(11, 390);
+            this.PriorityGrid.Location = new System.Drawing.Point(10, 292);
+            this.PriorityGrid.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.PriorityGrid.Name = "PriorityGrid";
             this.PriorityGrid.RowHeadersVisible = false;
             this.PriorityGrid.RowHeadersWidth = 51;
             this.PriorityGrid.RowTemplate.Height = 29;
-            this.PriorityGrid.Size = new System.Drawing.Size(201, 188);
+            this.PriorityGrid.Size = new System.Drawing.Size(176, 141);
             this.PriorityGrid.TabIndex = 10;
             this.PriorityGrid.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.PriorityGrid_Click);
             this.PriorityGrid.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.PriorityGrid_DoubleClick);
@@ -371,10 +375,11 @@
             // 
             this.Folders.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.Folders.FormattingEnabled = true;
-            this.Folders.ItemHeight = 20;
-            this.Folders.Location = new System.Drawing.Point(11, 132);
+            this.Folders.ItemHeight = 15;
+            this.Folders.Location = new System.Drawing.Point(10, 99);
+            this.Folders.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Folders.Name = "Folders";
-            this.Folders.Size = new System.Drawing.Size(199, 204);
+            this.Folders.Size = new System.Drawing.Size(175, 154);
             this.Folders.TabIndex = 25;
             // 
             // FilterUnreadCheckbox
@@ -391,30 +396,33 @@
             // FilterUnreadCheckbox1
             // 
             this.FilterUnreadCheckbox1.AutoSize = true;
-            this.FilterUnreadCheckbox1.Location = new System.Drawing.Point(353, 81);
+            this.FilterUnreadCheckbox1.Location = new System.Drawing.Point(309, 61);
+            this.FilterUnreadCheckbox1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.FilterUnreadCheckbox1.Name = "FilterUnreadCheckbox1";
-            this.FilterUnreadCheckbox1.Size = new System.Drawing.Size(119, 24);
+            this.FilterUnreadCheckbox1.Size = new System.Drawing.Size(96, 19);
             this.FilterUnreadCheckbox1.TabIndex = 26;
             this.FilterUnreadCheckbox1.Text = "Show Unread";
             this.FilterUnreadCheckbox1.UseVisualStyleBackColor = true;
             this.FilterUnreadCheckbox1.CheckedChanged += new System.EventHandler(this.FilterUnreadCheckbox_CheckChanged);
             // 
-            // Metrics
+            // MetricsButton
             // 
-            this.Metrics.Location = new System.Drawing.Point(228, 98);
-            this.Metrics.Name = "Metrics";
-            this.Metrics.Size = new System.Drawing.Size(90, 29);
-            this.Metrics.TabIndex = 27;
-            this.Metrics.Text = "Metrics";
-            this.Metrics.UseVisualStyleBackColor = true;
+            this.MetricsButton.Location = new System.Drawing.Point(200, 74);
+            this.MetricsButton.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.MetricsButton.Name = "MetricsButton";
+            this.MetricsButton.Size = new System.Drawing.Size(79, 22);
+            this.MetricsButton.TabIndex = 27;
+            this.MetricsButton.Text = "Metrics";
+            this.MetricsButton.UseVisualStyleBackColor = true;
+            this.MetricsButton.Click += new System.EventHandler(this.MetricsButton_Click);
             // 
             // Inboxes
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(75)))), ((int)(((byte)(75)))), ((int)(((byte)(75)))));
-            this.ClientSize = new System.Drawing.Size(1051, 599);
-            this.Controls.Add(this.Metrics);
+            this.ClientSize = new System.Drawing.Size(920, 449);
+            this.Controls.Add(this.MetricsButton);
             this.Controls.Add(this.FilterUnreadCheckbox1);
             this.Controls.Add(this.Folders);
             this.Controls.Add(this.PriorityGrid);
@@ -436,7 +444,8 @@
             this.Controls.Add(this.SearchTextBox);
             this.Controls.Add(this.InboxGrid);
             this.Controls.Add(this.Inbox);
-            this.Margin = new System.Windows.Forms.Padding(4);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "Inboxes";
             this.Text = "Prime Email";
             this.Load += new System.EventHandler(this.Form1_Load);
@@ -477,6 +486,6 @@
         private DataGridViewTextBoxColumn Sender;
         private DataGridViewTextBoxColumn Subject;
         private DataGridViewTextBoxColumn Date;
-        private Button Metrics;
+        private Button MetricsButton;
     }
 }
