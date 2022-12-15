@@ -45,6 +45,10 @@
             this.CreateFolderButton = new System.Windows.Forms.Button();
             this.DeleteFolderButton = new System.Windows.Forms.Button();
             this.InboxGrid = new System.Windows.Forms.DataGridView();
+            this.Flags = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Sender = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Subject = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Date = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.label2 = new System.Windows.Forms.Label();
             this.Compose = new System.Windows.Forms.Button();
             this.PrioritySelecter = new System.Windows.Forms.ComboBox();
@@ -55,10 +59,6 @@
             this.Folders = new System.Windows.Forms.ListBox();
             this.FilterUnreadCheckbox = new System.Windows.Forms.CheckBox();
             this.FilterUnreadCheckbox1 = new System.Windows.Forms.CheckBox();
-            this.Flags = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Sender = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Subject = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Date = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.InboxGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PriorityGrid)).BeginInit();
             this.SuspendLayout();
@@ -227,6 +227,7 @@
             // 
             // InboxGrid
             // 
+            this.InboxGrid.AllowUserToAddRows = false;
             this.InboxGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.InboxGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.InboxGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
@@ -236,6 +237,7 @@
             this.Date});
             this.InboxGrid.Location = new System.Drawing.Point(297, 150);
             this.InboxGrid.Name = "InboxGrid";
+            this.InboxGrid.ReadOnly = true;
             this.InboxGrid.RowHeadersVisible = false;
             this.InboxGrid.RowHeadersWidth = 51;
             this.InboxGrid.RowTemplate.Height = 29;
@@ -244,6 +246,44 @@
             this.InboxGrid.Click += new System.EventHandler(this.InboxGrid_Click);
             this.InboxGrid.DoubleClick += new System.EventHandler(this.InboxGrid_DoubleClick);
             this.InboxGrid.MouseUp += new System.Windows.Forms.MouseEventHandler(this.InboxGrid_MouseUp);
+            // 
+            // Flags
+            // 
+            this.Flags.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.Flags.FillWeight = 7.699075F;
+            this.Flags.HeaderText = "Flags";
+            this.Flags.MinimumWidth = 6;
+            this.Flags.Name = "Flags";
+            this.Flags.ReadOnly = true;
+            this.Flags.Width = 125;
+            // 
+            // Sender
+            // 
+            this.Sender.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Sender.FillWeight = 190F;
+            this.Sender.HeaderText = "Sender";
+            this.Sender.MinimumWidth = 6;
+            this.Sender.Name = "Sender";
+            this.Sender.ReadOnly = true;
+            // 
+            // Subject
+            // 
+            this.Subject.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Subject.FillWeight = 190F;
+            this.Subject.HeaderText = "Subject";
+            this.Subject.MinimumWidth = 6;
+            this.Subject.Name = "Subject";
+            this.Subject.ReadOnly = true;
+            // 
+            // Date
+            // 
+            this.Date.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.Date.FillWeight = 5.59213F;
+            this.Date.HeaderText = "Date";
+            this.Date.MinimumWidth = 6;
+            this.Date.Name = "Date";
+            this.Date.ReadOnly = true;
+            this.Date.Width = 125;
             // 
             // label2
             // 
@@ -288,6 +328,7 @@
             // 
             // PriorityGrid
             // 
+            this.PriorityGrid.AllowUserToAddRows = false;
             this.PriorityGrid.BackgroundColor = System.Drawing.SystemColors.AppWorkspace;
             this.PriorityGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.PriorityGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
@@ -356,40 +397,6 @@
             this.FilterUnreadCheckbox1.Text = "Show Unread";
             this.FilterUnreadCheckbox1.UseVisualStyleBackColor = true;
             this.FilterUnreadCheckbox1.CheckedChanged += new System.EventHandler(this.FilterUnreadCheckbox_CheckChanged);
-            // 
-            // Flags
-            // 
-            this.Flags.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.Flags.FillWeight = 7.699075F;
-            this.Flags.HeaderText = "Flags";
-            this.Flags.MinimumWidth = 6;
-            this.Flags.Name = "Flags";
-            this.Flags.Width = 125;
-            // 
-            // Sender
-            // 
-            this.Sender.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Sender.FillWeight = 190F;
-            this.Sender.HeaderText = "Sender";
-            this.Sender.MinimumWidth = 6;
-            this.Sender.Name = "Sender";
-            // 
-            // Subject
-            // 
-            this.Subject.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Subject.FillWeight = 190F;
-            this.Subject.HeaderText = "Subject";
-            this.Subject.MinimumWidth = 6;
-            this.Subject.Name = "Subject";
-            // 
-            // Date
-            // 
-            this.Date.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.Date.FillWeight = 5.59213F;
-            this.Date.HeaderText = "Date";
-            this.Date.MinimumWidth = 6;
-            this.Date.Name = "Date";
-            this.Date.Width = 125;
             // 
             // Inboxes
             // 

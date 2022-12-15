@@ -1447,10 +1447,11 @@ namespace Email_Client_01
             object PriorityMsg = InboxGrid.SelectedRows[0].Cells[2].Value;
 
             // Display the selected mail in listbox "Priority" as "priority + subject of email"
-            PriorityGrid.Rows.Add("", Selecteditem, PriorityMsg);
+            PriorityGrid.Rows.Add("X", Selecteditem, PriorityMsg);
 
             PriorityGrid.Sort(PriorityGrid.Columns[1], ListSortDirection.Ascending);
         }
+
         private void InboxGrid_Click(object sender, EventArgs e)
         {
             InboxGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
