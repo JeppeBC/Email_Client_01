@@ -9,59 +9,9 @@ using System.Threading.Tasks;
 
 namespace Email_Client_01
 {
-
-    public abstract class Subject
-    {
-        private List<Inboxes> Inboxes = new List<Inboxes>();
-        private int _MessageCountChanged;
-
-        public Subject(int messages)
-        {
-            this._MessageCountChanged = messages;
-        }
-
-        public void Attach(Inboxes inbox)
-        {
-            Inboxes.Add(inbox);
-        }
-
-        public void Detach(Inboxes inbox)
-        {
-            Inboxes.Remove(inbox);
-        }
-
-        public void Notify()
-        {
-            foreach(var inbox in Inboxes)
-            {
-                // Update reserved keyword
-                inbox.Reload();
-            }
-        }
-
-        public int MessageCountChanged
-        {
-            get { return _MessageCountChanged; }
-            set
-            {
-                if(_MessageCountChanged != value)
-                {
-                    _MessageCountChanged = value;
-                    Notify();
-                }
-            }
-        }
-    }
-    
-    public class ConcreteSubject : Subject
-    {
-        public ConcreteSubject(int MessageCountChanged) : base(MessageCountChanged)
-        {
-        }
-
-    }
-
-
+    // https://github.com/jstedfast/MailKit/blob/master/Documentation/Examples/ImapIdleExample.cs heavily inspired.
+    // Omitted some of the event handlers as we already solved these in an arguably more efficient manner as we avoid reloading the entire inbox.
+    // If we change to using a data source for the inbox then it works fine, however data grid views are not as simple to implement data sources for. 
     class IdleClient : IDisposable
     {
         readonly string host, username, password;
@@ -75,7 +25,7 @@ namespace Email_Client_01
         ImapClient client;
 
         // Observer
-        public ConcreteSubject InboxMessages; 
+        public InboxMessagesSubject InboxMessages; 
 
         public IdleClient(string host, int port, SecureSocketOptions sslOptions, string username, string password)
         {
@@ -90,7 +40,7 @@ namespace Email_Client_01
             this.port = port;
 
             // Observer
-            InboxMessages = new ConcreteSubject(0);
+            InboxMessages = new InboxMessagesSubject(0);
 
 
     }
@@ -136,6 +86,10 @@ namespace Email_Client_01
 
             foreach (var message in fetched)
             {
+
+                // Currently we just use an integer that counts the number of times we see changes
+                // Mutating this triggers the notify. We could perhaps also pass a reference to the list of message summaries in the inbox
+                // and watch this, however there is really not much of a difference. 
                 this.InboxMessages.MessageCountChanged++;
                 messages.Add(message);
             }
@@ -230,15 +184,10 @@ namespace Email_Client_01
 
             // keep track of messages being expunged so that when the CountChanged event fires, we can tell if it's
             // because new messages have arrived vs messages being removed (or some combination of the two).
-            f.MessageExpunged += OnMessageExpunged;
 
-            // keep track of flag changes
-            f.MessageFlagsChanged += OnMessageFlagsChanged;
 
             await IdleAsync();
 
-            f.MessageFlagsChanged -= OnMessageFlagsChanged;
-            f.MessageExpunged -= OnMessageExpunged;
             f.CountChanged -= OnCountChanged;
 
 
@@ -256,13 +205,7 @@ namespace Email_Client_01
             // larger than messages.Count, then it means that new messages have arrived.
             if (folder?.Count > messages.Count)
             {
-                MessageBox.Show("test");
                 int arrived = folder.Count - messages.Count;
-
-                if (arrived > 1)
-                    Console.WriteLine("\t{0} new messages have arrived.", arrived);
-                else
-                    Console.WriteLine("\t1 new message has arrived.");
 
                 // Note: your first instinct may be to fetch these new messages now, but you cannot do
                 // that in this event handler (the ImapFolder is not re-entrant).
@@ -274,33 +217,6 @@ namespace Email_Client_01
             }
         }
 
-        void OnMessageExpunged(object? sender, MessageEventArgs e)
-        {
-            var folder = (ImapFolder?)sender;
-
-            if (e.Index < messages.Count)
-            {
-                var message = messages[e.Index];
-
-                Console.WriteLine("{0}: message #{1} has been expunged: {2}", folder, e.Index, message.Envelope.Subject);
-
-                // Note: If you are keeping a local cache of message information
-                // (e.g. MessageSummary data) for the folder, then you'll need
-                // to remove the message at e.Index.
-                messages.RemoveAt(e.Index);
-            }
-            else
-            {
-                Console.WriteLine("{0}: message #{1} has been expunged.", folder, e.Index);
-            }
-        }
-
-        void OnMessageFlagsChanged(object? sender, MessageFlagsChangedEventArgs e)
-        {
-            var folder = (ImapFolder?)sender;
-
-            Console.WriteLine("{0}: flags have changed for message #{1} ({2}).", folder, e.Index, e.Flags);
-        }
 
         public void Exit()
         {

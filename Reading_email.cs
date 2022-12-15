@@ -2,6 +2,7 @@
 using MailKit.Net.Imap;
 using MimeKit;
 using MimeKit.Utils;
+using Org.BouncyCastle.Cms;
 using static System.Net.Mime.MediaTypeNames;
 
 
@@ -26,7 +27,7 @@ namespace Email_Client_01
             SubjectTextBox.Text = message.Subject;
 
 
-            // TODO: ADD HTML BODY HERE TO SHOW IMAGES AND SUCH?? LOW PRIO?
+            // Very low prio TODO. Maybe add HTML rendering too to display inline images and such instead of just textbody.
             MessageTextBox.Text = message.TextBody;
 
             ToTextBox.Text = message.To.ToString(); 
@@ -54,14 +55,9 @@ namespace Email_Client_01
                     AttachmentListBox.Items.Add(filename);
                 }
             }
-
-
-
-            // TODO ADD CC:
-/*            ccRecipientsTb.Text = message.Envelope.Cc.ToString();*/
         }
 
-        // TODO assumes text body is not null, fix.
+
         private void Reply(MimeMessage message, bool replyToAll)
         {
             var reply = new MimeMessage();
@@ -84,6 +80,11 @@ namespace Email_Client_01
                 // include all of the other original recipients - TODO: remove ourselves from these lists
                 reply.To.AddRange(message.To);
                 reply.Cc.AddRange(message.Cc);
+
+                // Remove ourselves from these lists of recipients
+                // MailboxAddress class inherits from the internet address class so we just use that type instead. 
+                reply.To.Remove(MailboxAddress.Parse(Utility.username));
+                reply.Cc.Remove(MailboxAddress.Parse(Utility.username));
             }
 
             // set the reply subject
@@ -167,10 +168,7 @@ namespace Email_Client_01
 
 
                     builder.TextBody = text.ToString();
-/*                    ForwardedMessage.Body = new TextPart("plain")
-                    {
-                        Text = text.ToString()
-                    };*/
+
                 }
             }
 
@@ -184,29 +182,20 @@ namespace Email_Client_01
 
             new NewMail(ForwardedMessage, client).Show();
         }
-        private void label3_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void richTextBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
 
         // Reply
-        private void button2_Click(object sender, EventArgs e)
+        private void Reply_Click(object sender, EventArgs e)
         {
             Reply(message, false);
         }
 
         //ReplyAll
-        private void button3_Click(object sender, EventArgs e)
+        private void ReplyAll_Click(object sender, EventArgs e)
         {
             Reply(message, true);
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void Close_Click(object sender, EventArgs e)
         {
             this.Close();
         }
@@ -290,11 +279,6 @@ namespace Email_Client_01
             {
                 MessageBox.Show(ex.Message);
             }
-
-        }
-
-        private void TrashButton_Click(object sender, EventArgs e)
-        {
 
         }
 

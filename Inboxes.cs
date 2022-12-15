@@ -61,14 +61,15 @@ namespace Email_Client_01
                 File.Create(Utility.JsonFilePath).Close();
             }
             // Read the entire file and De-serialize to list of filters
-            var Filters = Utility.JsonFileReader.Read<List<Filter>>(Utility.JsonFilePath) ?? new List<Filter>();
+            var Filters = new BindingList<Filter>(Utility.JsonFileReader.Read<List<Filter>>(Utility.JsonFilePath) ?? new List<Filter>());
 
 
 
             // Update the jsonfile when form closes
             this.FormClosed += (s, args) =>
             {
-                Utility.JsonFileWriter.Write<List<Filter>>(Utility.JsonFilePath, Filters);
+                if (FilterList == null) return;
+                Utility.JsonFileWriter.Write<List<Filter>>(Utility.JsonFilePath, FilterList.ToList());
             };
 
             BindingList<Filter> BindingListFilters = new BindingList<Filter>(Filters);
@@ -78,7 +79,6 @@ namespace Email_Client_01
             FilterListbox.DisplayMember = "Name";
 
             BindingList<Folder> BindingListFolders = new BindingList<Folder>();
-            BindingListFolders.ListChanged += new ListChangedEventHandler(folders_changed);
             FolderList = BindingListFolders;
             Folders.DataSource = FolderList;
             Folders.DisplayMember = "ListBoxName";
@@ -87,7 +87,7 @@ namespace Email_Client_01
             // Normally this can happen anywhere between 10, 15, 20, 25 or even 30 min. It is not very consistent. 
             System.Timers.Timer aTimer = new System.Timers.Timer();
             aTimer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
-            aTimer.Interval = 300000; // every 5 min, unit is milliseconds.
+            aTimer.Interval = 120000; // every 2 min, unit is milliseconds.
             aTimer.Enabled = true;
 
 
@@ -106,9 +106,11 @@ namespace Email_Client_01
         private void OnTimedEvent(object? sender, ElapsedEventArgs e)
         {
             if (ClientInUse || loadingFolders || loadingMessages) return;
-            
+
             // Dummy ping the server to prevent timing out
-            client.NoOp();
+            ClientInUse = true;
+            client.NoOp(); // this effectively takes no time but just in case
+            ClientInUse = false;
         }
 
         void filters_changed(object? sender, ListChangedEventArgs e)
@@ -126,11 +128,6 @@ namespace Email_Client_01
                 FilterLabel.Visible = false;
                 RemoveFilterButton.Visible = false;
             }
-        }
-
-        private void folders_changed(object? sender, ListChangedEventArgs e)
-        {
-/*            MessageBox.Show("folders changed");*/
         }
 
 
@@ -162,21 +159,17 @@ namespace Email_Client_01
 
                 FolderList.Clear();
 
-
                 foreach (var folder in folders)
                 {
                     if (folder.Exists)
                     {
-
                         // counting number of unread messages, the time this takes is noticeable #TODO
                         folder.Open(FolderAccess.ReadOnly);
 
-
-
+                        // Names are of the form "[Gmail]/Spam" -- get the "Spam" part only
                         var folderName = folder.FullName.Substring(folder.FullName.LastIndexOf("/") + 1);
 
-
-                        if (!isFolderUnreadBlacklisted(folder))
+                        if (!SpecialFolders.isFolderUnreadBlacklisted(folder))
                         {
                             int unreadCount = 0;
                             foreach (var uid in folder.Search(SearchQuery.NotSeen))
@@ -186,11 +179,10 @@ namespace Email_Client_01
                             folderName += " (" + unreadCount + ")";
                         }
                         // show the number of items in the following folders:
-                        if(isFolderDisplayAllCount(folder))
+                        if(SpecialFolders.isFolderDisplayAllCount(folder))
                         {
                             if (folder.Count > 0) folderName += " (" + folder.Count + ")";
                         }
-
 
 
                         FolderList.Add(new Folder()
@@ -338,11 +330,6 @@ namespace Email_Client_01
         }
 
 
-        public static void RefreshCurrentFolder()
-        {
-            instance.RetrieveMessagesFromFolder();
-        }
-
         private IMailFolder GetCurrentFolder()
         {
             if (Folders.SelectedIndex < 0)
@@ -356,12 +343,7 @@ namespace Email_Client_01
 
 
 
-
-        // default parameters here because we send it another method that does not care.
-        // retrives messages in a folder when it is double clicked. 
-        // default parameters here because we send it another method that does not care.
-        // retrives messages in a folder when it is double clicked. 
-
+        
         public void Reload()
         {
             RetrieveMessagesFromFolder();
@@ -385,68 +367,61 @@ namespace Email_Client_01
 
                 await folder.OpenAsync(FolderAccess.ReadWrite);
 
-                // optional TODO optimize the search queries so we can do these in batches.
-                // Each call to search takes about 200ms per filter (of course depending on the number of mails it is filtering)
+                // Optional TODO/future work:  optimize the search queries so we can do these in batches.
+                // Each call to search takes about 200ms per filter (of course depending slightly on the number of mails it is filtering)
 
-                // Notably we do not really care about the unread blacklist here, but it happens to be most of the special folders we also don't want to filter
-                // Namely: Sent, drafts, trashcan, all, flagged
-                if (!isFilterBlacklisted(folder))
+                if (!SpecialFolders.isFilterBlacklisted(folder))
                 {
+
                     foreach (var filter in FilterList)
                     {
-                        foreach (var f in folders) // find the IMailFolder from string DestinationFolder
+                        // get the destination folder;
+                        IMailFolder? f = folders.Where(folder => folder.FullName == filter.DestinationFolder).FirstOrDefault();
+
+                        if (f == folder) continue; // No need to move anything to the same folder it is currently in
+                        if (f == null || !f.Exists) continue; //guards that should never happen but just in case
+                        if (SpecialFolders.isFolderMoveMailToThisBlacklisted(f)) continue; // again a guard that should not happen but we make sure.
+
+
+                        var query = GetSearchQueryFromFilter(filter);
+                        if (query == null) continue;
+
+                        // find all the mails to be moved
+                        // takes like 150-200 ms per filter, slightly (almost negligible) extra ammount from moving the mail.
+                        var listUIDs = await folder.SearchAsync(query.And(SearchQuery.DeliveredAfter(Properties.Time.Default.Date)));
+
+
+
+                        // This similarly takes 100-200ms per filter, this following segment prevens the filter collisions
+                        // where you can have one filter move one mail to say spam and another one that moves the same mail to inbox or whatever.
+                        // In this scenario the user never sees the mail, but only the count go up and down when it is being moved. 
+                        // This block ensures that we only filter a mail at most once. However it is a somewhat expensive call as we access the imap client.
+                        // We do this as the Unique IDs are only folder specific, whereas the emailid is a globally unique identifier. 
+                        if (listUIDs.ToList().Count <= 0) continue; // if nothing to move we should not do expensive calls to folder.fetch or folder.movetoasync
+
+                        var summaries = folder.Fetch(listUIDs, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId);
+                        foreach (var sum in summaries)
                         {
-                            if (f == folder) continue; // no point in moving to the same folder as we are currently in
-                            if (f.FullName != filter.DestinationFolder || !f.Exists) continue;
-                            // should not allow creating filters to these folders in the first place, but a guard in case json file is manually modified perhaps.
-                            if (isFolderMoveMailToThisBlacklisted(f)) continue;
-
-                            var query = GetSearchQueryFromFilter(filter);
-                            if (query == null) continue;
-
-                            // find all the mails to be moved
-                            // takes like 150-200 ms per filter, slightly (almost negligible) extra ammount from moving the mail.
-                            var listUIDs = await folder.SearchAsync(query.And(SearchQuery.DeliveredAfter(Properties.Time.Default.Date)));
-
-
-
-                            // This similarly takes 100-200ms per filter, this following segment prevens the filter collisions
-                            // where you can have one filter move one mail to say spam and another one that moves the same mail to inbox or whatever.
-                            // In this scenario the user never sees the mail, but only the count go up and down when it is being moved. 
-                            // This block ensures that we only filter a mail at most once. However it is a somewhat expensive call as we access the imap client.
-                            // We do this as the Unique IDs are only folder specific, whereas the emailid is a globally unique identifier. 
-                            if (listUIDs.ToList().Count <= 0) continue;
-
-                            var summaries = folder.Fetch(listUIDs, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId);
-
-
-                            foreach(var sum in summaries)
+                            // if the email is already in the filterset
+                            if (!FilterSet.Add(sum.EmailId))
                             {
-                                // if the email is already in the filterset
-                                if(!FilterSet.Add(sum.EmailId))
-                                {
-                                    // remove the corresponding uid from the list of uids to be moved.
-                                    listUIDs.Remove(listUIDs.Where(uid => uid == sum.UniqueId).FirstOrDefault());
-                                }
+                                // remove the corresponding uid from the list of uids to be moved.
+                                listUIDs.Remove(listUIDs.Where(uid => uid == sum.UniqueId).FirstOrDefault());
                             }
-
-                            await folder.MoveToAsync(listUIDs, f);
-
-                            // update the unread count on folder f. We are moving (unread) mails to f
-                            IncrementFolderCount(f, value: listUIDs.Count());
-                            // We are moving a message before it is shown in the current listbox, so we do not need to update the count of current folder. 
-                            
-                            break;
-
                         }
-                    }
 
+                        await folder.MoveToAsync(listUIDs, f);
+                        // update the unread count on folder f. We are moving (unread) mails to f
+                        IncrementFolderCount(f, value: listUIDs.Count());
+                        // We are moving a message before it is shown in the current listbox, so we do not need to update the count of current folder. 
+                    }
                 }
+
                 // load in the mails after filtering
                 this.messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
                 int unreadCount = 0;
 
-                if(FilterUnreadCheckbox.Checked && !isFolderWithoutUnreads(folder))
+                if(FilterUnreadCheckbox.Checked && !SpecialFolders.isFolderWithoutUnreads(folder))
                 {
                     unreadCount = ShowUnreadMails(messageSummaries);
                 }
@@ -475,13 +450,13 @@ namespace Email_Client_01
                         Inbox.Items.Add(FormatInboxMessageText(item));
 
                         // make sure the folder count is correct
-                        if (isFolderUnreadBlacklisted(folder)) continue;
+                        if (SpecialFolders.isFolderUnreadBlacklisted(folder)) continue;
                         if (item.Flags != null && !item.Flags.Value.HasFlag(MessageFlags.Seen)) unreadCount += 1;
                     }
                 }
                 // display the unread count if not blacklisted
-                if (isFolderDisplayAllCount(folder)) UpdateFolderCount(folder, folder.Count);
-                else if(!isFolderUnreadBlacklisted(folder) && unreadCount > -1) UpdateFolderCount(folder, unreadCount);
+                if (SpecialFolders.isFolderDisplayAllCount(folder)) UpdateFolderCount(folder, folder.Count);
+                else if(!SpecialFolders.isFolderUnreadBlacklisted(folder) && unreadCount > -1) UpdateFolderCount(folder, unreadCount);
 
             }
             catch (Exception ex)
@@ -582,20 +557,6 @@ namespace Email_Client_01
         }
 
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
-        }
-
-
-        // delete element from inbox (does not put in trashfolder, deletes entirely)
-
-        private void RefreshPage_Click(object sender, EventArgs e)
-        {
-            // #TODO make this only refresh the current folder to save time?
-            RetrieveFolders();
-        }
-
-
         private void Compose_Click(object sender, EventArgs e)
         {
             NewMail send_mail = new NewMail(client);
@@ -608,15 +569,7 @@ namespace Email_Client_01
         {
             if (!loadingFolders && sender != null)
             {
-/*                idle.Dispose();
-*//*                folder = GetCurrentFolder();*/
                 RetrieveMessagesFromFolder(sender, e);
-/*                if (folder == null) return;*/
-
-/*
-                idle = new IdleClient(Utility.ImapServer, Utility.ImapPort, MailKit.Security.SecureSocketOptions.Auto, Utility.username!, Utility.password!);
-                idle.InboxMessages.Attach(this);
-                idle.RunAsync(folder);*/
             }
         }
 
@@ -714,7 +667,7 @@ namespace Email_Client_01
 
 
 
-        // On pressing a key down, i.e. enter here
+        // On pressing a key down, i.e. enter here (must be in searchfield)
         private void SearchTextBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -726,21 +679,14 @@ namespace Email_Client_01
 
         private void AddFilter(string searchQuery)
         {
-            // When LOADING MESSAGES when choosing filters
             var InitialFolder = Folders.SelectedItem;
 
-
-            // the 5 commented lines here about the SelecteDIndexChanged and selectedItem is if we do not want to load in the messages as we select them
-            /*          var selectedFolder = Folders.SelectedItem;
-                        Folders.SelectedIndexChanged -= Folders_SelectedIndexChanged;*/
             string? DestinationFolder = "";
             if (!(Utility.RadioListBoxInput(Folders, "ListBoxName", "FullName", ref DestinationFolder) == DialogResult.OK))
             {
-                /*                Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;*/
                 return;
             }
-            /*            Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;
-                        Folders.SelectedItem = selectedFolder;*/
+
 
             // this should mutate DestinationFolder to the stringified selected item of the data source
             // In our case the folder name is something like: "[Folder.Fullname, Displayed name]";
@@ -749,7 +695,7 @@ namespace Email_Client_01
             foreach(var f in folders)
             {
                 // Check if the folder is blacklisted from carelessly being moved mail to
-                if(f.FullName == DestinationFolder && isFolderMoveMailToThisBlacklisted(f))
+                if(f.FullName == DestinationFolder && SpecialFolders.isFolderMoveMailToThisBlacklisted(f))
                 {
                     MessageBox.Show($"Not allowed to filter mails to special folder {f.FullName}.\nFilter not saved.");
                     return;
@@ -964,7 +910,7 @@ namespace Email_Client_01
             Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;
         }
 
-       private bool isFolderUnreadBlacklisted(IMailFolder? f)
+       /*public bool isFolderUnreadBlacklisted(IMailFolder? f)
         {
             if (f == null) return false;
             if (f.Attributes.HasFlag(FolderAttributes.Trash)     ||
@@ -978,7 +924,7 @@ namespace Email_Client_01
             return false;
         }
 
-        private bool isFolderWithoutUnreads(IMailFolder? f)
+        public bool isFolderWithoutUnreads(IMailFolder? f)
         {
             if (f == null) return false;
             if (f.Attributes.HasFlag(FolderAttributes.Sent) ||
@@ -989,7 +935,7 @@ namespace Email_Client_01
 
         // At the moment one-to-one identical with the function above, however we can imagine these could end up doing two different things
         // so we make them into separate functions. 
-        private bool isFilterBlacklisted(IMailFolder? f)
+        public bool isFilterBlacklisted(IMailFolder? f)
         {
             if (f == null) return false;
             if(f.Attributes.HasFlag(FolderAttributes.Trash) ||
@@ -1003,7 +949,7 @@ namespace Email_Client_01
             return false;
         }
 
-        private bool isFolderMoveMailToThisBlacklisted(IMailFolder? f)
+        public bool isFolderMoveMailToThisBlacklisted(IMailFolder? f)
         {
             if (f == null) return false;
             if (f.Attributes.HasFlag(FolderAttributes.Drafts) ||
@@ -1013,7 +959,7 @@ namespace Email_Client_01
             return false;
         }
 
-        private bool isFolderDisplayAllCount(IMailFolder? f)
+        public bool isFolderDisplayAllCount(IMailFolder? f)
         {
             if (f == null) return false;
 
@@ -1022,7 +968,7 @@ namespace Email_Client_01
                 f.Attributes.HasFlag(FolderAttributes.Important)
                 ) return true;
             return false;
-        }
+        }*/
 
   
 
@@ -1074,7 +1020,7 @@ namespace Email_Client_01
                     // we find the correct folder and ensure that it is not either the special drafts- or sent folder.
                     if (f.FullName == folderName)
                     {
-                        if(isFolderMoveMailToThisBlacklisted(f))
+                        if(SpecialFolders.isFolderMoveMailToThisBlacklisted(f))
                         {
                             MessageBox.Show($"Not allowed to drag and drop mails to special folder \"{f.FullName}\"\nYour Email will be loaded into the current folder again on refresh");
                             break;
@@ -1095,22 +1041,22 @@ namespace Email_Client_01
 
 
                         // Update current folder count
-                        if (isFolderDisplayAllCount(folder))
+                        if (SpecialFolders.isFolderDisplayAllCount(folder))
                         {
                             IncrementFolderCount(folder, decrement: true);
                         }
-                        else if (!isFolderUnreadBlacklisted(folder))
+                        else if (!SpecialFolders.isFolderUnreadBlacklisted(folder))
                         {
                             if (selectedItem.Flags != null && !selectedItem.Flags.Value.HasFlag(MessageFlags.Seen))
                                 IncrementFolderCount(folder, decrement: true);
                         }
 
                         // Update target folder if applicable
-                        if (isFolderDisplayAllCount(f))
+                        if (SpecialFolders.isFolderDisplayAllCount(f))
                         {
                             IncrementFolderCount(f);
                         }
-                        else if(!isFolderUnreadBlacklisted(f))
+                        else if(!SpecialFolders.isFolderUnreadBlacklisted(f))
                         {
                             if (selectedItem.Flags != null && !selectedItem.Flags.Value.HasFlag(MessageFlags.Seen))
                                 IncrementFolderCount(f);
@@ -1312,7 +1258,7 @@ namespace Email_Client_01
                 messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
                 // if the message is unread, we update the unread count of the folder
-                if (msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen) && !isFolderUnreadBlacklisted(folder)) 
+                if (msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen) && !SpecialFolders.isFolderUnreadBlacklisted(folder)) 
                 {
                     IncrementFolderCount(folder, decrement: true);
                 }
@@ -1524,5 +1470,9 @@ namespace Email_Client_01
                 RetrieveMessagesFromFolder();
             }
         }
+
     }
 }
+
+
+

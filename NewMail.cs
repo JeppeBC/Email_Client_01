@@ -222,7 +222,7 @@ namespace Email_Client_01
 
         private string FilterString(string s)
         {
-            // we expect strings of the form "Alias" <MailAddress>
+            // we expect strings of the form "Alias <MailAddress>"
             // and want to return only MailAddress
             string result = s;
             // remove the text between quotations and " chars. 
@@ -251,7 +251,7 @@ namespace Email_Client_01
 
                 r = FilterString(r);
 
-                if (!EmailValidator.Validate(r))
+                if (!EmailValidator.Validate(r)) // use jstedfast 
                 {
                     return false;
                 }
@@ -305,7 +305,7 @@ namespace Email_Client_01
                 try
                 {
                     await Utility.ReconnectAsync(client);
-                    var draftsFolder = await getDraftFolder(CancellationToken.None);
+                    var draftsFolder = client.GetFolder(SpecialFolder.Drafts);
                     if(draftsFolder == null)
                     {
                         MessageBox.Show("\"Draft(s)\" folder not found");
@@ -381,11 +381,6 @@ namespace Email_Client_01
             }
         }
 
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private async void RemoveAttachmentButton_Click(object sender, EventArgs e)
         {
             try
@@ -412,163 +407,6 @@ namespace Email_Client_01
             {
                 MessageBox.Show("No Attachment selected!");
             }
-        }
-
-
-        public class Email
-        {
-            public bool isDraft = false;
-            public List<MailboxAddress> To { get; set; }
-
-            public List<MailboxAddress> CC { get; set; }
-            public string Subject { get; set; }
-
-            public string Content { get; set; }
-
-            public List<string?> LocalAttachments { get; set; }
-
-            public IEnumerable<MimeEntity>? nonlocalAttachments { get; set; }
-
-            public Email(string[] to, string[]? cc, string subject, string content, List<string?> localAttachments, IEnumerable<MimeEntity>? nonLocal = null)
-            {
-                To = new List<MailboxAddress>();
-                // username and address, #TODO currently we do not have aliases but extend this once we do
-
-                foreach (var recipient in to)
-                {
-                    To.Add(MailboxAddress.Parse(recipient));
-                }
-
-
-                CC = new List<MailboxAddress>();
-                if (!(cc == null))
-                {
-                    foreach (var c in cc)
-                    {
-                        CC.Add(MailboxAddress.Parse(c));
-                    }
-                }
-
-
-
-
-                Subject = subject;
-                Content = content;
-                LocalAttachments = localAttachments;
-                nonlocalAttachments = nonLocal;
-            }
-        }
-
-        public interface IEmailSender
-        {
-            void sendEmail(Email email);
-        }
-
-
-        public class EmailSender : IEmailSender
-        {
-
-            public void sendEmail(Email email)
-            {
-                var emailMessage = CreateEmailMessage(email);
-
-                Send(emailMessage);
-            }
-
-            private MimeMessage CreateEmailMessage(Email email)
-            {
-                MimeMessage emailMessage = new();
-
-                var builder = new BodyBuilder
-                {
-                    TextBody = email.Content // TODO formatting needed here???
-                };
-                foreach (var attachment in email.LocalAttachments)
-                {
-                    builder.Attachments.Add(attachment);
-                }
-
-                if(email.nonlocalAttachments != null)
-                {
-                    foreach(var attachment in email.nonlocalAttachments)
-                    {
-                        builder.Attachments.Add(attachment);
-                    }
-                }
-
-                emailMessage.Body = builder.ToMessageBody();                        // TODO add alias/username
-                emailMessage.From.Add(new MailboxAddress(Properties.Credentials.Default.username, Properties.Credentials.Default.username)); // username    &&     //email of user
-                emailMessage.To.AddRange(email.To);
-                emailMessage.Cc.AddRange(email.CC);
-                emailMessage.Subject = email.Subject;
-
-                return emailMessage;
-            }
-
-            private async void Send(MimeMessage emailMessage)
-            {
-
-                using (var client = await Utility.GetSmtpClient())
-                {
-                    try
-                    {
-                        client.Send(emailMessage);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.Message);
-                    }
-                    finally
-                    {
-                        // always disconnect no matter the scenario
-                        client?.Disconnect(true);
-                        // and dispose/free/delete the smtp client object
-                        client?.Dispose();
-                    }
-                }
-            }
-        }
-
-        private async Task<IMailFolder?> getDraftFolder(CancellationToken cancellationToken)
-        {
-            try
-            {
-                await Utility.ReconnectAsync(client);
-                string[] DraftFolderNames = { "Drafts", "Kladder", "Draft" };
-                if ((client.Capabilities & (ImapCapabilities.SpecialUse | ImapCapabilities.XList)) != 0)
-                {
-                    var trashFolder = client.GetFolder(SpecialFolder.Drafts);
-                    return trashFolder;
-                }
-
-                else
-                {
-                    var personal = client.GetFolder(client.PersonalNamespaces[0]);
-
-                    foreach (var folder in personal.GetSubfolders(false, cancellationToken))
-                    {
-                        foreach (var name in DraftFolderNames)
-                        {
-                            if (folder.Name == name)
-                                return folder;
-                        }
-                    }
-                }
-            }
-            catch(Exception ex)
-            {
-                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects.
-                if (ex is ImapProtocolException || ex is IOException)
-                {
-                    await Utility.ReconnectAsync(client);
-                }
-                else
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
-            return null;
-            
         }
 
         // saves the current message state as a draft
@@ -630,7 +468,7 @@ namespace Email_Client_01
                 await Utility.ReconnectAsync(client);
 
                 MimeMessage message = BuildDraftMessage();
-                IMailFolder? draftsFolder = await getDraftFolder(CancellationToken.None);
+                IMailFolder? draftsFolder = client.GetFolder(SpecialFolder.Drafts);
                 if(draftsFolder == null)
                 {
                     MessageBox.Show("\"Draft(s)\" folder not found");

@@ -34,9 +34,9 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.MessageTextBox = new System.Windows.Forms.RichTextBox();
-            this.button1 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
+            this.CloseButton = new System.Windows.Forms.Button();
+            this.ReplyButton = new System.Windows.Forms.Button();
+            this.ReplyAllButton = new System.Windows.Forms.Button();
             this.ForwardButton = new System.Windows.Forms.Button();
             this.button5 = new System.Windows.Forms.Button();
             this.button6 = new System.Windows.Forms.Button();
@@ -100,7 +100,6 @@
             this.label3.Size = new System.Drawing.Size(167, 48);
             this.label3.TabIndex = 4;
             this.label3.Text = "Message:";
-            this.label3.Click += new System.EventHandler(this.label3_Click);
             // 
             // MessageTextBox
             // 
@@ -111,40 +110,39 @@
             this.MessageTextBox.Size = new System.Drawing.Size(1684, 724);
             this.MessageTextBox.TabIndex = 5;
             this.MessageTextBox.Text = "";
-            this.MessageTextBox.TextChanged += new System.EventHandler(this.richTextBox1_TextChanged);
             // 
-            // button1
+            // CloseButton
             // 
-            this.button1.Location = new System.Drawing.Point(2094, 1139);
-            this.button1.Margin = new System.Windows.Forms.Padding(6);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(243, 112);
-            this.button1.TabIndex = 6;
-            this.button1.Text = "Close";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.CloseButton.Location = new System.Drawing.Point(2094, 1139);
+            this.CloseButton.Margin = new System.Windows.Forms.Padding(6);
+            this.CloseButton.Name = "CloseButton";
+            this.CloseButton.Size = new System.Drawing.Size(243, 112);
+            this.CloseButton.TabIndex = 6;
+            this.CloseButton.Text = "Close";
+            this.CloseButton.UseVisualStyleBackColor = true;
+            this.CloseButton.Click += new System.EventHandler(this.Close_Click);
             // 
-            // button2
+            // ReplyButton
             // 
-            this.button2.Location = new System.Drawing.Point(31, 1139);
-            this.button2.Margin = new System.Windows.Forms.Padding(6);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(243, 112);
-            this.button2.TabIndex = 7;
-            this.button2.Text = "Reply";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.ReplyButton.Location = new System.Drawing.Point(31, 1139);
+            this.ReplyButton.Margin = new System.Windows.Forms.Padding(6);
+            this.ReplyButton.Name = "ReplyButton";
+            this.ReplyButton.Size = new System.Drawing.Size(243, 112);
+            this.ReplyButton.TabIndex = 7;
+            this.ReplyButton.Text = "Reply";
+            this.ReplyButton.UseVisualStyleBackColor = true;
+            this.ReplyButton.Click += new System.EventHandler(this.Reply_Click);
             // 
-            // button3
+            // ReplyAllButton
             // 
-            this.button3.Location = new System.Drawing.Point(286, 1139);
-            this.button3.Margin = new System.Windows.Forms.Padding(6);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(243, 112);
-            this.button3.TabIndex = 8;
-            this.button3.Text = "Reply all";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
+            this.ReplyAllButton.Location = new System.Drawing.Point(286, 1139);
+            this.ReplyAllButton.Margin = new System.Windows.Forms.Padding(6);
+            this.ReplyAllButton.Name = "ReplyAllButton";
+            this.ReplyAllButton.Size = new System.Drawing.Size(243, 112);
+            this.ReplyAllButton.TabIndex = 8;
+            this.ReplyAllButton.Text = "Reply all";
+            this.ReplyAllButton.UseVisualStyleBackColor = true;
+            this.ReplyAllButton.Click += new System.EventHandler(this.ReplyAll_Click);
             // 
             // ForwardButton
             // 
@@ -277,7 +275,6 @@
             this.TrashButton.TabIndex = 22;
             this.TrashButton.Text = "Trash";
             this.TrashButton.UseVisualStyleBackColor = true;
-            this.TrashButton.Click += new System.EventHandler(this.TrashButton_Click);
             // 
             // Reading_email
             // 
@@ -299,9 +296,9 @@
             this.Controls.Add(this.button6);
             this.Controls.Add(this.button5);
             this.Controls.Add(this.ForwardButton);
-            this.Controls.Add(this.button3);
-            this.Controls.Add(this.button2);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.ReplyAllButton);
+            this.Controls.Add(this.ReplyButton);
+            this.Controls.Add(this.CloseButton);
             this.Controls.Add(this.MessageTextBox);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
@@ -324,9 +321,9 @@
         private Label label2;
         private Label label3;
         private RichTextBox MessageTextBox;
-        private Button button1;
-        private Button button2;
-        private Button button3;
+        private Button CloseButton;
+        private Button ReplyButton;
+        private Button ReplyAllButton;
         private Button ForwardButton;
         private Button button5;
         private Button button6;

@@ -24,13 +24,12 @@ namespace Email_Client_01
 
 
 
-        public static async Task<ImapClient> GetImapClient()
+        public static ImapClient GetImapClient()
         {
             var client = new ImapClient();
 
-            await client.ConnectAsync(ImapServer, ImapPort, MailKit.Security.SecureSocketOptions.Auto);
-            await client.AuthenticateAsync(username, password);
-
+            client.Connect(ImapServer, ImapPort, MailKit.Security.SecureSocketOptions.Auto);
+            client.Authenticate(username, password);
             return client;
         }
 

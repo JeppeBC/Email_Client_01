@@ -29,10 +29,10 @@ namespace Email_Client_01
             get { return instance ??= new LogIn(); }
         }
 
-        private void Form3_Load(object sender, EventArgs e)
+/*        private void Form3_Load(object sender, EventArgs e)
         {
             this.TopMost = true;
-        }
+        }*/
 
 
         private void EmailAddress_Click(object sender, EventArgs e)
@@ -47,21 +47,28 @@ namespace Email_Client_01
             PasswordTextBox.ForeColor = System.Drawing.Color.Black;
         }
 
-        private async void LogIn_button(object sender, EventArgs e)
+        private void LogIn_button(object sender, EventArgs e)
         {
-            // check username and password validity (length, and username looks like email?)
-            if (PasswordTextBox.Text.Length > 99 || PasswordTextBox.Text.Length < 8)
+            Utility.username = EmailTextBox.Text;
+            Utility.password = PasswordTextBox.Text;
+
+            Authenticator auth = new();
+
+
+            this.Cursor = Cursors.WaitCursor;
+            var client = auth.Authenticate(Utility.username, Utility.password); // attempt to authorize the given credentials
+
+            this.Cursor = Cursors.Default;
+            if(client == null)
             {
-                MessageBox.Show("Please enter a password between 8 and 99 characters (inclusive)");
-                return;
-            }
-            if (!EmailValidator.Validate(EmailTextBox.Text))
-            {
-                MessageBox.Show("Please enter a valid email address");
+                MessageBox.Show(auth.ErrorMessage);
                 return;
             }
 
 
+            // If we get here the client authorized successfully
+
+            // Store the credentials if checkbox is checked.
             if (RememberMeCheckBox.Checked)
             {
                 Properties.Credentials.Default.username = EmailTextBox.Text;
@@ -76,26 +83,17 @@ namespace Email_Client_01
                 Properties.Credentials.Default.Save();
             }
 
-            string username = EmailTextBox.Text;
-            string password = PasswordTextBox.Text;
-            Utility.username = username;
-            Utility.password = password;
 
-            this.Cursor = Cursors.WaitCursor;
-            var client = await Utility.GetImapClient();
-            if (client.IsConnected && client.IsAuthenticated)
+            this.Hide();
+            var Inbox = Inboxes.GetInstance(client);
+            Inbox.FormClosed += (s, args) =>
             {
-                this.Hide();
-                var Inbox = Inboxes.GetInstance(client);
-                Inbox.FormClosed += (s, args) =>
-                {
-                    Properties.Time.Default.Date = DateTime.Now;
-                    Properties.Time.Default.Save();
-                    this.Close();
-                };
-                Inbox.Show();
-            }
-            this.Cursor = Cursors.Default;
+                Properties.Time.Default.Date = DateTime.Now; // Store the exit time so we have a reference to how long since we last used the client.
+                Properties.Time.Default.Save();
+                this.Close();
+            };
+            Inbox.Show();
+
         }
 
         private void Exit_button(object sender, EventArgs e)

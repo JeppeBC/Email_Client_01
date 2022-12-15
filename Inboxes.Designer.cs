@@ -276,7 +276,6 @@
             this.Margin = new System.Windows.Forms.Padding(9, 10, 9, 10);
             this.Name = "Inboxes";
             this.Text = "Prime Email";
-            this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
