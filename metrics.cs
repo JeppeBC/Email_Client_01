@@ -131,15 +131,11 @@ namespace Email_Client_01
         {
             DateTime selected_date = displayPeriodDateSelector.Value.Date;
 
-            // Show for year
+            // Year display selected
             if (displayPeriodDropdown.SelectedIndex == 0)
             {
                 string[] month_labels = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
                 int year = selected_date.Year;
-                /*DateTime start = DateTime.ParseExact("01-01-" + year, "dd-MM-yyyy", ci);
-                DateTime end = DateTime.ParseExact("31-12-" + year, "dd-MM-yyyy", ci);
-
-                var days = Get_Days(start, end);*/
 
                 DateTime[] month_starts =
                 {
@@ -209,9 +205,11 @@ namespace Email_Client_01
                 }
             }
 
+
+
+            // Month display selected
             else if (displayPeriodDropdown.SelectedIndex == 1)
             {
-                // Do month stuff
                 int year = selected_date.Year;
                 int month = selected_date.Month;
                 int days_in_month = DateTime.DaysInMonth(year, month);
@@ -239,9 +237,6 @@ namespace Email_Client_01
                     sent_array = sent.Select(x => (double)x).ToArray();
                 }
 
-                
-
-
                 // space every time point by 1 day from a starting point
                 double[] positions = new double[recieved_array.Length];
                 for (int i = 0; i < recieved_array.Length; i++)
@@ -258,12 +253,51 @@ namespace Email_Client_01
                 }
 
             }
+
+
+
+            // Week display selected
             else
             {
-                // Do week stuff
-            }
+                // Do Week stuff
+                /*
+                 Get start date of week
+                Get end date of week
+                Get days from start and end
+                Display with weekday ticks
+                 */
 
-            return;
+                string[] labels = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+                DateTime start = selected_date.StartOfWeek(DayOfWeek.Monday);
+                DateTime end = selected_date.EndOfWeek(DayOfWeek.Monday);
+
+                var days = Get_Days(start, end);
+
+
+
+                // Get recieved and sent as list
+                var recieved = from e in days.Elements("Recieved")
+                               select (double.Parse(e.Value));
+
+                var sent = from e in days.Elements("Sent")
+                           select (double.Parse(e.Value));
+
+                double[] recieved_array = new double[7];
+                double[] sent_array = new double[7];
+                double[] positions = Enumerable.Range(0, 7).Select(x => (double)x).ToArray();
+
+                Array.Copy(recieved.ToArray(), 0, recieved_array, 0, days.Count());
+                Array.Copy(recieved.ToArray(), 0, recieved_array, 0, days.Count());
+
+                if (mailTypeDropdown.SelectedIndex == 0)
+                {
+                    Render_Plot(positions, recieved_array, labels);
+                }
+                else
+                {
+                    Render_Plot(positions, sent_array, labels);
+                }
+            }
         }
 
         /* Event handlers */
