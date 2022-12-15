@@ -1576,9 +1576,19 @@ namespace Email_Client_01
 
         private async void MetricsButton_Click(object sender, EventArgs e)
         {
-            // If XML needs to be updated
-            if (Settings.Default.dateLastLoaded != DateTime.Today)
-            {
+
+            string myTempFile = Path.Combine(Path.GetTempPath(), "root.xml");
+
+                // If XML needs to be updated
+                if (Settings.Default.dateLastLoaded != DateTime.Today || !File.Exists(myTempFile))
+                {
+
+                if (!File.Exists(myTempFile))
+                {
+                    Settings.Default.dateLastLoaded = DateTime.Parse("01-01-2010");
+                    Settings.Default.Save();
+                }
+
                 using (var client = await Utility.GetImapClient())
                 {
                     try
