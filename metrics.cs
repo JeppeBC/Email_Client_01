@@ -42,113 +42,6 @@ namespace Email_Client_01
 
             Render_Metrics();
 
-
-            /*DateTime start = DateTime.ParseExact("01-01-2022", "dd-MM-yyyy", ci);
-            DateTime end = DateTime.ParseExact("01-11-2022", "dd-MM-yyyy", ci);
-
-            IEnumerable<XElement> days = Get_Days(start, end);
-
-
-
-            // Array of Recieved values
-
-            IEnumerable<string> recieved =
-                from e in days.Elements("Recieved")
-                select e.Value;
-
-            double[] recieved_array = recieved.Select(double.Parse).ToArray();
-
-            // Sent
-
-            IEnumerable<string> sent =
-                from e in days.Elements("Sent")
-                select e.Value;
-
-            double[] sent_array = sent.Select(double.Parse).ToArray();
-
-            // Date
-
-            IEnumerable<string> date =
-               from e in days.Elements("Date")
-               select e.Value;
-
-            string[] date_array = date.ToArray();
-
-
-            // Amount of total days
-            int size = date.Count();
-            double[] positions;
-
-            DateTime[] month_starts = {
-                DateTime.ParseExact("01-01-2022", "dd-MM-yyyy", ci),
-                DateTime.ParseExact("01-02-2022", "dd-MM-yyyy", ci),
-                DateTime.ParseExact("01-03-2022", "dd-MM-yyyy", ci),
-                DateTime.ParseExact("01-04-2022", "dd-MM-yyyy", ci),
-                DateTime.ParseExact("01-05-2022", "dd-MM-yyyy", ci),
-                DateTime.ParseExact("01-06-2022", "dd-MM-yyyy", ci),
-                DateTime.ParseExact("01-07-2022", "dd-MM-yyyy", ci),
-                DateTime.ParseExact("01-08-2022", "dd-MM-yyyy", ci),
-                DateTime.ParseExact("01-09-2022", "dd-MM-yyyy", ci),
-                DateTime.ParseExact("01-10-2022", "dd-MM-yyyy", ci),
-                DateTime.ParseExact("01-11-2022", "dd-MM-yyyy", ci),
-                DateTime.ParseExact("01-12-2022", "dd-MM-yyyy", ci),
-                DateTime.ParseExact("01-01-2023", "dd-MM-yyyy", ci)
-            };
-
-            // Group into months
-            double[] recieved_month_array = new double[12];
-            double[] sent_month_array = new double[12];
-            positions = new double[12];
-            for (int i = 0; i < 12; i++)
-            {
-                positions[i] = i;
-            }
-
-            for (int i = 0; i < 12; i++)
-            {
-                // Get data from 1 month
-                IEnumerable<XElement> test =
-                from el in root.Descendants("Day")
-                where DateTime.ParseExact((string)(el.Element("Date")), "dd-MM-yyyy", ci) >= month_starts[i]
-                && DateTime.ParseExact((string)(el.Element("Date")), "dd-MM-yyyy", ci) < month_starts[i + 1]
-                select el;
-
-                // Count amount of emails recieved
-                IEnumerable<string> recieved_test =
-                from e in test.Elements("Recieved")
-                select e.Value;
-
-                foreach (var e in recieved_test)
-                {
-                    recieved_month_array[i] += double.Parse(e);
-                }
-
-
-                // Count amount of emails sent
-                IEnumerable<string> sent_test =
-                from e in test.Elements("Sent")
-                select e.Value;
-
-                foreach (var e in sent_test)
-                {
-                    sent_month_array[i] += double.Parse(e);
-                }
-            }
-
-
-            *//*double[] positions = new double[size];
-            for (int i = 0; i < size; i++)
-            {
-                positions[i] = i;
-            }*//*
-
-            string[] month_labels = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-            string[] labels_weekdays = { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
-
-            formsPlot1.Plot.AddBar(recieved_month_array, positions);
-            formsPlot1.Plot.XTicks(positions, month_labels);
-            formsPlot1.Plot.SetAxisLimits(yMin: 0);
-            formsPlot1.Refresh();*/
         }
 
         // Changes date selector depending on selected representation in combobox
@@ -195,6 +88,7 @@ namespace Email_Client_01
         {
             formsPlot1.Plot.Clear();
             BarPlot = formsPlot1.Plot.AddBar(y, positions);
+            Color_Bar();
             formsPlot1.Plot.XAxis.DateTimeFormat(false);
             formsPlot1.Plot.XTicks(positions, labels);
             formsPlot1.Plot.AxisAuto();
@@ -210,9 +104,27 @@ namespace Email_Client_01
             formsPlot1.Plot.XAxis.AutomaticTickPositions();
             formsPlot1.Plot.XAxis.DateTimeFormat(true);
             BarPlot = formsPlot1.Plot.AddBar(y, positions);
+            Color_Bar();
             formsPlot1.Plot.AxisAuto();
             formsPlot1.Plot.SetAxisLimits(yMin: 0);
             formsPlot1.Refresh();
+        }
+
+        private void Color_Bar()
+        {
+            switch (mailTypeDropdown.SelectedIndex)
+            {
+                case 0:
+                    BarPlot.Color = ColorTranslator.FromHtml("#1F77B4");
+                    break;
+
+                case 1:
+                    BarPlot.Color = ColorTranslator.FromHtml("#FF7F0E");
+                    break;
+
+                default:
+                    break;
+            }
         }
 
         private void Render_Metrics()

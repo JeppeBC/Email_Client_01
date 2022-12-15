@@ -51,7 +51,7 @@
             "Year",
             "Month",
             "Week"});
-            this.displayPeriodDropdown.Location = new System.Drawing.Point(1416, 43);
+            this.displayPeriodDropdown.Location = new System.Drawing.Point(1416, 33);
             this.displayPeriodDropdown.Name = "displayPeriodDropdown";
             this.displayPeriodDropdown.Size = new System.Drawing.Size(121, 23);
             this.displayPeriodDropdown.TabIndex = 1;
@@ -59,7 +59,7 @@
             // 
             // displayPeriodDateSelector
             // 
-            this.displayPeriodDateSelector.Location = new System.Drawing.Point(1416, 96);
+            this.displayPeriodDateSelector.Location = new System.Drawing.Point(1416, 62);
             this.displayPeriodDateSelector.Name = "displayPeriodDateSelector";
             this.displayPeriodDateSelector.Size = new System.Drawing.Size(121, 23);
             this.displayPeriodDateSelector.TabIndex = 2;
@@ -72,7 +72,7 @@
             this.mailTypeDropdown.Items.AddRange(new object[] {
             "Recieved",
             "Sent"});
-            this.mailTypeDropdown.Location = new System.Drawing.Point(1416, 158);
+            this.mailTypeDropdown.Location = new System.Drawing.Point(1416, 121);
             this.mailTypeDropdown.Name = "mailTypeDropdown";
             this.mailTypeDropdown.Size = new System.Drawing.Size(121, 23);
             this.mailTypeDropdown.TabIndex = 3;
