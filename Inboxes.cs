@@ -1264,6 +1264,7 @@ namespace Email_Client_01
                 await folder.AddFlagsAsync(msg.UniqueId, MessageFlags.Deleted, true);
                 await folder.ExpungeAsync();
 
+                // If Email to be deleted is in priority list, remove it from the list
                 if (PriorityGrid.Rows.Count > 0)
                 {
                     for (int i=0; i<PriorityGrid.Rows.Count;i++)
