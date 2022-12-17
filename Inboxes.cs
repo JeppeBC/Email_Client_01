@@ -890,6 +890,11 @@ namespace Email_Client_01
         }
 
 
+        private void RemoveFilter(Filter filter)
+        {
+            FilterList.Remove(filter);
+        }
+
 
         // Method that is run whenever the remove filter button is clicked
         // The method removes that filter from the list of local filters (and ultimately the json file at program closure).
@@ -899,7 +904,7 @@ namespace Email_Client_01
             if (FilterListbox.SelectedItem == null) return;
             var filter = FilterList[FilterListbox.SelectedIndex];
             if (filter == null) return;
-            FilterList.Remove(filter);
+            RemoveFilter(filter);
         }
 
 
@@ -920,19 +925,19 @@ namespace Email_Client_01
 
 
                 var DeleteItem = new ToolStripMenuItem("Delete");
-                DeleteItem.Click += new EventHandler(DeleteMail);
+                DeleteItem.Click += new EventHandler(DeleteMail_handler);
                 ContextMenu.Items.Add(DeleteItem);
 
                 var FlagItem = new ToolStripMenuItem("Flag");
-                FlagItem.Click += new EventHandler(ToggleFlagMail);
+                FlagItem.Click += new EventHandler(ToggleFlag_handler);
                 ContextMenu.Items.Add(FlagItem);
 
                 var UnreadItem = new ToolStripMenuItem("Mark as Unread");
-                UnreadItem.Click += new EventHandler(MarkMailAsUnread);
+                UnreadItem.Click += new EventHandler(MarkAsUnread_handler);
                 ContextMenu.Items.Add(UnreadItem);
 
                 var MoveToTrash = new ToolStripMenuItem("Move to trash");
-                MoveToTrash.Click += new EventHandler(MoveMailToTrash);
+                MoveToTrash.Click += new EventHandler(MoveMailToTrash_handler);
                 ContextMenu.Items.Add(MoveToTrash);
 
                 Inbox.ContextMenuStrip = ContextMenu;
@@ -941,7 +946,7 @@ namespace Email_Client_01
             }
         }
 
-        private async void MoveMailToTrash(object? sender, EventArgs e)
+        private async void MoveMailToTrash_handler(object? sender, EventArgs e)
         {
             var msgIndex = Inbox.SelectedIndex;
             if (msgIndex < 0 || msgIndex > Inbox.Items.Count) // this should not happen
@@ -961,7 +966,6 @@ namespace Email_Client_01
                 if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
 
                 await MoveMail(msg.UniqueId, client.GetFolder(SpecialFolder.Trash));
-
 
                 // Instead of calling RefreshCurrentFolder() or RetrieveMessagesFromFolder(), we just remove it from the current listbox as this is faster
                 // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
@@ -999,8 +1003,24 @@ namespace Email_Client_01
             }
         }
 
-            // This method marks a given mail as unread if it is not already unread.
-            private async void MarkMailAsUnread(object? sender, EventArgs e)
+        private async Task MarkAsUnread(IMessageSummary? msg)
+        {
+            if (msg == null) return; // guard
+            
+            // Message is already unread. With the current methods we never get here, but this might be relevant later. 
+            if (msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen)) return;
+
+            // Make sure folder is not null and it is open.
+            if (folder == null) folder = GetCurrentFolder();
+            if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
+
+            // Remove the seen flag from the message
+            await folder.RemoveFlagsAsync(msg.UniqueId, MessageFlags.Seen, false);
+
+        }
+
+        // This method marks a given mail as unread if it is not already unread.
+        private async void MarkAsUnread_handler(object? sender, EventArgs e)
         {
             var msgIndex = Inbox.SelectedIndex;
             if (msgIndex < 0 || msgIndex > Inbox.Items.Count) // this should not happen
@@ -1010,22 +1030,18 @@ namespace Email_Client_01
             }
             var msg = messageSummaries[messageSummaries.Count - 1 - msgIndex];
 
-            // Message is already unread 
+            if (ClientInUse) return; // guard 
             if (msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen)) return;
 
-            if (ClientInUse) return; // guard 
-
-        
             this.Cursor = Cursors.WaitCursor;
             try
             {
                 ClientInUse = true;
                 await Utility.ReconnectAsync(client);
-                if (folder == null) folder = GetCurrentFolder();
-                if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
+
 
                 // Mark the message as unread
-                await folder.RemoveFlagsAsync(msg.UniqueId, MessageFlags.Seen, false);
+                await MarkAsUnread(msg);
 
                 // instead of reloading the entire folder using RefreshCurrenFolder() or RetrieveMessagesFromFolder() to capture this (UNREAD) change,
                 // we just manually forcefully update that one element in the listbox (this will automatically happen on refresh)
@@ -1056,7 +1072,19 @@ namespace Email_Client_01
         }
 
         // This method deletes a given mail entirely from the user's mailbox. No do-overs, does not move to trash. 
-        private async void DeleteMail(object? sender, EventArgs e)
+
+
+        private async Task DeleteMail(UniqueId id)
+        {
+            if (folder == null) folder = GetCurrentFolder();
+            if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
+
+            // Delete the message
+            await folder.AddFlagsAsync(id, MessageFlags.Deleted, true);
+            await folder.ExpungeAsync();
+
+        }
+        private async void DeleteMail_handler(object? sender, EventArgs e)
         {
             if (ClientInUse) return;
 
@@ -1077,12 +1105,8 @@ namespace Email_Client_01
             {
                 ClientInUse = true;
                 await Utility.ReconnectAsync(client);
-                if (folder == null) folder = GetCurrentFolder();
-                if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
 
-                // Delete the message
-                await folder.AddFlagsAsync(msg.UniqueId, MessageFlags.Deleted, true);
-                await folder.ExpungeAsync();
+                await DeleteMail(msg.UniqueId);
 
 
                 // Instead of calling RefreshCurrentFolder() or RetrieveMessagesFromFolder(), we just remove it from the current listbox as this is faster
@@ -1119,8 +1143,26 @@ namespace Email_Client_01
             }
         }
 
+
+        private async Task ToggleFlag(IMessageSummary message)
+        {
+            if (folder == null) folder = GetCurrentFolder();
+            if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
+
+            // toggle the flag
+            if (message.Flags != null && message.Flags.Value.HasFlag(MessageFlags.Flagged))
+            {
+                await folder.RemoveFlagsAsync(message.UniqueId, MessageFlags.Flagged, false);
+            }
+            else
+            {
+                await folder.AddFlagsAsync(message.UniqueId, MessageFlags.Flagged, false);
+            }
+
+        }
+
         // This method toggles the flagged state of a given mail.
-        private async void ToggleFlagMail(object? sender, EventArgs e)
+        private async void ToggleFlag_handler(object? sender, EventArgs e)
         {
             if (ClientInUse) return;
             var messageIndex = Inbox.SelectedIndex; // index of the message to modify
@@ -1132,22 +1174,10 @@ namespace Email_Client_01
             {
                 ClientInUse = true;
                 await Utility.ReconnectAsync(client);
-                if (folder == null) folder = GetCurrentFolder();
-                if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
 
-                // toggle the flag
-                if (message.Flags != null && message.Flags.Value.HasFlag(MessageFlags.Flagged))
-                {
-                    await folder.RemoveFlagsAsync(message.UniqueId, MessageFlags.Flagged, false);
-                }
-                else
-                {
-                    await folder.AddFlagsAsync(message.UniqueId, MessageFlags.Flagged, false);
-                    Inbox.Items[messageIndex] = "(FLAGGED) " + Inbox.Items[messageIndex];
-                    messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
-                }
-
-
+                await ToggleFlag(message);
+                Inbox.Items[messageIndex] = "(FLAGGED) " + Inbox.Items[messageIndex];
+                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
             }
             catch (Exception ex)
             {
@@ -1177,7 +1207,16 @@ namespace Email_Client_01
             RetrieveFolders();
         }
 
-        // method for creating a new folder. Currently we do not allow for sub-folders.
+
+        // Method that creates a new folder with the given name.We do not allow sub-folders
+        private async Task CreateFolder(string name)
+        {
+            var toplevel = client.GetFolder(client.PersonalNamespaces[0]);
+            await toplevel.CreateAsync(name, true);
+        }
+
+        // Method prompts the user for a name and then attempts to create a folder with that name. 
+        // Finally the folder is loaded in immediately. 
         private async void CreateFolderButton_Click(object sender, EventArgs e)
         {
             if (ClientInUse) return;
@@ -1194,9 +1233,7 @@ namespace Email_Client_01
                 }
 
                 // Could add waitcursors here but the call to create a toplevel folder is really fast...
-                var toplevel = client.GetFolder(client.PersonalNamespaces[0]);
-                var test = await toplevel.CreateAsync(FolderName, true);
-                RetrieveFolders(); // Load in all folders again, this function is quite slow but how often do you create new folders...
+                await CreateFolder(FolderName);
             }
             catch (Exception ex)
             {
@@ -1213,9 +1250,18 @@ namespace Email_Client_01
             finally
             {
                 ClientInUse = false;
+                RetrieveFolders(); // Load in all folders again, this function is quite slow but how often do you create new folders...
             }
         }
 
+
+        // Method deletes the current folder.
+        private async Task DeleteCurrentFolder()
+        {
+            // folder is the imap folder.
+            if (folder == null) folder = GetCurrentFolder();
+            await folder.DeleteAsync();
+        }
 
         // Method for deleting the currently open folder and all the mails in it.
         // Afterwards the client opens the default inbox. 
@@ -1234,12 +1280,9 @@ namespace Email_Client_01
                 if (result == DialogResult.No)
                     return;
 
-                // folder is the imap folder.
-                if (folder == null) folder = GetCurrentFolder();
 
-  
-                // Could add waitcursors here but the call to delete a toplevel folder is really fast...
-                await folder.DeleteAsync();
+                // Delete the current folder
+                await DeleteCurrentFolder();
 
                 // if we get here, we should also delete it locally and not just on the server.
                 // get the folder
