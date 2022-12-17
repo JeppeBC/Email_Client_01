@@ -497,27 +497,27 @@ namespace Email_Client_01
 
 
 
-        // Method for adding a new filter (locally, we write it to json file at program closure).
-        private void AddFilter(string searchQuery)
+        private Filter? GetFilter()
         {
+            string searchQuery = SearchTextBox.Text;
             // Prompt the user on where to filter mails to.
             string? DestinationFolder = "";
             if (!(Utility.RadioButtonList.Input(Folders, "ListBoxName", "FullName", ref DestinationFolder) == DialogResult.OK))
             {
-                return;
+                return null;
             }
 
             // this should mutate DestinationFolder to the stringified selected item of the data source
             // In our case the folder name is something like: "[Folder.Fullname, Displayed name]";
-            if (string.IsNullOrEmpty(DestinationFolder)) return; // guard
+            if (string.IsNullOrEmpty(DestinationFolder)) return null; // guard
 
             // Find the folder selected in the folderlist
             var f = folders.First(item => item.FullName == DestinationFolder);
             // Check if it is a valid target destination
-            if(SpecialFolders.isFolderMoveMailToThisBlacklisted(f))
+            if (SpecialFolders.isFolderMoveMailToThisBlacklisted(f))
             {
                 MessageBox.Show($"Not allowed to filter mails to special folder {f.FullName}.\nFilter not saved.");
-                return;
+                return null;
             }
 
 
@@ -525,7 +525,7 @@ namespace Email_Client_01
             string FilterName = "";
             if (!(Utility.InputBox("Add Filter", "Filter Name: ", ref FilterName) == DialogResult.OK))
             {
-                return;
+                return null;
             }
 
             // Check if filter name is already in use
@@ -533,33 +533,39 @@ namespace Email_Client_01
             if (ExistingFilterNames.Contains(FilterName))
             {
                 MessageBox.Show("A filter with the name " + FilterName + " already exists");
-                return;
+                return null;
             }
 
             if (string.IsNullOrEmpty(FilterName))
             {
                 MessageBox.Show("Please enter a valid filter name");
-                return;
+                return null;
             }
 
 
             List<string>? searchLocations = GetSearchLocations();
-            if(searchLocations.Count <= 0)
+            if (searchLocations.Count <= 0)
             {
                 MessageBox.Show("Please specify a location to query");
-                return;
+                return null;
             }
 
-
-            // Add the new filter, to local list of filters.
-            FilterList.Add(new Filter()
+            Filter filter = new Filter()
             {
                 Name = FilterName,
                 DestinationFolder = DestinationFolder,
                 TargetString = searchQuery,
                 SearchLocations = searchLocations,
-            });
+            };
+            return filter;
 
+        }
+
+        // Method for adding a new filter (locally, we write it to json file at program closure).
+        private void AddFilter(Filter filter)
+        {
+            // Add the new filter, to local list of filters.
+            FilterList.Add(filter);
         }
 
         // When we click the search/add filter button this runs. Performs the search operation or add filter operation.
@@ -571,7 +577,8 @@ namespace Email_Client_01
                 if (FilterCheckbox.Checked)
                 {
                     // add to list of filters
-                    AddFilter(searchQuery);
+                    Filter? filter = GetFilter();
+                    if(filter != null) AddFilter(filter);
                 }
                 else
                 {
