@@ -62,7 +62,7 @@
             this.Inbox.Size = new System.Drawing.Size(1835, 1060);
             this.Inbox.TabIndex = 6;
             this.Inbox.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.Inbox_DrawItem);
-            this.Inbox.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.Inbox_MouseDoubleClick);
+            this.Inbox.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.OpenMail_MouseDoubleClick);
             this.Inbox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Inbox_MouseDown);
             this.Inbox.MouseUp += new System.Windows.Forms.MouseEventHandler(this.Inbox_MouseUp);
             // 

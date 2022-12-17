@@ -20,6 +20,8 @@ using Microsoft.VisualBasic.ApplicationServices;
 
 namespace Email_Client_01
 {
+
+    // Form shown when writing a new mail.
     public partial class NewMail : Form
     {
         BindingList<Attachment> Attachments = new();
@@ -33,6 +35,7 @@ namespace Email_Client_01
         IEnumerable<MimeEntity>? nonlocalAttachments; 
         
 
+        // When writing a mail from scratch, this constructor is used (e.g. by pressing the "compose" button)
         public NewMail(ImapClient client)
         {
             InitializeComponent();
@@ -47,6 +50,8 @@ namespace Email_Client_01
 
         }
 
+        // if we already have a skeleton for a mail, we use this constructor.
+        // E.g. when forwarding a mail, the content should stay. 
         public NewMail(MimeMessage msg, ImapClient client)
         {
             InitializeComponent();
@@ -80,6 +85,7 @@ namespace Email_Client_01
         }
 
         // could be combined with the constructor above. But having one more is no issue. 
+        // This constructor is used for when we have drafts, opening drafts is slightly different. 
         public NewMail(MimeMessage msg, bool isDraft, ImapClient client)
         {
             InitializeComponent();
@@ -116,6 +122,7 @@ namespace Email_Client_01
         }
 
 
+        // Dynamically checks whenever the attachments change if we need to display the associated GUI elements.
         private void attachments_changed(object? sender, ListChangedEventArgs e)
         {
             bool show = Attachments.Count > 0; 
@@ -124,6 +131,7 @@ namespace Email_Client_01
             RemoveAttachmentButton.Visible = show;
         }
 
+        // When hovering over the recipients field, a helpful message is displayed.
         private void RecipientsMouseOver(object sender, EventArgs e)
         {
 
@@ -148,6 +156,9 @@ namespace Email_Client_01
             MessageBodyTextBox.ForeColor = System.Drawing.Color.Black;
         }
 
+
+        // For attaching files to a mail. Opens the windows directory and allows the user to pick one. 
+        // That is, the file must be stored locally on the user's computer!
         private void Attach_file(object sender, EventArgs e)
         {
             using (OpenFileDialog fileDialog = new OpenFileDialog())
@@ -176,7 +187,8 @@ namespace Email_Client_01
 
 
 
-
+        // Get the recipients from the textbox field. 
+        // Filtered into a list of strings. Instead of one long, concatenated string. 
         private string[]? GetRecipients()
         {
             if (string.IsNullOrEmpty(RecipientTextBox.Text))
@@ -191,6 +203,7 @@ namespace Email_Client_01
             }
         }
 
+        // Get list of CCs instead of having one concatenated blob. 
         private string[]? GetCCs()
         {
             if (string.IsNullOrEmpty(CCTextBox.Text))
@@ -202,6 +215,8 @@ namespace Email_Client_01
                 return CCTextBox.Text.Split(",");
             }
         }
+
+        // Method for getting the subject. If there is no subject, it prompts the user if this is fine. 
         private string? GetSubject()
         {
             if (string.IsNullOrEmpty(SubjectTextBox.Text))
@@ -220,10 +235,11 @@ namespace Email_Client_01
         }
 
 
-        private string FilterString(string s)
-        {
-            // we expect strings of the form "Alias <MailAddress>"
+            // we expect strings of the form:        "Alias <MailAddress>"          <-- is a mailbox address
             // and want to return only MailAddress
+            // Below method does that
+        private string FilterMailboxAddress(string s)
+        {
             string result = s;
             // remove the text between quotations and " chars. 
             int startQuotation = s.IndexOf('"');
@@ -238,6 +254,8 @@ namespace Email_Client_01
             return result.Trim();
         }
 
+        // Check if the recipients are seemingly valid. 
+        // We use a separate library by jeffrey stedfast, who created MailKit to do this. 
         private bool validateRecipientArray(string[] recipients)
         {
 
@@ -249,7 +267,7 @@ namespace Email_Client_01
             {
                 string r = recipient.Replace(",", "");
 
-                r = FilterString(r);
+                r = FilterMailboxAddress(r);
 
                 if (!EmailValidator.Validate(r)) // use jstedfast 
                 {
@@ -262,6 +280,7 @@ namespace Email_Client_01
 
 
 
+        // WHen we click the send_mail button this runs. 
         private async void Send_mail(object sender, EventArgs e)
         {
 
@@ -292,12 +311,16 @@ namespace Email_Client_01
 
             List<string?> attachmentFilepaths = Attachments.Select(a => a.filepath).ToList();
             attachmentFilepaths.RemoveAll(fp => string.IsNullOrEmpty(fp)); // remove all the null cases, and empty cases that corresponds to the nonlocal attachments.
-            Email email = new Email(To, CC, Subject, Content, attachmentFilepaths, nonlocalAttachments);
+            
+            
 
-            var s = new EmailSender();
+            // Construct an email and send that email.
+            Email email = new Email(To, CC, Subject, Content, attachmentFilepaths, nonlocalAttachments);
+            IEmailSender s = new EmailSender();
             s.sendEmail(email);
 
-            // expensive as we establish smtp connection to send just prior and then imap connection to delete..
+            // If the mail was a mail from the drafts folder, we must delete it.
+            // To do this, we must use IMAP connection. 
             if(MailIsDraft)
             {
                 // delete the mail from drafts folder
@@ -345,6 +368,9 @@ namespace Email_Client_01
         }
 
 
+        // When the Recipients textbox registers changes, this method runs
+        // Checks if the recpients appear to be valid, if so highlight in green and enable send button
+        // else highlight in red and disable send button.
         private void RecipientsValidating(object sender, CancelEventArgs e)
         {
             string[] recipients = RecipientTextBox.Text.Split(",");
@@ -364,7 +390,7 @@ namespace Email_Client_01
         }
 
 
-        // CC validation does not work for some reason, #TODO
+        // CC validation works in the exact same way as Recipient validation above, only for the CC field instead. 
         private void CCValidating(object sender, CancelEventArgs e)
         {
             string[] cc = CCTextBox.Text.Split(",");
@@ -381,6 +407,8 @@ namespace Email_Client_01
             }
         }
 
+
+        // Method for removing attachments in the new mail that is currently being composed. 
         private async void RemoveAttachmentButton_Click(object sender, EventArgs e)
         {
             try
@@ -409,7 +437,7 @@ namespace Email_Client_01
             }
         }
 
-        // saves the current message state as a draft
+        // Translates the current message state (from the form) into a MimeMessage and returns this. 
         private MimeMessage BuildDraftMessage()
         {
             BodyBuilder builder = new BodyBuilder();
@@ -460,6 +488,8 @@ namespace Email_Client_01
         }
 
 
+
+        // Save the current MessageState as a draft and put in drafts folder.
         private async void SaveDraftButton_Click(object sender, EventArgs e)
         {
             this.Cursor = Cursors.WaitCursor;

@@ -57,14 +57,70 @@ namespace Email_Client_01
             return null;
         }
 
+
+        // Searches the current folder for a given target string but it only looks at locations specified in "locations" variable
+        // Namely the list of "locations" should contain the strings "Subject", "Sender" and "Body" if we are to search these. 
+        // Method returns a list of unique ids in the current folder that matches the search criterion. 
+        public IList<UniqueId>? Search(List<string> locations, string target)
+        {
+            if (!currentFolder.IsOpen) currentFolder.Open(FolderAccess.ReadWrite);
+            SearchQuery query;
+
+            if (locations.Count <= 0) return null;
+            if (locations.Contains("Sender") && locations.Contains("Subject") && locations.Contains("Body"))
+            {
+                query = SearchQuery.FromContains(target).Or(SearchQuery.SubjectContains(target)).Or(SearchQuery.BodyContains(target));
+            }
+            else if (!locations.Contains("Sender") && locations.Contains("Subject") && locations.Contains("Body"))
+            {
+                query = SearchQuery.SubjectContains(target).Or(SearchQuery.BodyContains(target));
+            }
+            else if(locations.Contains("Sender") && !locations.Contains("Subject") && locations.Contains("Body"))
+            {
+                query = SearchQuery.FromContains(target).Or(SearchQuery.BodyContains(target));
+            }
+            else if (locations.Contains("Sender") && locations.Contains("Subject") && !locations.Contains("Body"))
+            {
+                query = SearchQuery.FromContains(target).Or(SearchQuery.SubjectContains(target));
+            }
+            else if (locations.Contains("Sender") && !locations.Contains("Subject") && !locations.Contains("Body"))
+            {
+                query = SearchQuery.FromContains(target);
+            }
+            else if (!locations.Contains("Sender") && locations.Contains("Subject") && !locations.Contains("Body"))
+            {
+                query = SearchQuery.SubjectContains(target);
+            }
+            else if (!locations.Contains("Sender") && !locations.Contains("Subject") && locations.Contains("Body"))
+            {
+                query = SearchQuery.BodyContains(target);
+            }
+            else
+            {
+                return null;
+            }
+            return Search(query);
+        }
+
+
+
+        // Wrapper for async search method of mailkit
         public Task<IList<UniqueId>> SearchAsync(SearchQuery query)
         {
             return currentFolder.SearchAsync(query);
         }
 
+
+        // Wrapper for synchronous search method of mailkit. 
+
         public IList<UniqueId> Search(SearchQuery query)
         {
             return currentFolder.Search(query);
         }
+
+
+
+
+
     }
 }

@@ -9,6 +9,8 @@ using System.Windows.Forms.VisualStyles;
 
 namespace Email_Client_01
 {
+    // Class that holds some nice variables (such as the filepath to filter.json or the gmail IMAP port) and also some nice to have functionality
+
     internal class Utility
     {
         public static string? username;
@@ -20,10 +22,8 @@ namespace Email_Client_01
         public static readonly string ImapServer = "imap.gmail.com";
         public static readonly int ImapPort = 993;
 
-        public static readonly string JsonFilePath = Path.Combine(Path.GetTempPath(), "filters.json");
 
-
-
+        // Method to get an ImapClient. This uses the credentials stored in utility and immediately tries to connect and authorize.
         public static ImapClient GetImapClient()
         {
             var client = new ImapClient();
@@ -33,6 +33,8 @@ namespace Email_Client_01
             return client;
         }
 
+
+        // Reconnect / Reauthorize the given ImapClient if needed.
         public static async Task ReconnectAsync(ImapClient client)
         {
             // if somehow not connected or authenticated, try again
@@ -46,36 +48,60 @@ namespace Email_Client_01
             }
         }
 
-        public static async Task<SmtpClient> GetSmtpClient()
+        public static void Reconnect(ImapClient client)
+        {
+            if (!client.IsConnected)
+            {
+                client.Connect(ImapServer, ImapPort, MailKit.Security.SecureSocketOptions.Auto);
+            }
+            if (!client.IsAuthenticated)
+            {
+                client.Authenticate(username, password);
+            }
+        }
+
+        // Get an SMTP client. Like with the IMAP client method, this also immediately tries to connect and authorize using the credentials in utility.
+        public static SmtpClient GetSmtpClient()
         {
             var client = new SmtpClient();
-            await client.ConnectAsync(SmtpServer, SmtpPort, MailKit.Security.SecureSocketOptions.Auto);
-            await client.AuthenticateAsync(username, password);
+            client.Connect(SmtpServer, SmtpPort, MailKit.Security.SecureSocketOptions.Auto);
+            client.Authenticate(username, password);
 
             return client;
         }
 
+
+        // Class that allows for us read Json content. 
+        // This method uses NewtonSoft.Json library.
         public static class JsonFileReader
         {
+
+            // This method deserializes the contents of a json file given a "filepath"
             public static T? Read<T>(string filePath)
             {
 
-                // TODO make this async/await??? Newtonsoft json does not support this?
-                // so use the .Net version : System.Text.Json....
                 string json = File.ReadAllText(filePath);
                 return JsonConvert.DeserializeObject<T>(json);
             }
         }
 
+        // A class to write (json) to a file
         public static class JsonFileWriter
         {
 
+            // This method Serializes a deserialized json object and writes it to a file at "filepath".
             public static void Write<T>(string filePath, T jsonDeserializedObject)
             {
                 var newJson = JsonConvert.SerializeObject(jsonDeserializedObject);
                 System.IO.File.WriteAllText(filePath, newJson);
             }
         }
+
+
+
+        // Below is a handy and pretty standard way of accessing the special directories of windows systems.
+        // This uses the WinAPI method SHGetKnownFolderPath
+        // See also: https://stackoverflow.com/questions/10667012/getting-downloads-folder-in-c
         public enum KnownFolder
         {
             Contacts,
@@ -112,6 +138,11 @@ namespace Email_Client_01
         }
 
 
+
+        // Windowforms does not really have any built in option to quickly prompt the user
+        // This function basically does that. It prompts the user about something. The user can write something in a text field
+        // and submit that. This does not return the user input (user input mutates the "value" parameter). Instead this returns
+        // if the user presses "OK" or "Cancel"
         public static DialogResult InputBox(string title, string promptText, ref string value)
         {
             Form form = new Form();
@@ -150,36 +181,15 @@ namespace Email_Client_01
 
         }
 
-        /*    // see https://stackoverflow.com/questions/5427020/prompt-dialog-in-windows-forms
-            public static class Prompt
-            {
-                public static string ShowDialog(string text, string caption)
-                {
-                    Form prompt = new Form()
-                    {
-                        Width = 750,
-                        Height = 400,
-                        FormBorderStyle = FormBorderStyle.FixedDialog,
-                        Text = caption,
-                        StartPosition = FormStartPosition.CenterScreen
-                    };
-                    Label textLabel = new Label() { Left = 100, Top = 0, Text = text };
-                    TextBox textBox = new TextBox() { Left = 100, Top = 100, Width = 800 };
-                    Button confirmation = new Button() { Text = "Ok", Left = 700, Width = 200, Top = 140, DialogResult = DialogResult.OK };
-                    confirmation.Click += (sender, e) => { prompt.Close(); };
-                    prompt.Controls.Add(textBox);
-                    prompt.Controls.Add(confirmation);
-                    prompt.Controls.Add(textLabel);
-                    prompt.AcceptButton = confirmation;
-
-                    return prompt.ShowDialog() == DialogResult.OK ? textBox.Text : "";
-                }
-            }
-    */
 
 
+        // Similarly to the Prompt functionality above, window forms does not really have a built-in way of prompting a user
+        // to select a given item in a listbox. Below class implements this.
 
-        // see top answer of https://stackoverflow.com/questions/1015411/winforms-radiobuttonlist-doesnt-exist
+        // The class is heavily inspired by the top answer of
+        // https://stackoverflow.com/questions/1015411/winforms-radiobuttonlist-doesnt-exist
+        // however it is not 1-1 and we extended it quite a bit, making it more versatile. It now works with custom datasources
+        // from classes and shows a chosen displaymember.
         public class RadioButtonList : ListBox
         {
             Size s;
@@ -248,61 +258,64 @@ namespace Email_Client_01
                 get { return base.DrawMode; }
                 set { base.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed; }
             }
+
+
+
+            // takes listbox, translates it into a radiolistbox and prompts the user to select one item.
+            // SelectedFolder is mutated to match the user's choice. DialogResult returned. 
+            // DisplayMember is for class objects if they are stored in the list box, for specifying which attribute to show
+            public static DialogResult Input(ListBox lb, string displayMember, string valueMember, ref string? selectedObject)
+            {
+                Form form = new Form();
+                Label label = new Label();
+                RadioButtonList RBL = new RadioButtonList();
+                Button buttonOk = new Button();
+                Button buttonCancel = new Button();
+
+                RBL.Height = lb.ItemHeight * (lb.Items.Count + 1);
+                RBL.Width = lb.Width;
+                // todo set maximum limit to protect form?
+
+                RBL.DataSource = lb.DataSource;
+
+                // Currently just hardcoded
+                RBL.DisplayMember = displayMember;
+                RBL.ValueMember = valueMember;
+
+                form.Text = "Folders";
+                label.Text = "Please select a destination folder: ";
+
+                buttonOk.Text = "OK";
+                buttonCancel.Text = "Cancel";
+                buttonOk.DialogResult = DialogResult.OK;
+                buttonCancel.DialogResult = DialogResult.Cancel;
+
+
+                RBL.SetBounds(25, label.Height * 2, RBL.Width, RBL.Height);
+                buttonOk.SetBounds(400, 160, 160, 60);
+                buttonCancel.SetBounds(400, 240, 160, 60);
+
+
+                label.AutoSize = true;
+                form.ClientSize = new Size((int)(Math.Max(RBL.Width, label.Width) * 2), (int)((RBL.Height + label.Height) * 1.25));
+                form.FormBorderStyle = FormBorderStyle.FixedDialog;
+                form.StartPosition = FormStartPosition.CenterScreen;
+                form.MinimizeBox = false;
+                form.MaximizeBox = false;
+
+                form.Controls.AddRange(new Control[] { label, RBL, buttonOk, buttonCancel });
+                form.AcceptButton = buttonOk;
+                form.CancelButton = buttonCancel;
+
+                DialogResult dialogResult = form.ShowDialog();
+
+
+                selectedObject = (string?) RBL.SelectedValue;
+                return dialogResult;
+            }
+
         }
 
-
-        // takes listbox, translates it into a radiolistbox and prompts the user to select one item.
-        // SelectedFolder is mutated to match the user's choice. DialogResult returned. 
-        // DisplayMember is for class objects if they are stored in the list box, for specifying which attribute to show
-        public static DialogResult RadioListBoxInput(ListBox lb, string displayMember, string valueMember, ref string? selectedObject)
-        {
-            Form form = new Form();
-            Label label = new Label();
-            RadioButtonList RBL = new RadioButtonList();
-            Button buttonOk = new Button();
-            Button buttonCancel = new Button();
-
-            RBL.Height = lb.ItemHeight * (lb.Items.Count + 1);
-            RBL.Width = lb.Width;
-            // todo set maximum limit to protect form?
-
-            RBL.DataSource = lb.DataSource;
-
-            // Currently just hardcoded
-            RBL.DisplayMember = displayMember;
-            RBL.ValueMember = valueMember;
-
-            form.Text = "Folders";
-            label.Text = "Please select a destination folder: ";
-
-            buttonOk.Text = "OK";
-            buttonCancel.Text = "Cancel";
-            buttonOk.DialogResult = DialogResult.OK;
-            buttonCancel.DialogResult = DialogResult.Cancel;
-
-
-            RBL.SetBounds(25, label.Height * 2, RBL.Width, RBL.Height);
-            buttonOk.SetBounds(400, 160, 160, 60);
-            buttonCancel.SetBounds(400, 240, 160, 60);
-
-
-            label.AutoSize = true;
-            form.ClientSize = new Size((int)(Math.Max(RBL.Width, label.Width) * 2), (int)((RBL.Height + label.Height) * 1.25));
-            form.FormBorderStyle = FormBorderStyle.FixedDialog;
-            form.StartPosition = FormStartPosition.CenterScreen;
-            form.MinimizeBox = false;
-            form.MaximizeBox = false;
-
-            form.Controls.AddRange(new Control[] { label, RBL, buttonOk, buttonCancel });
-            form.AcceptButton = buttonOk;
-            form.CancelButton = buttonCancel;
-
-            DialogResult dialogResult = form.ShowDialog();
-
-
-            selectedObject = (string?) RBL.SelectedValue;
-            return dialogResult;
-        }
 
 
 

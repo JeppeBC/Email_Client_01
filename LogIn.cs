@@ -5,8 +5,11 @@ using System.ComponentModel;
 
 namespace Email_Client_01
 {
+    // LogInForm.
     public partial class LogIn : Form
     {
+
+        // We emply a singleton pattern on this form. No advantage to having multiple login pages open at once.
         private static LogIn instance = null!;
         private LogIn()
         {
@@ -29,10 +32,6 @@ namespace Email_Client_01
             get { return instance ??= new LogIn(); }
         }
 
-/*        private void Form3_Load(object sender, EventArgs e)
-        {
-            this.TopMost = true;
-        }*/
 
 
         private void EmailAddress_Click(object sender, EventArgs e)
@@ -49,25 +48,29 @@ namespace Email_Client_01
 
         private void LogIn_button(object sender, EventArgs e)
         {
+
+            // Get the user's input.
             Utility.username = EmailTextBox.Text;
             Utility.password = PasswordTextBox.Text;
 
-            Authenticator auth = new();
 
-
+            // Attempt to authorize the inptus
+            IAuthenticator auth = new Authenticator();
             this.Cursor = Cursors.WaitCursor;
-            var client = auth.Authenticate(Utility.username, Utility.password); // attempt to authorize the given credentials
-
+            var client = auth.Authenticate(Utility.username, Utility.password); // This does the authorization.
             this.Cursor = Cursors.Default;
+
+
+            // If client is null, an error happened and we display the custom error message.
             if(client == null)
             {
-                MessageBox.Show(auth.ErrorMessage);
+                MessageBox.Show(auth.GetErrorMessage());
                 return;
             }
+            // If we get here the client we got is already authenticated and connected. 
 
 
             // If we get here the client authorized successfully
-
             // Store the credentials if checkbox is checked.
             if (RememberMeCheckBox.Checked)
             {
@@ -85,7 +88,7 @@ namespace Email_Client_01
 
 
             this.Hide();
-            var Inbox = Inboxes.GetInstance(client);
+            var Inbox = Inboxes.GetInstance(client); // Open the main inbox.
             Inbox.FormClosed += (s, args) =>
             {
                 Properties.Time.Default.Date = DateTime.Now; // Store the exit time so we have a reference to how long since we last used the client.

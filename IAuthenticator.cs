@@ -11,5 +11,7 @@ namespace Email_Client_01
     {
         ImapClient? Authenticate(string email, string password);
 
+        string GetErrorMessage();
+
     }
 }

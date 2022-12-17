@@ -8,10 +8,15 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace Email_Client_01
 {
+    // Form shown when reading a given mail. 
     public partial class Reading_email : Form
     {
         MimeMessage message = null!;
         ImapClient client;
+
+
+        // Fetches the mime message when it is clicked on,
+        // loads that in and show stuff based on that
         public Reading_email(MimeMessage msg, ImapClient client)
         {
             InitializeComponent();
@@ -20,6 +25,9 @@ namespace Email_Client_01
             this.client = client;
         }
 
+
+        // Method that interpolates the contents of the mimemessage
+        // to the fields we have in our form.
         private void InitializeMessage()
         {
             FromTextBox.Text = message.From.ToString();
@@ -58,6 +66,8 @@ namespace Email_Client_01
         }
 
 
+        // Method for replying to a mail (message). The boolean ReplyToAll determines if we just reply to the sender
+        // or everyone it was sent to. 
         private void Reply(MimeMessage message, bool replyToAll)
         {
             var reply = new MimeMessage();
@@ -195,11 +205,14 @@ namespace Email_Client_01
             Reply(message, true);
         }
 
+
         private void Close_Click(object sender, EventArgs e)
         {
             this.Close();
         }
 
+
+        // Method for downloading a selected attachment. The file is downloaded to the default windows special Downloads folder. 
         private async void DownloadAttachmentButton_Click(object sender, EventArgs e)
         {
             try
@@ -245,6 +258,8 @@ namespace Email_Client_01
             }
         }
 
+
+        // Downloads all the attachments in the mail to the windows default Downloads folder.
         private async void DownloadAllAttachmentsButton_Click(object sender, EventArgs e)
         {
             try

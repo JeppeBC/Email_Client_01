@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace Email_Client_01
 {
+
+    // Class representation of an email we use primarily for sending emails. 
     public class Email
     {
         public bool isDraft = false;

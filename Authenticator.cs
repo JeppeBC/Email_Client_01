@@ -9,12 +9,22 @@ using System.Threading.Tasks;
 
 namespace Email_Client_01
 {
+    // Concrete Class for authenticating login credentials
     public class Authenticator : IAuthenticator
     {
 
+        private string ErrorMessage; // Attribute to store an error message if anything goes wrong.
 
-        public string? ErrorMessage { get; private set; }
+        public Authenticator()
+        {
+            ErrorMessage = "";
+        }
+        public string GetErrorMessage()
+        {
+            return ErrorMessage;
+        }
 
+        // Function to validate the username/email 
         private bool isUsernameInvalid(string username)
         {
             if (!EmailValidator.Validate(username))
@@ -26,6 +36,8 @@ namespace Email_Client_01
 
         }
 
+
+        // Function to validate the password
         private bool isPasswordInvalid(string password)
         {
             if (password.Length > 99 || password.Length < 8)
@@ -38,15 +50,15 @@ namespace Email_Client_01
 
         public ImapClient? Authenticate(string username, string password)
         {
-            // Preliminary testing 
+            // Preliminary testing if the password and username seem valid. If not return early. 
             if(isUsernameInvalid(username) || isPasswordInvalid(password)) return null;
 
-
-            // Attempt to connect to the IMAP server, if we can connect and authorize to an IMAP client we accept
+            // Check if the combination of username + password is valid. If we can establish and authorize an IMAP
+            // client connection, we accept the user credentials.
             var client = Utility.GetImapClient();
             if (client.IsConnected && client.IsAuthenticated) return client;
 
-            // Failed to connect/authorize to the IMAP client
+            // Failed to connect/authorize to the IMAP client, timed out. 
             ErrorMessage = "Could not authorize the given credentials";
             return null;
         }

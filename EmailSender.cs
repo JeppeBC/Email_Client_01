@@ -8,16 +8,19 @@ using static Email_Client_01.NewMail;
 
 namespace Email_Client_01
 {
+    // Concrete Class for sending emails
     public class EmailSender : IEmailSender
     {
 
+        // Method that sends an email instance, implements the method of IEmailSender
         public void sendEmail(Email email)
         {
-            var emailMessage = CreateEmailMessage(email);
-
-            Send(emailMessage);
+            var emailMessage = CreateEmailMessage(email); // Construct a mime message from the given email
+            Send(emailMessage);                           // Call private send method that sends the MimeMessage. 
         }
 
+
+        // Creates a MimeMessage from a given Email instance. 
         private MimeMessage CreateEmailMessage(Email email)
         {
             MimeMessage emailMessage = new();
@@ -48,10 +51,11 @@ namespace Email_Client_01
             return emailMessage;
         }
 
-        private async void Send(MimeMessage emailMessage)
+        // Method for sending a MimeMessage via SMTP. 
+        private void Send(MimeMessage emailMessage)
         {
 
-            using (var client = await Utility.GetSmtpClient())
+            using (var client = Utility.GetSmtpClient())
             {
                 try
                 {
@@ -61,11 +65,9 @@ namespace Email_Client_01
                 {
                     MessageBox.Show(ex.Message);
                 }
-                finally
+                finally // Ensure that no matter what, we dispose and disconnect the client. 
                 {
-                    // always disconnect no matter the scenario
                     client?.Disconnect(true);
-                    // and dispose/free/delete the smtp client object
                     client?.Dispose();
                 }
             }
