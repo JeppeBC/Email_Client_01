@@ -99,7 +99,7 @@ namespace Email_Client_01
             // This enforces that the client does not naturally time out, which normally can happen
             // anywhere between 10, 15, 20, 25 or even 30 min. It is not very consistent. 
             System.Timers.Timer aTimer = new System.Timers.Timer();
-            aTimer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
+            aTimer.Elapsed += new ElapsedEventHandler(PingServerOnTimer);
             aTimer.Interval = 120000; // every 2 min, unit is milliseconds. 
             aTimer.Enabled = true;
 
@@ -119,7 +119,7 @@ namespace Email_Client_01
 
 
         // Method that runs on a timer and pings the server to ensure no natural time outs. 
-        private void OnTimedEvent(object? sender, ElapsedEventArgs e)
+        private void PingServerOnTimer(object? sender, ElapsedEventArgs e)
         {
             if (ClientInUse || loadingFolders || loadingMessages) return;
 
@@ -711,7 +711,6 @@ namespace Email_Client_01
         {
             if (folder == null) return;
 
-
             Folder? folderInList;
             string DisplayedName = "";
             int number;
@@ -1167,7 +1166,7 @@ namespace Email_Client_01
                 // folder is the imap folder.
                 if (folder == null) folder = GetCurrentFolder();
 
-
+  
                 // Could add waitcursors here but the call to delete a toplevel folder is really fast...
                 await folder.DeleteAsync();
 
