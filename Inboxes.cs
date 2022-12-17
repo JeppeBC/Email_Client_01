@@ -496,12 +496,10 @@ namespace Email_Client_01
         }
 
 
+
         // Method for adding a new filter (locally, we write it to json file at program closure).
         private void AddFilter(string searchQuery)
         {
-            var InitialFolder = Folders.SelectedItem;
-
-
             // Prompt the user on where to filter mails to.
             string? DestinationFolder = "";
             if (!(Utility.RadioButtonList.Input(Folders, "ListBoxName", "FullName", ref DestinationFolder) == DialogResult.OK))
@@ -926,14 +924,76 @@ namespace Email_Client_01
                 UnreadItem.Click += new EventHandler(MarkMailAsUnread);
                 ContextMenu.Items.Add(UnreadItem);
 
+                var MoveToTrash = new ToolStripMenuItem("Move to trash");
+                MoveToTrash.Click += new EventHandler(MoveMailToTrash);
+                ContextMenu.Items.Add(MoveToTrash);
+
                 Inbox.ContextMenuStrip = ContextMenu;
                 Inbox.ContextMenuStrip.Show(Inbox, e.Location);
 
             }
         }
 
-        // This method marks a given mail as unread if it is not already unread.
-        private async void MarkMailAsUnread(object? sender, EventArgs e)
+        private async void MoveMailToTrash(object? sender, EventArgs e)
+        {
+            var msgIndex = Inbox.SelectedIndex;
+            if (msgIndex < 0 || msgIndex > Inbox.Items.Count) // this should not happen
+            {
+                MessageBox.Show("No email to mark as unread");
+                return;
+            }
+            var msg = messageSummaries[messageSummaries.Count - 1 - msgIndex];
+
+
+            this.Cursor = Cursors.WaitCursor;
+            try
+            {
+                ClientInUse = true;
+                await Utility.ReconnectAsync(client);
+                if (folder == null) folder = GetCurrentFolder();
+                if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
+
+                await MoveMail(msg.UniqueId, client.GetFolder(SpecialFolder.Trash));
+
+
+                // Instead of calling RefreshCurrentFolder() or RetrieveMessagesFromFolder(), we just remove it from the current listbox as this is faster
+                // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
+                Inbox.Items.Remove(Inbox.SelectedItem);
+                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+
+                // if the message is unread, we update the unread count of the folder
+                if (msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen) && !SpecialFolders.isFolderUnreadBlacklisted(folder))
+                {
+                    IncrementFolderCount(folder, decrement: true);
+                }
+                else if(SpecialFolders.isFolderDisplayAllCount(folder))
+                {
+                    IncrementFolderCount(folder, decrement: true);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects. 
+                if (ex is ImapProtocolException || ex is IOException)
+                {
+                    await Utility.ReconnectAsync(client);
+                }
+                else
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+                ClientInUse = false;
+
+            }
+        }
+
+            // This method marks a given mail as unread if it is not already unread.
+            private async void MarkMailAsUnread(object? sender, EventArgs e)
         {
             var msgIndex = Inbox.SelectedIndex;
             if (msgIndex < 0 || msgIndex > Inbox.Items.Count) // this should not happen
@@ -966,7 +1026,7 @@ namespace Email_Client_01
                 // To prevent us from prefixing (UNREAD) multiple times we need to update the messagesummaries however
                 messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
-                IncrementFolderCount(folder);
+                if(!SpecialFolders.isFolderUnreadBlacklisted(folder)) IncrementFolderCount(folder);
             }
             catch (Exception ex)
             {
@@ -1025,6 +1085,10 @@ namespace Email_Client_01
 
                 // if the message is unread, we update the unread count of the folder
                 if (msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen) && !SpecialFolders.isFolderUnreadBlacklisted(folder)) 
+                {
+                    IncrementFolderCount(folder, decrement: true);
+                }
+                else if(SpecialFolders.isFolderDisplayAllCount(folder))
                 {
                     IncrementFolderCount(folder, decrement: true);
                 }
