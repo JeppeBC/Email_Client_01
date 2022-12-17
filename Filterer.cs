@@ -16,7 +16,7 @@ namespace Email_Client_01
     internal class Filterer
     {
         private List<Filter> filters;               // container for filters
-        private HashSet<string> FilterSet = new();  // For bookkeeping which mails have already been moved.
+        private HashSet<string> filteredMails = new();  // For bookkeeping which mails have already been moved.
                                                     // Can imagine scenarios where filters are conflicting (moving mails back and forth)
                                                     // We need to deal with this as the user would never be able to read such a mail. 
                         
@@ -110,7 +110,7 @@ namespace Email_Client_01
                     foreach (var sum in summaries)
                     {
                         // if the email is already in the filterset
-                        if (!FilterSet.Add(sum.EmailId))
+                        if (!filteredMails.Add(sum.EmailId))
                         {
                             // remove the corresponding uid from the list of uids to be moved.
                             listUIDs.Remove(listUIDs.Where(uid => uid == sum.UniqueId).FirstOrDefault());

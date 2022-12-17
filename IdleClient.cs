@@ -25,7 +25,7 @@ namespace Email_Client_01
         ImapClient client;
 
         // Observer
-        public InboxMessagesSubject InboxMessages; 
+        public DynamicReciever reciever; 
 
         public IdleClient(string host, int port, SecureSocketOptions sslOptions, string username, string password)
         {
@@ -40,7 +40,7 @@ namespace Email_Client_01
             this.port = port;
 
             // Observer
-            InboxMessages = new InboxMessagesSubject(0);
+            reciever = new DynamicReciever();
 
 
     }
@@ -90,7 +90,7 @@ namespace Email_Client_01
                 // Currently we just use an integer that counts the number of times we see changes
                 // Mutating this triggers the notify. We could perhaps also pass a reference to the list of message summaries in the inbox
                 // and watch this, however there is really not much of a difference. 
-                this.InboxMessages.MessageCountChanged++;
+                this.reciever.MessageCountChanged++;
                 messages.Add(message);
             }
         }

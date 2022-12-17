@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MailKit;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,32 +10,29 @@ namespace Email_Client_01
     // In this file we implement the observer pattern that allows us to detect incoming emails and automatically update/fetch them.
 
     // 1) Below is the generic abstract Subject class 
-    public abstract class Subject
+
+    // Only allows subscribers that implement a Reload() method. 
+    public abstract class ReceiverSubject<Subscriber> where Subscriber : ISubscriber
     {
-        private List<Inboxes> Inboxes = new List<Inboxes>();
-        private int _MessageCountChanged;
+        private List<Subscriber> Subscribers = new List<Subscriber>();
+        private int _MessageCountChanged = 0;
 
-        public Subject(int messages)
+        public void Attach(Subscriber sub)
         {
-            this._MessageCountChanged = messages;
+            Subscribers.Add(sub);
         }
 
-        public void Attach(Inboxes inbox)
+        public void Detach(Subscriber sub)
         {
-            Inboxes.Add(inbox);
-        }
-
-        public void Detach(Inboxes inbox)
-        {
-            Inboxes.Remove(inbox);
+            Subscribers.Remove(sub);
         }
 
         public void Notify()
         {
-            foreach (var inbox in Inboxes)
+            foreach (var subscriber in Subscribers)
             {
                 // Update reserved keyword
-                inbox.Reload();
+                subscriber.Reload();
             }
         }
 
@@ -52,13 +50,10 @@ namespace Email_Client_01
         }
     }
 
-    // 2) Below is the concrete subject that we are observing. 
+    // 2) Below is the concrete subject. 
     // Whenever the MessageCountChanged variable is mutated, Notify() is called.
-    public class InboxMessagesSubject : Subject
+    // Trigerring Reload() of the subscribers.
+    public class DynamicReciever : ReceiverSubject<Inboxes>
     {
-        public InboxMessagesSubject(int MessageCountChanged) : base(MessageCountChanged)
-        {
-        }
-
     }
 }

@@ -23,7 +23,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Email_Client_01
 {
-    public partial class Inboxes : Form
+    public partial class Inboxes : Form, ISubscriber
     {
         IList<IMailFolder> folders = null!;                 // local storage of all the IMAP folders
         IMailFolder? folder;                                // current folder (mostly bookkeeping for loading)
@@ -109,7 +109,7 @@ namespace Email_Client_01
 
             // Setup the idle client, attach the inbox as subscriber. 
             idle = new IdleClient(Utility.ImapServer, Utility.ImapPort, MailKit.Security.SecureSocketOptions.Auto, Utility.username!, Utility.password!);
-            idle.InboxMessages.Attach(this);
+            idle.reciever.Attach(this);
 
             // Load in all the folders
             RetrieveFolders(); 
