@@ -9,7 +9,7 @@ namespace Email_Client_01
 {
     internal class TextFormatter
     {
-        public static string? GetFlags(IMessageSummary item)
+        private static string? GetFlags(IMessageSummary item)
         {
             string FlagString = "";
 
@@ -34,7 +34,7 @@ namespace Email_Client_01
             return FlagString;
         }
 
-        public static string getSubject(IMessageSummary item)
+        private static string GetSubject(IMessageSummary item)
         {
             string subject = "";
             if (item.Envelope.Subject != null)
@@ -51,7 +51,7 @@ namespace Email_Client_01
             return subject;
         }
 
-        public static string GetSender(IMessageSummary item)
+        private static string GetSender(IMessageSummary item)
         {
             // if an alias is present, i.e. the name and not the actual mailaddress, then return that
             if (item.Envelope.Sender.Count > 0 && !string.IsNullOrEmpty(item.Envelope.Sender[0].Name))
@@ -60,9 +60,9 @@ namespace Email_Client_01
             return item.Envelope.From.Mailboxes.FirstOrDefault()?.Address ?? "";
         }
 
-        public static string FormatInboxMessageText(IMessageSummary item)
+        public static string FormatInboxText(IMessageSummary item)
         {
-            string subject = getSubject(item);
+            string subject = GetSubject(item);
             string? flags = GetFlags(item);
             string sender = GetSender(item);
 
@@ -81,7 +81,7 @@ namespace Email_Client_01
 
         public static string FormatDraftInboxText(IMessageSummary item)
         {
-            return "(DRAFT) " + getSubject(item);
+            return "(DRAFT) " + GetSubject(item);
         }
 
     }

@@ -1,4 +1,4 @@
-﻿using MailKit;
+﻿    using MailKit;
 using MailKit.Net.Imap;
 using MimeKit;
 using MimeKit.Utils;
@@ -213,7 +213,7 @@ namespace Email_Client_01
 
 
         // Method for downloading a selected attachment. The file is downloaded to the default windows special Downloads folder. 
-        private async void DownloadAttachmentButton_Click(object sender, EventArgs e)
+        private async void DownloadSelectedAttachment_click(object sender, EventArgs e)
         {
             try
             {

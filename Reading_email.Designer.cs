@@ -254,7 +254,7 @@
             this.DownloadAttachmentButton.Text = "Download Attachment";
             this.DownloadAttachmentButton.UseVisualStyleBackColor = true;
             this.DownloadAttachmentButton.Visible = false;
-            this.DownloadAttachmentButton.Click += new System.EventHandler(this.DownloadAttachmentButton_Click);
+            this.DownloadAttachmentButton.Click += new System.EventHandler(this.DownloadSelectedAttachment_click);
             // 
             // DownloadAllAttachmentsButton
             // 

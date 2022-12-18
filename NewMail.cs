@@ -18,6 +18,7 @@ using Org.BouncyCastle.Asn1.X509;
 using System.Net.Mail;
 using Microsoft.VisualBasic.ApplicationServices;
 
+
 namespace Email_Client_01
 {
 
@@ -30,6 +31,7 @@ namespace Email_Client_01
         bool MailIsDraft = false;
         string? DraftID;
         ImapClient client;
+
 
         // Forward and reply to get the attachments.
         IEnumerable<MimeEntity>? nonlocalAttachments; 
@@ -157,8 +159,15 @@ namespace Email_Client_01
         }
 
 
+
         // For attaching files to a mail. Opens the windows directory and allows the user to pick one. 
         // That is, the file must be stored locally on the user's computer!
+
+        private void AttachFile(Attachment attachment)
+        {
+            Attachments.Add(attachment);
+        }
+
         private void Attach_file(object sender, EventArgs e)
         {
             using (OpenFileDialog fileDialog = new OpenFileDialog())
@@ -170,17 +179,19 @@ namespace Email_Client_01
 
                 if (fileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    string fileSelected = fileDialog.FileName;
+                    string filepath = fileDialog.FileName;
 
                     // Shorten the file name to not include directories
-                    string fileSelectedShort = fileSelected.Substring(fileSelected.LastIndexOf('\\') + 1) + " ";
+                    string filename = filepath.Substring(filepath.LastIndexOf('\\') + 1) + " ";
 
-
-                    Attachments.Add(new Attachment()
+                    Attachment attachment = new Attachment()
                     {
-                        filepath = fileSelected,
-                        name = fileSelectedShort,
-                    });
+                        name = filename,
+                        filepath = filepath,
+                    };
+
+                    AttachFile(attachment);
+
                 }
             }
         }
@@ -238,7 +249,7 @@ namespace Email_Client_01
             // we expect strings of the form:        "Alias <MailAddress>"          <-- is a mailbox address
             // and want to return only MailAddress
             // Below method does that
-        private string FilterMailboxAddress(string s)
+        private string ParseMailboxAddressString(string s)
         {
             string result = s;
             // remove the text between quotations and " chars. 
@@ -256,7 +267,7 @@ namespace Email_Client_01
 
         // Check if the recipients are seemingly valid. 
         // We use a separate library by jeffrey stedfast, who created MailKit to do this. 
-        private bool validateRecipientArray(string[] recipients)
+        private bool ValidateRecipients(string[] recipients)
         {
 
             // if we reply to a mail an internet address is inserted i.e. of the form 
@@ -267,7 +278,7 @@ namespace Email_Client_01
             {
                 string r = recipient.Replace(",", "");
 
-                r = FilterMailboxAddress(r);
+                r = ParseMailboxAddressString(r);
 
                 if (!EmailValidator.Validate(r)) // use jstedfast 
                 {
@@ -374,7 +385,7 @@ namespace Email_Client_01
         private void RecipientsValidating(object sender, CancelEventArgs e)
         {
             string[] recipients = RecipientTextBox.Text.Split(",");
-            bool valid = validateRecipientArray(recipients);
+            bool valid = ValidateRecipients(recipients);
             SendButton.Enabled = valid;
 
             if (!valid)
@@ -394,7 +405,7 @@ namespace Email_Client_01
         private void CCValidating(object sender, CancelEventArgs e)
         {
             string[] cc = CCTextBox.Text.Split(",");
-            bool valid = validateRecipientArray(cc);
+            bool valid = ValidateRecipients(cc);
             SendButton.Enabled = valid;
 
             if (!valid)
@@ -407,6 +418,10 @@ namespace Email_Client_01
             }
         }
 
+        private void RemoveAttachment(Attachment attachment)
+        {
+            Attachments.Remove(attachment);
+        }
 
         // Method for removing attachments in the new mail that is currently being composed. 
         private async void RemoveAttachmentButton_Click(object sender, EventArgs e)
@@ -417,7 +432,7 @@ namespace Email_Client_01
                 if (AttachmentsListBox.SelectedItem == null) return;
                 var attachment = Attachments[AttachmentsListBox.SelectedIndex];
                 if (attachment == null) return;
-                Attachments.Remove(attachment);
+                RemoveAttachment(attachment);
 
                 // currently we are using the same Attachments list for both nonlocal and local attachments, only difference being the filepath is empty for nonlocal.
                 // we should remove the mimeentity part if we remove a file that has empty filepath
@@ -488,9 +503,7 @@ namespace Email_Client_01
         }
 
 
-
-        // Save the current MessageState as a draft and put in drafts folder.
-        private async void SaveDraftButton_Click(object sender, EventArgs e)
+        private async void SaveAsDraft()
         {
             this.Cursor = Cursors.WaitCursor;
             try
@@ -499,7 +512,7 @@ namespace Email_Client_01
 
                 MimeMessage message = BuildDraftMessage();
                 IMailFolder? draftsFolder = client.GetFolder(SpecialFolder.Drafts);
-                if(draftsFolder == null)
+                if (draftsFolder == null)
                 {
                     MessageBox.Show("\"Draft(s)\" folder not found");
                     return;
@@ -511,7 +524,7 @@ namespace Email_Client_01
             catch (Exception ex)
             {
                 // IMAP protocol exception often causes client disconnects, and io exceptions always do.
-                if(ex is ImapProtocolException || ex is IOException)
+                if (ex is ImapProtocolException || ex is IOException)
                 {
                     await Utility.ReconnectAsync(client);
                 }
@@ -525,6 +538,12 @@ namespace Email_Client_01
                 this.Cursor = Cursors.Default;
                 this.Close();
             }
+        }
+
+        // Save the current MessageState as a draft and put in drafts folder.
+        private void SaveDraftButton_Click(object sender, EventArgs e)
+        {
+            SaveAsDraft();   
         }
     }
 }

@@ -20,44 +20,6 @@ namespace Email_Client_01
         }
 
 
-        public SearchQuery? GetSearchQueryFromFilter(Filter filter)
-        {
-            if (filter.SearchLocations == null)
-            {
-                return null;
-            }
-            if (filter.SearchLocations.Contains("Subject") && filter.SearchLocations.Contains("Sender") && filter.SearchLocations.Contains("Body"))
-            {
-                return SearchQuery.FromContains(filter.TargetString).Or(SearchQuery.SubjectContains(filter.TargetString)).Or(SearchQuery.BodyContains(filter.TargetString));
-            }
-            if (filter.SearchLocations.Contains("Subject") && filter.SearchLocations.Contains("Body"))
-            {
-                return SearchQuery.SubjectContains(filter.TargetString).Or(SearchQuery.BodyContains(filter.TargetString));
-            }
-            if (filter.SearchLocations.Contains("Sender") && filter.SearchLocations.Contains("Body"))
-            {
-                return SearchQuery.FromContains(filter.TargetString).Or(SearchQuery.BodyContains(filter.TargetString));
-            }
-            if (filter.SearchLocations.Contains("Sender") && filter.SearchLocations.Contains("Subject"))
-            {
-                return SearchQuery.FromContains(filter.TargetString).Or(SearchQuery.SubjectContains(filter.TargetString));
-            }
-            if (filter.SearchLocations.Contains("Sender"))
-            {
-                return SearchQuery.FromContains(filter.TargetString);
-            }
-            if (filter.SearchLocations.Contains("Subject"))
-            {
-                return SearchQuery.SubjectContains(filter.TargetString);
-            }
-            if (filter.SearchLocations.Contains("Body"))
-            {
-                return SearchQuery.BodyContains(filter.TargetString);
-            }
-            return null;
-        }
-
-
         // Searches the current folder for a given target string but it only looks at locations specified in "locations" variable
         // Namely the list of "locations" should contain the strings "Subject", "Sender" and "Body" if we are to search these. 
         // Method returns a list of unique ids in the current folder that matches the search criterion. 

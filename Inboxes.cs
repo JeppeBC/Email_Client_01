@@ -314,7 +314,7 @@ namespace Email_Client_01
 
                     foreach (var item in messageSummaries.Reverse())
                     {
-                        Inbox.Items.Add(TextFormatter.FormatInboxMessageText(item));
+                        Inbox.Items.Add(TextFormatter.FormatInboxText(item));
 
                         // make sure the folder count is correct
                         if (SpecialFolders.isFolderUnreadBlacklisted(folder)) continue;
@@ -479,7 +479,7 @@ namespace Email_Client_01
             }
             foreach (var item in messageSummaries.Reverse())
             {
-                Inbox.Items.Add(TextFormatter.FormatInboxMessageText(item));
+                Inbox.Items.Add(TextFormatter.FormatInboxText(item));
             }
         }
 
