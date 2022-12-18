@@ -77,7 +77,7 @@
             this.Inbox.Size = new System.Drawing.Size(697, 292);
             this.Inbox.TabIndex = 6;
             this.Inbox.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.Inbox_DrawItem);
-            this.Inbox.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.Inbox_MouseDoubleClick);
+            this.Inbox.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.OpenMail_MouseDoubleClick);
             this.Inbox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Inbox_MouseDown);
             this.Inbox.MouseUp += new System.Windows.Forms.MouseEventHandler(this.Inbox_MouseUp);
             // 
@@ -448,9 +448,11 @@
             this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.Name = "Inboxes";
             this.Text = "Prime Email";
-            this.Load += new System.EventHandler(this.Form1_Load);
+
+            // this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.InboxGrid)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.PriorityGrid)).EndInit();
+            
             this.ResumeLayout(false);
             this.PerformLayout();
 

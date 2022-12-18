@@ -170,7 +170,6 @@
             this.AttachmentLabel.TabIndex = 13;
             this.AttachmentLabel.Text = "Attachments:";
             this.AttachmentLabel.Visible = false;
-            this.AttachmentLabel.Click += new System.EventHandler(this.label1_Click);
             // 
             // RemoveAttachmentButton
             // 

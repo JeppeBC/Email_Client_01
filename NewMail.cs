@@ -18,8 +18,11 @@ using Org.BouncyCastle.Asn1.X509;
 using System.Net.Mail;
 using Microsoft.VisualBasic.ApplicationServices;
 
+
 namespace Email_Client_01
 {
+
+    // Form shown when writing a new mail.
     public partial class NewMail : Form
     {
         BindingList<Attachment> Attachments = new();
@@ -29,10 +32,12 @@ namespace Email_Client_01
         string? DraftID;
         ImapClient client;
 
+
         // Forward and reply to get the attachments.
         IEnumerable<MimeEntity>? nonlocalAttachments; 
         
 
+        // When writing a mail from scratch, this constructor is used (e.g. by pressing the "compose" button)
         public NewMail(ImapClient client)
         {
             InitializeComponent();
@@ -47,6 +52,8 @@ namespace Email_Client_01
 
         }
 
+        // if we already have a skeleton for a mail, we use this constructor.
+        // E.g. when forwarding a mail, the content should stay. 
         public NewMail(MimeMessage msg, ImapClient client)
         {
             InitializeComponent();
@@ -80,6 +87,7 @@ namespace Email_Client_01
         }
 
         // could be combined with the constructor above. But having one more is no issue. 
+        // This constructor is used for when we have drafts, opening drafts is slightly different. 
         public NewMail(MimeMessage msg, bool isDraft, ImapClient client)
         {
             InitializeComponent();
@@ -116,6 +124,7 @@ namespace Email_Client_01
         }
 
 
+        // Dynamically checks whenever the attachments change if we need to display the associated GUI elements.
         private void attachments_changed(object? sender, ListChangedEventArgs e)
         {
             bool show = Attachments.Count > 0; 
@@ -124,6 +133,7 @@ namespace Email_Client_01
             RemoveAttachmentButton.Visible = show;
         }
 
+        // When hovering over the recipients field, a helpful message is displayed.
         private void RecipientsMouseOver(object sender, EventArgs e)
         {
 
@@ -148,6 +158,16 @@ namespace Email_Client_01
             MessageBodyTextBox.ForeColor = System.Drawing.Color.Black;
         }
 
+
+
+        // For attaching files to a mail. Opens the windows directory and allows the user to pick one. 
+        // That is, the file must be stored locally on the user's computer!
+
+        private void AttachFile(Attachment attachment)
+        {
+            Attachments.Add(attachment);
+        }
+
         private void Attach_file(object sender, EventArgs e)
         {
             using (OpenFileDialog fileDialog = new OpenFileDialog())
@@ -159,24 +179,27 @@ namespace Email_Client_01
 
                 if (fileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    string fileSelected = fileDialog.FileName;
+                    string filepath = fileDialog.FileName;
 
                     // Shorten the file name to not include directories
-                    string fileSelectedShort = fileSelected.Substring(fileSelected.LastIndexOf('\\') + 1) + " ";
+                    string filename = filepath.Substring(filepath.LastIndexOf('\\') + 1) + " ";
 
-
-                    Attachments.Add(new Attachment()
+                    Attachment attachment = new Attachment()
                     {
-                        filepath = fileSelected,
-                        name = fileSelectedShort,
-                    });
+                        name = filename,
+                        filepath = filepath,
+                    };
+
+                    AttachFile(attachment);
+
                 }
             }
         }
 
 
 
-
+        // Get the recipients from the textbox field. 
+        // Filtered into a list of strings. Instead of one long, concatenated string. 
         private string[]? GetRecipients()
         {
             if (string.IsNullOrEmpty(RecipientTextBox.Text))
@@ -191,6 +214,7 @@ namespace Email_Client_01
             }
         }
 
+        // Get list of CCs instead of having one concatenated blob. 
         private string[]? GetCCs()
         {
             if (string.IsNullOrEmpty(CCTextBox.Text))
@@ -202,6 +226,8 @@ namespace Email_Client_01
                 return CCTextBox.Text.Split(",");
             }
         }
+
+        // Method for getting the subject. If there is no subject, it prompts the user if this is fine. 
         private string? GetSubject()
         {
             if (string.IsNullOrEmpty(SubjectTextBox.Text))
@@ -220,10 +246,11 @@ namespace Email_Client_01
         }
 
 
-        private string FilterString(string s)
-        {
-            // we expect strings of the form "Alias" <MailAddress>
+            // we expect strings of the form:        "Alias <MailAddress>"          <-- is a mailbox address
             // and want to return only MailAddress
+            // Below method does that
+        private string ParseMailboxAddressString(string s)
+        {
             string result = s;
             // remove the text between quotations and " chars. 
             int startQuotation = s.IndexOf('"');
@@ -238,7 +265,9 @@ namespace Email_Client_01
             return result.Trim();
         }
 
-        private bool validateRecipientArray(string[] recipients)
+        // Check if the recipients are seemingly valid. 
+        // We use a separate library by jeffrey stedfast, who created MailKit to do this. 
+        private bool ValidateRecipients(string[] recipients)
         {
 
             // if we reply to a mail an internet address is inserted i.e. of the form 
@@ -249,9 +278,9 @@ namespace Email_Client_01
             {
                 string r = recipient.Replace(",", "");
 
-                r = FilterString(r);
+                r = ParseMailboxAddressString(r);
 
-                if (!EmailValidator.Validate(r))
+                if (!EmailValidator.Validate(r)) // use jstedfast 
                 {
                     return false;
                 }
@@ -262,6 +291,7 @@ namespace Email_Client_01
 
 
 
+        // WHen we click the send_mail button this runs. 
         private async void Send_mail(object sender, EventArgs e)
         {
 
@@ -292,19 +322,24 @@ namespace Email_Client_01
 
             List<string?> attachmentFilepaths = Attachments.Select(a => a.filepath).ToList();
             attachmentFilepaths.RemoveAll(fp => string.IsNullOrEmpty(fp)); // remove all the null cases, and empty cases that corresponds to the nonlocal attachments.
-            Email email = new Email(To, CC, Subject, Content, attachmentFilepaths, nonlocalAttachments);
+            
+            
 
-            var s = new EmailSender();
+            // Construct an email and send that email.
+            Email email = new Email(To, CC, Subject, Content, attachmentFilepaths, nonlocalAttachments);
+            IEmailSender s = new EmailSender();
             s.sendEmail(email);
 
-            // expensive as we establish smtp connection to send just prior and then imap connection to delete..
+            // If the mail was a mail from the drafts folder, we must delete it.
+            // To do this, we must use IMAP connection. 
             if(MailIsDraft)
             {
                 // delete the mail from drafts folder
                 this.Cursor = Cursors.WaitCursor;
                 try
                 {
-                    var draftsFolder = await getDraftFolder(CancellationToken.None);
+                    await Utility.ReconnectAsync(client);
+                    var draftsFolder = client.GetFolder(SpecialFolder.Drafts);
                     if(draftsFolder == null)
                     {
                         MessageBox.Show("\"Draft(s)\" folder not found");
@@ -344,10 +379,13 @@ namespace Email_Client_01
         }
 
 
+        // When the Recipients textbox registers changes, this method runs
+        // Checks if the recpients appear to be valid, if so highlight in green and enable send button
+        // else highlight in red and disable send button.
         private void RecipientsValidating(object sender, CancelEventArgs e)
         {
             string[] recipients = RecipientTextBox.Text.Split(",");
-            bool valid = validateRecipientArray(recipients);
+            bool valid = ValidateRecipients(recipients);
             SendButton.Enabled = valid;
 
             if (!valid)
@@ -363,11 +401,11 @@ namespace Email_Client_01
         }
 
 
-        // CC validation does not work for some reason, #TODO
+        // CC validation works in the exact same way as Recipient validation above, only for the CC field instead. 
         private void CCValidating(object sender, CancelEventArgs e)
         {
             string[] cc = CCTextBox.Text.Split(",");
-            bool valid = validateRecipientArray(cc);
+            bool valid = ValidateRecipients(cc);
             SendButton.Enabled = valid;
 
             if (!valid)
@@ -380,20 +418,21 @@ namespace Email_Client_01
             }
         }
 
-        private void label1_Click(object sender, EventArgs e)
+        private void RemoveAttachment(Attachment attachment)
         {
-
+            Attachments.Remove(attachment);
         }
 
-        private void RemoveAttachmentButton_Click(object sender, EventArgs e)
+        // Method for removing attachments in the new mail that is currently being composed. 
+        private async void RemoveAttachmentButton_Click(object sender, EventArgs e)
         {
             try
             {
-           
+                await Utility.ReconnectAsync(client);
                 if (AttachmentsListBox.SelectedItem == null) return;
                 var attachment = Attachments[AttachmentsListBox.SelectedIndex];
                 if (attachment == null) return;
-                Attachments.Remove(attachment);
+                RemoveAttachment(attachment);
 
                 // currently we are using the same Attachments list for both nonlocal and local attachments, only difference being the filepath is empty for nonlocal.
                 // we should remove the mimeentity part if we remove a file that has empty filepath
@@ -413,163 +452,7 @@ namespace Email_Client_01
             }
         }
 
-
-        public class Email
-        {
-            public bool isDraft = false;
-            public List<MailboxAddress> To { get; set; }
-
-            public List<MailboxAddress> CC { get; set; }
-            public string Subject { get; set; }
-
-            public string Content { get; set; }
-
-            public List<string?> LocalAttachments { get; set; }
-
-            public IEnumerable<MimeEntity>? nonlocalAttachments { get; set; }
-
-            public Email(string[] to, string[]? cc, string subject, string content, List<string?> localAttachments, IEnumerable<MimeEntity>? nonLocal = null)
-            {
-                To = new List<MailboxAddress>();
-                // username and address, #TODO currently we do not have aliases but extend this once we do
-
-                foreach (var recipient in to)
-                {
-                    To.Add(MailboxAddress.Parse(recipient));
-                }
-
-
-                CC = new List<MailboxAddress>();
-                if (!(cc == null))
-                {
-                    foreach (var c in cc)
-                    {
-                        CC.Add(MailboxAddress.Parse(c));
-                    }
-                }
-
-
-
-
-                Subject = subject;
-                Content = content;
-                LocalAttachments = localAttachments;
-                nonlocalAttachments = nonLocal;
-            }
-        }
-
-        public interface IEmailSender
-        {
-            void sendEmail(Email email);
-        }
-
-
-        public class EmailSender : IEmailSender
-        {
-
-            public void sendEmail(Email email)
-            {
-                var emailMessage = CreateEmailMessage(email);
-
-                Send(emailMessage);
-            }
-
-            private MimeMessage CreateEmailMessage(Email email)
-            {
-                MimeMessage emailMessage = new();
-
-                var builder = new BodyBuilder
-                {
-                    TextBody = email.Content // TODO formatting needed here???
-                };
-                foreach (var attachment in email.LocalAttachments)
-                {
-                    builder.Attachments.Add(attachment);
-                }
-
-                if(email.nonlocalAttachments != null)
-                {
-                    foreach(var attachment in email.nonlocalAttachments)
-                    {
-                        builder.Attachments.Add(attachment);
-                    }
-                }
-
-                emailMessage.Body = builder.ToMessageBody();                        // TODO add alias/username
-                emailMessage.From.Add(new MailboxAddress(Properties.Credentials.Default.username, Properties.Credentials.Default.username)); // username    &&     //email of user
-                emailMessage.To.AddRange(email.To);
-                emailMessage.Cc.AddRange(email.CC);
-                emailMessage.Subject = email.Subject;
-
-                return emailMessage;
-            }
-
-            private async void Send(MimeMessage emailMessage)
-            {
-
-                using (var client = await Utility.GetSmtpClient())
-                {
-                    try
-                    {
-                        client.Send(emailMessage);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.Message);
-                    }
-                    finally
-                    {
-                        // always disconnect no matter the scenario
-                        client?.Disconnect(true);
-                        // and dispose/free/delete the smtp client object
-                        client?.Dispose();
-                    }
-                }
-            }
-        }
-
-        private async Task<IMailFolder?> getDraftFolder(CancellationToken cancellationToken)
-        {
-            try
-            {
-                string[] DraftFolderNames = { "Drafts", "Kladder", "Draft" };
-                if ((client.Capabilities & (ImapCapabilities.SpecialUse | ImapCapabilities.XList)) != 0)
-                {
-                    var trashFolder = client.GetFolder(SpecialFolder.Drafts);
-                    return trashFolder;
-                }
-
-                else
-                {
-                    var personal = client.GetFolder(client.PersonalNamespaces[0]);
-
-                    foreach (var folder in personal.GetSubfolders(false, cancellationToken))
-                    {
-                        foreach (var name in DraftFolderNames)
-                        {
-                            if (folder.Name == name)
-                                return folder;
-                        }
-                    }
-                }
-            }
-            catch(Exception ex)
-            {
-                // Protocol exceptions often result in client getting disconnected. IO exception always result in client disconnects.
-                if (ex is ImapProtocolException || ex is IOException)
-                {
-                    await Utility.ReconnectAsync(client);
-                }
-                else
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
-            return null;
-            
-        }
-
-        // saves the current message state as a draft
+        // Translates the current message state (from the form) into a MimeMessage and returns this. 
         private MimeMessage BuildDraftMessage()
         {
             BodyBuilder builder = new BodyBuilder();
@@ -620,14 +503,16 @@ namespace Email_Client_01
         }
 
 
-        private async void SaveDraftButton_Click(object sender, EventArgs e)
+        private async void SaveAsDraft()
         {
             this.Cursor = Cursors.WaitCursor;
             try
             {
+                await Utility.ReconnectAsync(client);
+
                 MimeMessage message = BuildDraftMessage();
-                IMailFolder? draftsFolder = await getDraftFolder(CancellationToken.None);
-                if(draftsFolder == null)
+                IMailFolder? draftsFolder = client.GetFolder(SpecialFolder.Drafts);
+                if (draftsFolder == null)
                 {
                     MessageBox.Show("\"Draft(s)\" folder not found");
                     return;
@@ -639,7 +524,7 @@ namespace Email_Client_01
             catch (Exception ex)
             {
                 // IMAP protocol exception often causes client disconnects, and io exceptions always do.
-                if(ex is ImapProtocolException || ex is IOException)
+                if (ex is ImapProtocolException || ex is IOException)
                 {
                     await Utility.ReconnectAsync(client);
                 }
@@ -653,6 +538,12 @@ namespace Email_Client_01
                 this.Cursor = Cursors.Default;
                 this.Close();
             }
+        }
+
+        // Save the current MessageState as a draft and put in drafts folder.
+        private void SaveDraftButton_Click(object sender, EventArgs e)
+        {
+            SaveAsDraft();   
         }
     }
 }
