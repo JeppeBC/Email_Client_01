@@ -9,7 +9,7 @@ namespace Email_Client_01
 {
     internal class TextFormatter
     {
-        private static string? GetFlags(IMessageSummary item)
+        public static string? GetFlags(IMessageSummary item)
         {
             string FlagString = "";
 
@@ -34,7 +34,7 @@ namespace Email_Client_01
             return FlagString;
         }
 
-        private static string GetSubject(IMessageSummary item)
+        public static string GetSubject(IMessageSummary item)
         {
             string subject = "";
             if (item.Envelope.Subject != null)
@@ -51,7 +51,7 @@ namespace Email_Client_01
             return subject;
         }
 
-        private static string GetSender(IMessageSummary item)
+        public static string GetSender(IMessageSummary item)
         {
             // if an alias is present, i.e. the name and not the actual mailaddress, then return that
             if (item.Envelope.Sender.Count > 0 && !string.IsNullOrEmpty(item.Envelope.Sender[0].Name))

@@ -128,13 +128,13 @@ namespace Email_Client_01
                 [KnownFolder.SavedGames] = new("4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4"),
                 [KnownFolder.SavedSearches] = new("7D1D3A04-DEBB-4115-95CF-2F29DA2920DA")
             };
-          
+
             public static string GetPath(KnownFolder knownFolder)
             {
                 return SHGetKnownFolderPath(_guids[knownFolder], 0);
             }
 
-            
+
             [DllImport("shell32",
                 CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = false)]
             private static extern string SHGetKnownFolderPath(
@@ -264,6 +264,62 @@ namespace Email_Client_01
                 set { base.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed; }
             }
 
+
+            // takes listbox, translates it into a radiolistbox and prompts the user to select one item.
+            // SelectedFolder is mutated to match the user's choice. DialogResult returned. 
+            // DisplayMember is for class objects if they are stored in the list box, for specifying which attribute to show
+            public static DialogResult Input(ListBox lb, string displayMember, string valueMember, ref string? selectedObject)
+            {
+                Form form = new Form();
+                Label label = new Label();
+                RadioButtonList RBL = new RadioButtonList();
+                Button buttonOk = new Button();
+                Button buttonCancel = new Button();
+
+                RBL.Height = lb.ItemHeight * (lb.Items.Count + 1);
+                RBL.Width = lb.Width;
+                // todo set maximum limit to protect form?
+
+                RBL.DataSource = lb.DataSource;
+
+                // Currently just hardcoded
+                RBL.DisplayMember = displayMember;
+                RBL.ValueMember = valueMember;
+
+                form.Text = "Folders";
+                label.Text = "Please select a destination folder: ";
+
+                buttonOk.Text = "OK";
+                buttonCancel.Text = "Cancel";
+                buttonOk.DialogResult = DialogResult.OK;
+                buttonCancel.DialogResult = DialogResult.Cancel;
+
+
+                RBL.SetBounds(25, label.Height * 2, RBL.Width, RBL.Height);
+                buttonOk.SetBounds(400, 160, 160, 60);
+                buttonCancel.SetBounds(400, 240, 160, 60);
+
+
+                label.AutoSize = true;
+                form.ClientSize = new Size((int)(Math.Max(RBL.Width, label.Width) * 2), (int)((RBL.Height + label.Height) * 1.25));
+                form.FormBorderStyle = FormBorderStyle.FixedDialog;
+                form.StartPosition = FormStartPosition.CenterScreen;
+                form.MinimizeBox = false;
+                form.MaximizeBox = false;
+
+                form.Controls.AddRange(new Control[] { label, RBL, buttonOk, buttonCancel });
+                form.AcceptButton = buttonOk;
+                form.CancelButton = buttonCancel;
+
+                DialogResult dialogResult = form.ShowDialog();
+
+
+                selectedObject = (string?)RBL.SelectedValue;
+                return dialogResult;
+            }
+
+        }
+
         // Creates XML directory of dates, recieved, sent mails
         public static void CreateXML(IList<IMessageSummary> summaries)
         {
@@ -276,7 +332,7 @@ namespace Email_Client_01
             // Hardcoded temp value
             DateTime startdate = Properties.Settings.Default.dateLastLoaded;
 
-            if (startdate==DateTime.MinValue)
+            if (startdate == DateTime.MinValue)
             {
                 startdate = DateTime.ParseExact("01-01-2010", "dd-MM-yyyy", ci);
             }
@@ -340,64 +396,6 @@ namespace Email_Client_01
             Properties.Settings.Default.dateLastLoaded = DateTime.Today;
             Properties.Settings.Default.Save();
         }
-
-
-
-            // takes listbox, translates it into a radiolistbox and prompts the user to select one item.
-            // SelectedFolder is mutated to match the user's choice. DialogResult returned. 
-            // DisplayMember is for class objects if they are stored in the list box, for specifying which attribute to show
-            public static DialogResult Input(ListBox lb, string displayMember, string valueMember, ref string? selectedObject)
-            {
-                Form form = new Form();
-                Label label = new Label();
-                RadioButtonList RBL = new RadioButtonList();
-                Button buttonOk = new Button();
-                Button buttonCancel = new Button();
-
-                RBL.Height = lb.ItemHeight * (lb.Items.Count + 1);
-                RBL.Width = lb.Width;
-                // todo set maximum limit to protect form?
-
-                RBL.DataSource = lb.DataSource;
-
-                // Currently just hardcoded
-                RBL.DisplayMember = displayMember;
-                RBL.ValueMember = valueMember;
-
-                form.Text = "Folders";
-                label.Text = "Please select a destination folder: ";
-
-                buttonOk.Text = "OK";
-                buttonCancel.Text = "Cancel";
-                buttonOk.DialogResult = DialogResult.OK;
-                buttonCancel.DialogResult = DialogResult.Cancel;
-
-
-                RBL.SetBounds(25, label.Height * 2, RBL.Width, RBL.Height);
-                buttonOk.SetBounds(400, 160, 160, 60);
-                buttonCancel.SetBounds(400, 240, 160, 60);
-
-
-                label.AutoSize = true;
-                form.ClientSize = new Size((int)(Math.Max(RBL.Width, label.Width) * 2), (int)((RBL.Height + label.Height) * 1.25));
-                form.FormBorderStyle = FormBorderStyle.FixedDialog;
-                form.StartPosition = FormStartPosition.CenterScreen;
-                form.MinimizeBox = false;
-                form.MaximizeBox = false;
-
-                form.Controls.AddRange(new Control[] { label, RBL, buttonOk, buttonCancel });
-                form.AcceptButton = buttonOk;
-                form.CancelButton = buttonCancel;
-
-                DialogResult dialogResult = form.ShowDialog();
-
-
-                selectedObject = (string?) RBL.SelectedValue;
-                return dialogResult;
-            }
-
-        }
-
 
     }
     public static class DateTimeExtensions
