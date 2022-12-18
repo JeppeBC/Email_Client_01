@@ -103,5 +103,24 @@ namespace Email_Client_01
         {
             this.Close();
         }
+
+        private void PressEnter(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                LogInButton.PerformClick();
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        private void EmailTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            PressEnter(sender, e);
+        }
+
+        private void PasswordTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            PressEnter(sender, e);
+        }
     }
 }

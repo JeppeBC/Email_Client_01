@@ -2,6 +2,7 @@ using Email_Client_01;
 using MailKit;
 using MailKit.Net.Imap;
 using MailKit.Search;
+using Microsoft.VisualBasic;
 using MimeKit;
 using MimeKit.Cryptography;
 using Newtonsoft.Json;
@@ -16,6 +17,9 @@ using System.Security.Cryptography;
 using System.Timers;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using System.Diagnostics;
+using System.Text;
+using Email_Client_01.Properties;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 
@@ -245,6 +249,9 @@ namespace Email_Client_01
         private async void RetrieveMessagesFromFolder()
         {
             Inbox.Items.Clear();
+
+            InboxGrid.Rows.Clear();
+
             if (loadingMessages) return; // ensure we don't start loading another batch of messages before we are done loading the current batch. Even prevents queueing of many folders that need to be loaded in
             this.Cursor = Cursors.WaitCursor;
             loadingMessages = true;
@@ -253,7 +260,12 @@ namespace Email_Client_01
 
             try
             {
+
                 await Utility.ReconnectAsync(client); // if timed out, reconnect
+
+                Inbox.Items.Clear();
+                InboxGrid.Rows.Clear();
+
 
                 folder = GetCurrentFolder();
                 if (!folder.Exists) return;
@@ -294,6 +306,7 @@ namespace Email_Client_01
                 else if (messageSummaries.Count <= 0)
                 {
                     Inbox.Items.Add("This folder is empty!");
+                    InboxGrid.Rows.Add("This folder is empty!");
                 }
                 else if (folder.Attributes.HasFlag(FolderAttributes.Drafts))
                 {
@@ -314,7 +327,10 @@ namespace Email_Client_01
 
                     foreach (var item in messageSummaries.Reverse())
                     {
+
                         Inbox.Items.Add(TextFormatter.FormatInboxText(item));
+                        InboxGrid.Rows.Add(GetFlags(item), item.Envelope.Sender, item.Envelope.Subject, item.Envelope.Date);
+
 
                         // make sure the folder count is correct
                         if (SpecialFolders.isFolderUnreadBlacklisted(folder)) continue;
@@ -348,8 +364,16 @@ namespace Email_Client_01
         // If we double click on a mail this method runs, opens the mail clicked
         private void OpenMail_MouseDoubleClick(object sender, MouseEventArgs e)
         {
+
             if (ClientInUse) return;
             if (folder == null) folder = GetCurrentFolder();
+
+            // Get the specific message
+            var messageId = (((DataGridView)sender).SelectedRows.ToString); // 2 parenthesis warns about missing ';' for some reason.
+            //if (messageId < 0) return; // failsafe
+            var messageItem = messageSummaries[messageSummaries.Count - InboxGrid.SelectedRows[0].Index - 1];
+
+
 
 
             // Index of mail in inbox. 
@@ -357,6 +381,17 @@ namespace Email_Client_01
             // Get the specific message
             if (MailIdx < 0) return; // failsafe
             var Message = messageSummaries[messageSummaries.Count - 1 - MailIdx];
+                // if unread mail
+                if (messageItem.Flags != null && !messageItem.Flags.Value.HasFlag(MessageFlags.Seen))
+                {
+                    // Mutate the message in the listbox, so it no longer says unread
+                    string currentString = InboxGrid.SelectedRows[0].Cells[0].Value.ToString();
+                    // Remove (UNREAD) if present in the inbox view
+                    InboxGrid.SelectedRows[0].Cells[0].Value = currentString.Replace("(UNREAD)", "").Trim();
+
+                    // Update the unread count
+                    IncrementFolderCount(folder, decrement: true);
+
 
 
 
@@ -466,6 +501,7 @@ namespace Email_Client_01
         private void ShowSearchResult(IMailFolder folder, IList<UniqueId> uids)
         {
             Inbox.Items.Clear();
+
             if (!folder.IsOpen) return;
             if (loadingMessages) return;
 
@@ -473,13 +509,22 @@ namespace Email_Client_01
             messageSummaries = folder.Fetch(uids, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
 
+            InboxGrid.Rows.Clear();
+
+
             if (messageSummaries.Count <= 0)
             {
                 Inbox.Items.Add("No results!");
+                InboxGrid.Rows.Add("No results!");
             }
             foreach (var item in messageSummaries.Reverse())
             {
+
                 Inbox.Items.Add(TextFormatter.FormatInboxText(item));
+
+
+                InboxGrid.Rows.Add(GetFlags(item), item.Envelope.Sender, item.Envelope.Subject, item.Envelope.Date);
+
             }
         }
 
@@ -948,8 +993,8 @@ namespace Email_Client_01
 
         private async void MoveMailToTrash_handler(object? sender, EventArgs e)
         {
-            var msgIndex = Inbox.SelectedIndex;
-            if (msgIndex < 0 || msgIndex > Inbox.Items.Count) // this should not happen
+            var msgIndex = InboxGrid.CurrentRow.Index;
+            if (msgIndex < 0 || msgIndex > InboxGrid.Rows.Count) // this should not happen
             {
                 MessageBox.Show("No email to mark as unread");
                 return;
@@ -1045,9 +1090,13 @@ namespace Email_Client_01
 
                 // instead of reloading the entire folder using RefreshCurrenFolder() or RetrieveMessagesFromFolder() to capture this (UNREAD) change,
                 // we just manually forcefully update that one element in the listbox (this will automatically happen on refresh)
+
                 Inbox.Items[msgIndex] = "(UNREAD) " + Inbox.Items[msgIndex];
                 // To prevent us from prefixing (UNREAD) multiple times we need to update the messagesummaries however
                 messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+
+                InboxGrid.Rows[InboxGrid.CurrentRow.Index].Cells[0].Value = "(UNREAD) ";
+
 
                 if(!SpecialFolders.isFolderUnreadBlacklisted(folder)) IncrementFolderCount(folder);
             }
@@ -1086,11 +1135,15 @@ namespace Email_Client_01
         }
         private async void DeleteMail_handler(object? sender, EventArgs e)
         {
+
             if (ClientInUse) return;
 
-            var msgIndex = Inbox.SelectedIndex;
+            // var msgIndex = Inbox.SelectedIndex;
+
+            var msgIndex = InboxGrid.SelectedRows[0].Index;
+
             // quick check so we do not waste unnecessary time to establish an imap connection in case of errors.
-            if (msgIndex < 0 || msgIndex > Inbox.Items.Count) // dont know how this would appear, but just in case
+            if (msgIndex < 0 || msgIndex > InboxGrid.Rows.Count) // dont know how this would appear, but just in case
             {
                 MessageBox.Show("No email is selected for deletion.");
                 return;
@@ -1108,10 +1161,25 @@ namespace Email_Client_01
 
                 await DeleteMail(msg.UniqueId);
 
+                // If Email to be deleted is in priority list, remove it from the list
+                if (PriorityGrid.Rows.Count > 0)
+                {
+                    for (int i=0; i<PriorityGrid.Rows.Count;i++)
+                    {
+                        if (PriorityGrid.Rows[i].Cells[2].Value == InboxGrid.Rows[InboxGrid.SelectedRows[0].Index].Cells[2].Value)
+                        {
+                            PriorityGrid.Rows[i].Selected = true;
+                            PriorityGrid.Rows.Remove(PriorityGrid.SelectedRows[0]);
+                        }
+                    }
+                }
 
                 // Instead of calling RefreshCurrentFolder() or RetrieveMessagesFromFolder(), we just remove it from the current listbox as this is faster
                 // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
+
                 Inbox.Items.Remove(Inbox.SelectedItem);
+               
+                InboxGrid.Rows.Remove(InboxGrid.SelectedRows[0]);
                 messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
                 // if the message is unread, we update the unread count of the folder
@@ -1123,6 +1191,7 @@ namespace Email_Client_01
                 {
                     IncrementFolderCount(folder, decrement: true);
                 }
+
             }
             catch (Exception ex)
             {
@@ -1146,6 +1215,7 @@ namespace Email_Client_01
 
         private async Task ToggleFlag(IMessageSummary message)
         {
+
             if (folder == null) folder = GetCurrentFolder();
             if (!folder.IsOpen) await folder.OpenAsync(FolderAccess.ReadWrite);
 
@@ -1165,7 +1235,10 @@ namespace Email_Client_01
         private async void ToggleFlag_handler(object? sender, EventArgs e)
         {
             if (ClientInUse) return;
-            var messageIndex = Inbox.SelectedIndex; // index of the message to modify
+            // var messageIndex = Inbox.SelectedIndex; // index of the message to modify
+
+            var messageIndex = InboxGrid.CurrentRow.Index; ;
+
             if (messageIndex < 0) return; // failsafe
             var message = messageSummaries[messageSummaries.Count - 1 - messageIndex]; // find the message to modify
 
@@ -1318,6 +1391,7 @@ namespace Email_Client_01
                     MessageBox.Show(ex.Message);
                 }
             }
+
             finally
             {
                 ClientInUse = false;
@@ -1325,9 +1399,13 @@ namespace Email_Client_01
 
         }
 
-
+        // MERGE : FIX THIS getuneradmailscurrentfolder
         // Method that returns the list of UIDs of the currently open folder
-        private List<UniqueId> GetUnreadMailsCurrentFolder()
+        // private List<UniqueId> GetUnreadMailsCurrentFolder()
+
+        // }
+        private List<UniqueId> GetUnreadMailsCurrentFolder(IList<IMessageSummary> msgSummaries)
+
         {
             // If folder is null, get current folder
             if (folder == null) folder = GetCurrentFolder(); 
@@ -1339,10 +1417,96 @@ namespace Email_Client_01
             var listUIDs = unreadMails.Select(msg => msg.UniqueId);
             return listUIDs.ToList();
         }
+        private void PriorityClicked(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Priority_Clicked(object sender, EventArgs e)
+        {
+            // Take selected email and selected priority
+            object Selecteditem = PrioritySelecter.SelectedItem;
+
+            object PriorityMsg = InboxGrid.SelectedRows[0].Cells[2].Value;
+
+            // Display the selected mail in listbox "Priority" as "priority + subject of email"
+            PriorityGrid.Rows.Add("X", Selecteditem, PriorityMsg);
+
+            PriorityGrid.Sort(PriorityGrid.Columns[1], ListSortDirection.Ascending);
+        }
+
+        private void InboxGrid_Click(object sender, EventArgs e)
+        {
+            InboxGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        }
+
+        private void InboxGrid_DoubleClick(object sender, EventArgs e)
+        {
+            ReadMessage(sender, e);
+        }
+
+        private void PriorityGrid_Click(object sender, DataGridViewCellEventArgs e)
+        {
+            PriorityGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+
+            if (e.ColumnIndex == 0)
+                PriorityGrid.Rows.RemoveAt(e.RowIndex);
+        }
+
+        private void PriorityGrid_DoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            // opens the specified email when doubleclicked in Prioritygrid
+            InboxGrid.ClearSelection();
+            var subject = PriorityGrid.SelectedRows[0].Cells[2].Value;
+            
+            foreach (DataGridViewRow row in InboxGrid.Rows)
+            {
+                if (subject == InboxGrid.Rows[row.Index].Cells[2].Value)
+                    row.Selected = true;
+            }
+            
+            ReadMessage(sender, e);
+
+        }
+
+        private void InboxGrid_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                var itemIndex = InboxGrid.CurrentRow.Index;
+                if (itemIndex < 0 || itemIndex > InboxGrid.SelectedRows.Count) return;
+
+                var ContextMenu = new ContextMenuStrip();
+                ContextMenu.Items.Clear();
+
+                var DeleteItem = new ToolStripMenuItem("Delete");
+                DeleteItem.Click += new EventHandler(DeleteMail);
+                ContextMenu.Items.Add(DeleteItem);
+
+                var FlagItem = new ToolStripMenuItem("Flag");
+                FlagItem.Click += new EventHandler(ToggleFlagMail);
+                ContextMenu.Items.Add(FlagItem);
+
+                var UnreadItem = new ToolStripMenuItem("Mark as Unread");
+                UnreadItem.Click += new EventHandler(MarkMailAsUnread);
+                ContextMenu.Items.Add(UnreadItem);
+
+                InboxGrid.ContextMenuStrip = ContextMenu;
+                InboxGrid.ContextMenuStrip.Show(Inbox, e.Location);
+
+            }
+        }
+
 
 
         // Displays the unread mails of the currently open folder in the inbox.
-        private int ShowUnreadMails()
+        // private int ShowUnreadMails()
+
+
+        // need somewhere to display active filters and option to remove any active filters (does not work backwards, only works for future filtering)
+
+        private int ShowUnreadMails(IList<IMessageSummary> msgSummaries)
+
         {
             var uids = GetUnreadMailsCurrentFolder(); // Find the UIDs of the unread mails.
             if (folder == null) return -1; // if no folder, returns -1 (guard)
@@ -1370,6 +1534,7 @@ namespace Email_Client_01
             }
         }
 
+
         // Whenver the list of filters change, we check if we need to hide the associated GUI elements
         // in case there is nothing to show. 
         void filters_changed(object? sender, ListChangedEventArgs e)
@@ -1389,6 +1554,101 @@ namespace Email_Client_01
             }
         }
 
+
+        private void FilterUnreadCheckbox_CheckChanged(object sender, EventArgs e)
+        {
+            if (folder == null) return;
+            if (folder.Attributes.HasFlag(FolderAttributes.Sent) || folder.Attributes.HasFlag(FolderAttributes.Drafts)) return; // Never any unread mails in these folders, so dont do anything
+
+            if (FilterUnreadCheckbox.Checked)
+            {
+                ShowUnreadMails(messageSummaries);
+            }
+            else
+            {
+                RetrieveMessagesFromFolder();
+            }
+        }
+
+        private async void MetricsButton_Click(object sender, EventArgs e)
+        {
+
+            string myTempFile = Path.Combine(Path.GetTempPath(), "root.xml");
+
+                // If XML needs to be updated
+                if (Settings.Default.dateLastLoaded != DateTime.Today || !File.Exists(myTempFile))
+                {
+
+                if (!File.Exists(myTempFile))
+                {
+                    Settings.Default.dateLastLoaded = DateTime.Parse("01-01-2010");
+                    Settings.Default.Save();
+                }
+
+                using (var client = await Utility.GetImapClient())
+                {
+                    try
+                    {
+                        var folders = await client.GetFoldersAsync(new FolderNamespace('.', ""));
+                        var messages = new List<IMessageSummary>();
+                        var messages_sorted = new List<IMessageSummary>();
+                        MailboxAddress MyAddress = MailboxAddress.Parse(Utility.username);
+
+                        // Sent mails folder
+                        foreach (var folder in folders)
+                        {
+                            // Perhaps rewrite to accress from ID or something instead of name
+                            // All (including sent)
+                            if (folder.Exists && folder.Attributes.HasFlag(FolderAttributes.All))
+                            {
+                                folder.Open(FolderAccess.ReadOnly);
+                                var test = folder.Fetch(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                                messages.AddRange(test.ToList());
+                            }
+
+                            // Sent
+                            if (folder.Exists && folder.Attributes.HasFlag(FolderAttributes.Sent))
+                            {
+                                folder.Open(FolderAccess.ReadOnly);
+                                var test = folder.Fetch(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                                messages_sorted.AddRange(test.ToList());
+                            }
+                        }
+
+                        // Sort out sent mails from "All" folder
+                        foreach (var message in messages)
+                        {
+                            foreach (var from in message.Envelope.From)
+                            {
+                                // If not sent by myself
+                                if (!(((MailboxAddress)from).Address == MyAddress.Address))
+                                {
+                                    messages_sorted.Add(message);
+                                }
+                            }
+                        }
+
+
+                        Utility.CreateXML(messages_sorted);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                    }
+                    finally
+                    {
+                        client?.DisconnectAsync(true);
+                        client?.Dispose();
+                        this.Cursor = Cursors.Default;
+
+                    }
+                }
+            }
+
+            // Create metrics form
+            metrics Metrics_Form = new metrics();
+            Metrics_Form.Show();
+        }
     }
 }
 

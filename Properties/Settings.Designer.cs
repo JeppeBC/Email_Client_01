@@ -13,11 +13,11 @@ namespace Email_Client_01.Properties {
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.4.0.0")]
-    internal sealed partial class Time : global::System.Configuration.ApplicationSettingsBase {
+    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
-        private static Time defaultInstance = ((Time)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Time())));
+        private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
         
-        public static Time Default {
+        public static Settings Default {
             get {
                 return defaultInstance;
             }
@@ -25,12 +25,12 @@ namespace Email_Client_01.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        public global::System.DateTime Date {
+        public global::System.DateTime dateLastLoaded {
             get {
-                return ((global::System.DateTime)(this["Date"]));
+                return ((global::System.DateTime)(this["dateLastLoaded"]));
             }
             set {
-                this["Date"] = value;
+                this["dateLastLoaded"] = value;
             }
         }
     }
