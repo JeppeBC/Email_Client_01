@@ -45,10 +45,6 @@
             this.CreateFolderButton = new System.Windows.Forms.Button();
             this.DeleteFolderButton = new System.Windows.Forms.Button();
             this.InboxGrid = new System.Windows.Forms.DataGridView();
-            this.Flags = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Sender = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Subject = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Date = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.label2 = new System.Windows.Forms.Label();
             this.Compose = new System.Windows.Forms.Button();
             this.PrioritySelecter = new System.Windows.Forms.ComboBox();
@@ -60,6 +56,10 @@
             this.remove = new System.Windows.Forms.DataGridViewButtonColumn();
             this.Priority = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Flags = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Sender = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Subject = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Date = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.InboxGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PriorityGrid)).BeginInit();
             this.SuspendLayout();
@@ -236,44 +236,6 @@
             this.InboxGrid.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.InboxGrid_CellMouseDown);
             this.InboxGrid.DoubleClick += new System.EventHandler(this.InboxGrid_DoubleClick);
             // 
-            // Flags
-            // 
-            this.Flags.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.Flags.FillWeight = 7.699075F;
-            this.Flags.HeaderText = "Flags";
-            this.Flags.MinimumWidth = 6;
-            this.Flags.Name = "Flags";
-            this.Flags.ReadOnly = true;
-            this.Flags.Width = 125;
-            // 
-            // Sender
-            // 
-            this.Sender.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Sender.FillWeight = 190F;
-            this.Sender.HeaderText = "Sender";
-            this.Sender.MinimumWidth = 6;
-            this.Sender.Name = "Sender";
-            this.Sender.ReadOnly = true;
-            // 
-            // Subject
-            // 
-            this.Subject.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Subject.FillWeight = 190F;
-            this.Subject.HeaderText = "Subject";
-            this.Subject.MinimumWidth = 6;
-            this.Subject.Name = "Subject";
-            this.Subject.ReadOnly = true;
-            // 
-            // Date
-            // 
-            this.Date.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.Date.FillWeight = 5.59213F;
-            this.Date.HeaderText = "Date";
-            this.Date.MinimumWidth = 6;
-            this.Date.Name = "Date";
-            this.Date.ReadOnly = true;
-            this.Date.Width = 125;
-            // 
             // label2
             // 
             this.label2.AutoSize = true;
@@ -394,6 +356,7 @@
             this.Priority.HeaderText = "Priority";
             this.Priority.MinimumWidth = 6;
             this.Priority.Name = "Priority";
+            this.Priority.ReadOnly = true;
             // 
             // dataGridViewTextBoxColumn1
             // 
@@ -401,6 +364,45 @@
             this.dataGridViewTextBoxColumn1.HeaderText = "Subject";
             this.dataGridViewTextBoxColumn1.MinimumWidth = 6;
             this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            this.dataGridViewTextBoxColumn1.ReadOnly = true;
+            // 
+            // Flags
+            // 
+            this.Flags.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.Flags.FillWeight = 7.699075F;
+            this.Flags.HeaderText = "Flags";
+            this.Flags.MinimumWidth = 6;
+            this.Flags.Name = "Flags";
+            this.Flags.ReadOnly = true;
+            this.Flags.Width = 125;
+            // 
+            // Sender
+            // 
+            this.Sender.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Sender.FillWeight = 190F;
+            this.Sender.HeaderText = "Sender";
+            this.Sender.MinimumWidth = 6;
+            this.Sender.Name = "Sender";
+            this.Sender.ReadOnly = true;
+            // 
+            // Subject
+            // 
+            this.Subject.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Subject.FillWeight = 190F;
+            this.Subject.HeaderText = "Subject";
+            this.Subject.MinimumWidth = 6;
+            this.Subject.Name = "Subject";
+            this.Subject.ReadOnly = true;
+            // 
+            // Date
+            // 
+            this.Date.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.Date.FillWeight = 5.59213F;
+            this.Date.HeaderText = "Date";
+            this.Date.MinimumWidth = 6;
+            this.Date.Name = "Date";
+            this.Date.ReadOnly = true;
+            this.Date.Width = 125;
             // 
             // Inboxes
             // 
@@ -462,11 +464,11 @@
         private ListBox Folders;
         private CheckBox FilterUnreadCheckbox;
         private CheckBox FilterUnreadCheckbox1;
+        private Button MetricsButton;
         private DataGridViewTextBoxColumn Flags;
         private DataGridViewTextBoxColumn Sender;
         private DataGridViewTextBoxColumn Subject;
         private DataGridViewTextBoxColumn Date;
-        private Button MetricsButton;
         private DataGridViewButtonColumn remove;
         private DataGridViewTextBoxColumn Priority;
         private DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
