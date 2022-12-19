@@ -1309,7 +1309,7 @@ namespace Email_Client_01
         }
 
 
-        private void ReadMessage(IMessageSummary? message)
+        private void OpenMessage(IMessageSummary? message)
         {
             if (message == null || ClientInUse) return;
             if (folder == null) folder = GetCurrentFolder();
@@ -1334,7 +1334,7 @@ namespace Email_Client_01
             var Mail = messageSummaries[messageSummaries.Count - InboxGrid.SelectedRows[0].Index - 1];
 
 
-            ReadMessage(Mail);
+            OpenMessage(Mail);
 
             // if unread mail
             if (Mail.Flags != null && !Mail.Flags.Value.HasFlag(MessageFlags.Seen))
@@ -1382,7 +1382,7 @@ namespace Email_Client_01
             }
 
             if (mail == null) return;
-            ReadMessage(mail);
+            OpenMessage(mail);
 
 
             // if unread mail
