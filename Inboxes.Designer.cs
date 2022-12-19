@@ -31,7 +31,6 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Inboxes));
-            this.Inbox = new System.Windows.Forms.ListBox();
             this.SearchTextBox = new System.Windows.Forms.TextBox();
             this.SearchButton = new System.Windows.Forms.Button();
             this.SearchSenderCheck = new System.Windows.Forms.CheckBox();
@@ -64,23 +63,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.InboxGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PriorityGrid)).BeginInit();
             this.SuspendLayout();
-            // 
-            // Inbox
-            // 
-            this.Inbox.AllowDrop = true;
-            this.Inbox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
-            this.Inbox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            this.Inbox.FormattingEnabled = true;
-            this.Inbox.ItemHeight = 48;
-            this.Inbox.Location = new System.Drawing.Point(571, 317);
-            this.Inbox.Margin = new System.Windows.Forms.Padding(6);
-            this.Inbox.Name = "Inbox";
-            this.Inbox.Size = new System.Drawing.Size(1984, 916);
-            this.Inbox.TabIndex = 6;
-            this.Inbox.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.Inbox_DrawItem);
-            this.Inbox.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.OpenMail_MouseDoubleClick);
-            this.Inbox.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Inbox_MouseDown);
-            this.Inbox.MouseUp += new System.Windows.Forms.MouseEventHandler(this.Inbox_MouseUp);
             // 
             // SearchTextBox
             // 
@@ -217,6 +199,7 @@
             // 
             // InboxGrid
             // 
+            this.InboxGrid.AllowDrop = true;
             this.InboxGrid.AllowUserToAddRows = false;
             this.InboxGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.InboxGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -227,17 +210,18 @@
             this.Date});
             this.InboxGrid.Location = new System.Drawing.Point(757, 403);
             this.InboxGrid.Margin = new System.Windows.Forms.Padding(9, 6, 9, 6);
+            this.InboxGrid.MultiSelect = false;
             this.InboxGrid.Name = "InboxGrid";
             this.InboxGrid.ReadOnly = true;
             this.InboxGrid.RowHeadersVisible = false;
             this.InboxGrid.RowHeadersWidth = 51;
             this.InboxGrid.RowTemplate.Height = 29;
+            this.InboxGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.InboxGrid.Size = new System.Drawing.Size(1803, 960);
             this.InboxGrid.TabIndex = 24;
             this.InboxGrid.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.InboxGrid_CellMouseClick);
             this.InboxGrid.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.InboxGrid_CellMouseDown);
             this.InboxGrid.DoubleClick += new System.EventHandler(this.InboxGrid_DoubleClick);
-            this.InboxGrid.MultiSelect = false;
             // 
             // Flags
             // 
@@ -431,7 +415,6 @@
             this.Controls.Add(this.SearchButton);
             this.Controls.Add(this.SearchTextBox);
             this.Controls.Add(this.InboxGrid);
-            this.Controls.Add(this.Inbox);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(11, 10, 11, 10);
             this.Name = "Inboxes";
@@ -444,7 +427,6 @@
         }
 
         #endregion
-        private ListBox Inbox;
         private TextBox SearchTextBox;
         private Button SearchButton;
         private CheckBox SearchSenderCheck;
