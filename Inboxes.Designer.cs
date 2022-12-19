@@ -67,12 +67,13 @@
             // 
             // Inbox
             // 
+            this.Inbox.AllowDrop = true;
             this.Inbox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
             this.Inbox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.Inbox.FormattingEnabled = true;
             this.Inbox.ItemHeight = 48;
             this.Inbox.Location = new System.Drawing.Point(571, 317);
-            this.Inbox.Margin = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            this.Inbox.Margin = new System.Windows.Forms.Padding(6);
             this.Inbox.Name = "Inbox";
             this.Inbox.Size = new System.Drawing.Size(1984, 916);
             this.Inbox.TabIndex = 6;
@@ -233,9 +234,10 @@
             this.InboxGrid.RowTemplate.Height = 29;
             this.InboxGrid.Size = new System.Drawing.Size(1803, 960);
             this.InboxGrid.TabIndex = 24;
-            this.InboxGrid.Click += new System.EventHandler(this.InboxGrid_Click);
+            this.InboxGrid.CellMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.InboxGrid_CellMouseClick);
+            this.InboxGrid.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.InboxGrid_CellMouseDown);
             this.InboxGrid.DoubleClick += new System.EventHandler(this.InboxGrid_DoubleClick);
-            this.InboxGrid.MouseUp += new System.Windows.Forms.MouseEventHandler(this.InboxGrid_MouseUp);
+            this.InboxGrid.MultiSelect = false;
             // 
             // Flags
             // 
@@ -315,7 +317,6 @@
             this.PrioritySelecter.TabIndex = 0;
             this.PrioritySelecter.Text = "Priorities";
             this.PrioritySelecter.SelectedIndexChanged += new System.EventHandler(this.Priority_Clicked);
-            this.PrioritySelecter.Click += new System.EventHandler(this.PriorityClicked);
             // 
             // PriorityGrid
             // 
@@ -360,6 +361,7 @@
             // 
             // Folders
             // 
+            this.Folders.AllowDrop = true;
             this.Folders.BackColor = System.Drawing.SystemColors.AppWorkspace;
             this.Folders.FormattingEnabled = true;
             this.Folders.ItemHeight = 48;
@@ -368,22 +370,21 @@
             this.Folders.Name = "Folders";
             this.Folders.Size = new System.Drawing.Size(493, 484);
             this.Folders.TabIndex = 25;
+            this.Folders.DragDrop += new System.Windows.Forms.DragEventHandler(this.Folders_DragDrop);
+            this.Folders.DragEnter += new System.Windows.Forms.DragEventHandler(this.Folders_DragEnter);
+            this.Folders.DragOver += new System.Windows.Forms.DragEventHandler(this.Folders_DragOver);
             // 
             // FilterUnreadCheckbox
             // 
-            this.FilterUnreadCheckbox.AutoSize = true;
-            this.FilterUnreadCheckbox.Location = new System.Drawing.Point(342, 81);
+            this.FilterUnreadCheckbox.Location = new System.Drawing.Point(0, 0);
             this.FilterUnreadCheckbox.Name = "FilterUnreadCheckbox";
-            this.FilterUnreadCheckbox.Size = new System.Drawing.Size(119, 24);
-            this.FilterUnreadCheckbox.TabIndex = 24;
-            this.FilterUnreadCheckbox.Text = "Show Unread";
-            this.FilterUnreadCheckbox.UseVisualStyleBackColor = true;
-            this.FilterUnreadCheckbox.CheckedChanged += new System.EventHandler(this.FilterUnreadCheckbox_CheckedChanged);
+            this.FilterUnreadCheckbox.Size = new System.Drawing.Size(104, 24);
+            this.FilterUnreadCheckbox.TabIndex = 0;
             // 
             // FilterUnreadCheckbox1
             // 
             this.FilterUnreadCheckbox1.AutoSize = true;
-            this.FilterUnreadCheckbox1.Location = new System.Drawing.Point(883, 195);
+            this.FilterUnreadCheckbox1.Location = new System.Drawing.Point(883, 203);
             this.FilterUnreadCheckbox1.Margin = new System.Windows.Forms.Padding(9, 6, 9, 6);
             this.FilterUnreadCheckbox1.Name = "FilterUnreadCheckbox1";
             this.FilterUnreadCheckbox1.Size = new System.Drawing.Size(278, 52);

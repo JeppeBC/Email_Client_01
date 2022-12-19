@@ -17,10 +17,15 @@ using System.Security.Cryptography;
 using System.Timers;
 using System.Windows.Forms;
 using System.Xml.Linq;
-using System.Diagnostics;
 using System.Text;
 using Email_Client_01.Properties;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using Newtonsoft.Json.Linq;
+using ScottPlot.Statistics.Interpolation;
+
+using System;
+using System.Linq;
+
 
 
 // for distinguishing between types of click: https://learn.microsoft.com/en-us/dotnet/desktop/winforms/input-mouse/how-to-distinguish-between-clicks-and-double-clicks?view=netdesktop-6.0
@@ -117,6 +122,7 @@ namespace Email_Client_01
             }
 
 
+            InboxGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
 
             // Setup the idle client, attach the inbox as subscriber. 
             idle = new IdleClient(Utility.ImapServer, Utility.ImapPort, MailKit.Security.SecureSocketOptions.Auto, Utility.username!, Utility.password!);
@@ -489,7 +495,8 @@ namespace Email_Client_01
             private void ShowSearchResult(IMailFolder folder, IList<UniqueId> uids)
             {
                 Inbox.Items.Clear();
-
+                InboxGrid.Rows.Clear();
+            
                 if (!folder.IsOpen) return;
                 if (loadingMessages) return;
 
@@ -497,20 +504,13 @@ namespace Email_Client_01
                 messageSummaries = folder.Fetch(uids, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
 
-                InboxGrid.Rows.Clear();
-
-
                 if (messageSummaries.Count <= 0)
                 {
                     Inbox.Items.Add("No results!");
-                    InboxGrid.Rows.Add("No results!");
                 }
                 foreach (var item in messageSummaries.Reverse())
                 {
-
                     Inbox.Items.Add(TextFormatter.FormatInboxText(item));
-
-
                     InboxGrid.Rows.Add(TextFormatter.GetFlags(item), TextFormatter.GetSender(item), TextFormatter.GetSubject(item), item.Envelope.Date);
 
                 }
@@ -694,21 +694,6 @@ namespace Email_Client_01
                 Folders.DoDragDrop(idx, DragDropEffects.Copy);
             }
 
-            // When we enter the folders listbox during a drag and drop sequence this runs, mostly just modifies the visuals
-            // but also a guard if we have no data (index of a mail, it halts).
-            private void Folders_DragEnter(object sender, DragEventArgs e)
-            {
-                if (e.Data == null) return; // guard
-                if (e.Data.GetDataPresent(DataFormats.Text))
-                {
-                    e.Effect = DragDropEffects.Copy;
-                }
-                else
-                {
-                    e.Effect = DragDropEffects.None;
-                }
-            }
-
 
             // Moves from the current "folder".
             private async Task MoveMail(UniqueId id, IMailFolder TargetFolder)
@@ -791,13 +776,24 @@ namespace Email_Client_01
                 if (e.Data == null) return;
                 if (string.IsNullOrEmpty(folderName)) return;
                 // get the passed index in mail of mail to move from inbox.
-                var InboxIdx = (int)e.Data.GetData(e.Data.GetFormats()[0]);
 
+                DataGridViewSelectedRowCollection rows = (DataGridViewSelectedRowCollection)e.Data.GetData(typeof(DataGridViewSelectedRowCollection));
+                
+                List<int> indices= new List<int>();
+                foreach(DataGridViewRow row in rows)
+                {
+                    indices.Add(row.Index);
+                }
 
+                List<IMessageSummary> MessagesToMove = new();
+                
+                foreach(int idx in indices)
+                {
+                MessagesToMove.Add(messageSummaries[messageSummaries.Count - 1 - idx]);
+                }
+/*            var InboxIdx = (int)e.Data.GetData(e.Data.GetFormats)
+                var InboxIdx = (int)e.Data.GetData(e.Data.GetFormats()[0]);*/
 
-
-                // the message selected in the inbox folder (message to be moved)
-                var selectedItem = messageSummaries[messageSummaries.Count - 1 - InboxIdx];
 
                 if (ClientInUse) return;
 
@@ -822,13 +818,23 @@ namespace Email_Client_01
                                 break;
                             }
 
-                            // Move mail
-                            await MoveMail(selectedItem.UniqueId, f);
-                            /*                        await folder.OpenAsync(FolderAccess.ReadWrite);
-                                                    await folder.MoveToAsync(selectedItem.UniqueId, f);*/
+                        // Move mail
+                            var uids = MessagesToMove.Select(m => m.UniqueId).ToList();
+                            await folder.MoveToAsync(uids, f);
+                        /*                        await folder.OpenAsync(FolderAccess.ReadWrite);
+                                                await folder.MoveToAsync(selectedItem.UniqueId, f);*/
 
-                            // Instead of calling RefreshCurrentFolder() or RetrieveMessagesFromFolder(), we just remove it from the current listbox as this is faster (this is done by drag and drop automatically)
-                            // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
+                        // Instead of calling RefreshCurrentFolder() or RetrieveMessagesFromFolder(), we just remove it from the current listbox as this is faster (this is done by drag and drop automatically)
+                        // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
+                            List<DataGridViewRow> toBeDeleted = new List<DataGridViewRow>();
+                            foreach (DataGridViewRow row in InboxGrid.SelectedRows)
+                            {
+                                toBeDeleted.Add(row);
+                            }
+                            foreach(DataGridViewRow row in toBeDeleted)
+                            {
+                                InboxGrid.Rows.Remove(row);
+                            }
 
                             // update messageSummaries so futuure operations without loading all messages work as intended
                             messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
@@ -837,23 +843,23 @@ namespace Email_Client_01
                             // Update current folder count
                             if (SpecialFolders.isFolderDisplayAllCount(folder))
                             {
-                                IncrementFolderCount(folder, decrement: true);
+                                IncrementFolderCount(folder, decrement: true, value: MessagesToMove.Count);
                             }
                             else if (!SpecialFolders.isFolderUnreadBlacklisted(folder))
                             {
-                                if (selectedItem.Flags != null && !selectedItem.Flags.Value.HasFlag(MessageFlags.Seen))
-                                    IncrementFolderCount(folder, decrement: true);
+                                var unseenMessages = MessagesToMove.Select(m => m.Flags != null && !m.Flags.Value.HasFlag(MessageFlags.Seen)).ToList();
+                                IncrementFolderCount(folder, decrement: true, value : unseenMessages.Count);
                             }
 
                             // Update target folder if applicable
                             if (SpecialFolders.isFolderDisplayAllCount(f))
                             {
-                                IncrementFolderCount(f);
+                                IncrementFolderCount(f, value : MessagesToMove.Count);
                             }
                             else if (!SpecialFolders.isFolderUnreadBlacklisted(f))
                             {
-                                if (selectedItem.Flags != null && !selectedItem.Flags.Value.HasFlag(MessageFlags.Seen))
-                                    IncrementFolderCount(f);
+                                var unseenMessages = MessagesToMove.Select(m => m.Flags != null && !m.Flags.Value.HasFlag(MessageFlags.Seen)).ToList();
+                                IncrementFolderCount(f, value: unseenMessages.Count);
                             }
 
                             break;
@@ -1230,7 +1236,6 @@ namespace Email_Client_01
                 if (messageIndex < 0) return; // failsafe
                 var message = messageSummaries[messageSummaries.Count - 1 - messageIndex]; // find the message to modify
 
-                this.Cursor = Cursors.WaitCursor;
                 try
                 {
                     ClientInUse = true;
@@ -1254,7 +1259,6 @@ namespace Email_Client_01
                 }
                 finally
                 {
-                    this.Cursor = Cursors.Default;
                     ClientInUse = false;
                 }
             }
@@ -1401,10 +1405,6 @@ namespace Email_Client_01
             var listUIDs = unreadMails.Select(msg => msg.UniqueId);
             return listUIDs.ToList();
         }
-        private void PriorityClicked(object sender, EventArgs e)
-        {
-
-        }
 
         private void Priority_Clicked(object sender, EventArgs e)
         {
@@ -1419,10 +1419,6 @@ namespace Email_Client_01
             PriorityGrid.Sort(PriorityGrid.Columns[1], ListSortDirection.Ascending);
         }
 
-        private void InboxGrid_Click(object sender, EventArgs e)
-        {
-            InboxGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-        }
 
         private void ReadMessage(IMessageSummary? message)
         {
@@ -1514,41 +1510,6 @@ namespace Email_Client_01
             }
         }
 
-        private void InboxGrid_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                var itemIndex = Inbox.IndexFromPoint(e.Location);
-                if (itemIndex < 0 || itemIndex > Inbox.Items.Count) return;
-
-                Inbox.SelectedIndex = itemIndex;
-
-                var ContextMenu = new ContextMenuStrip();
-                ContextMenu.Items.Clear();
-
-
-                var DeleteItem = new ToolStripMenuItem("Delete");
-                DeleteItem.Click += new EventHandler(DeleteMail_handler);
-                ContextMenu.Items.Add(DeleteItem);
-
-                var FlagItem = new ToolStripMenuItem("Flag");
-                FlagItem.Click += new EventHandler(ToggleFlag_handler);
-                ContextMenu.Items.Add(FlagItem);
-
-                var UnreadItem = new ToolStripMenuItem("Mark as Unread");
-                UnreadItem.Click += new EventHandler(MarkAsUnread_handler);
-                ContextMenu.Items.Add(UnreadItem);
-
-                var MoveToTrash = new ToolStripMenuItem("Move to trash");
-                MoveToTrash.Click += new EventHandler(MoveMailToTrash_handler);
-                ContextMenu.Items.Add(MoveToTrash);
-
-                Inbox.ContextMenuStrip = ContextMenu;
-                Inbox.ContextMenuStrip.Show(Inbox, e.Location);
-            }
-        }
-
-
 
             // Displays the unread mails of the currently open folder in the inbox.
         private int ShowUnreadMails()
@@ -1565,23 +1526,8 @@ namespace Email_Client_01
 
 
 
-        // Whenever we tick the checkbox to show unread mails only
-        // this method runs
-        // If checked it display only unread mails, if unchecked we load in the current folder's messages again. 
-        private void FilterUnreadCheckbox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (folder == null) return;
-            if (folder.Attributes.HasFlag(FolderAttributes.Sent) || folder.Attributes.HasFlag(FolderAttributes.Drafts)) return; // Never any unread mails in these folders, so dont do anything
 
-            if (FilterUnreadCheckbox.Checked)
-            {
-                ShowUnreadMails();
-            }
-            else
-            {
-                RetrieveMessagesFromFolder();
-            }
-        }
+
 
 
         // Whenver the list of filters change, we check if we need to hide the associated GUI elements
@@ -1604,12 +1550,15 @@ namespace Email_Client_01
         }
 
 
+        // Whenever we tick the checkbox to show unread mails only
+        // this method runs
+        // If checked it display only unread mails, if unchecked we load in the current folder's messages again. 
         private void FilterUnreadCheckbox_CheckChanged(object sender, EventArgs e)
         {
             if (folder == null) return;
             if (folder.Attributes.HasFlag(FolderAttributes.Sent) || folder.Attributes.HasFlag(FolderAttributes.Drafts)) return; // Never any unread mails in these folders, so dont do anything
 
-            if (FilterUnreadCheckbox.Checked)
+            if (FilterUnreadCheckbox1.Checked)
             {
                 ShowUnreadMails();
             }
@@ -1698,6 +1647,86 @@ namespace Email_Client_01
             Metrics_Form.Show();
         }
 
+
+
+
+        // Right click functionality for main inbox.
+        private async void InboxGrid_CellMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+
+            if(e.Button == MouseButtons.Left && InboxGrid.Rows[e.RowIndex].Selected)
+            {
+                // ensure that we are able to distinguish double clicks from this type of mouse down. 
+                if (clicked) return;
+                clicked = true;
+                await Task.Delay(SystemInformation.DoubleClickTime); // get the user system default double click time. 
+                if (!clicked) return;
+                clicked = false;
+
+                // Add this to the data transfered during this drag-drop sequence
+                InboxGrid.DoDragDrop(InboxGrid.SelectedRows, DragDropEffects.Move);
+            }
+            if (e.Button == MouseButtons.Right)
+            {
+                InboxGrid.ClearSelection(); // deselect all rows
+                InboxGrid.Rows[e.RowIndex].Selected = true;
+
+                var itemIndex = Inbox.IndexFromPoint(e.Location);
+                if (itemIndex < 0 || itemIndex > Inbox.Items.Count) return;
+
+                Inbox.SelectedIndex = itemIndex;
+
+                var ContextMenu = new ContextMenuStrip();
+                ContextMenu.Items.Clear();
+
+
+                var DeleteItem = new ToolStripMenuItem("Delete");
+                DeleteItem.Click += new EventHandler(DeleteMail_handler);
+                ContextMenu.Items.Add(DeleteItem);
+
+                var FlagItem = new ToolStripMenuItem("Flag");
+                FlagItem.Click += new EventHandler(ToggleFlag_handler);
+                ContextMenu.Items.Add(FlagItem);
+
+                var UnreadItem = new ToolStripMenuItem("Mark as Unread");
+                UnreadItem.Click += new EventHandler(MarkAsUnread_handler);
+                ContextMenu.Items.Add(UnreadItem);
+
+                var MoveToTrash = new ToolStripMenuItem("Move to trash");
+                MoveToTrash.Click += new EventHandler(MoveMailToTrash_handler);
+                ContextMenu.Items.Add(MoveToTrash);
+
+                Inbox.ContextMenuStrip = ContextMenu;
+                Inbox.ContextMenuStrip.Show(Inbox, e.Location);
+            }
+        }
+
+        private async void InboxGrid_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (InboxGrid.Rows[e.RowIndex].Selected)
+            {
+                InboxGrid_CellMouseClick(sender, e);
+            }
+            return;
+
+
+        }
+
+            // When we enter the folders listbox during a drag and drop sequence this runs, mostly just modifies the visuals
+            // but also a guard if we have no data (index of a mail, it halts).
+        private void Folders_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data == null) return; // guard
+            if (e.Data.GetDataPresent(typeof(DataGridViewSelectedRowCollection)))
+            {
+                e.Effect = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
+            }
+        }
     }
 }
 
