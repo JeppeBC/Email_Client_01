@@ -286,8 +286,18 @@ namespace Email_Client_01
                 double[] sent_array = new double[7];
                 double[] positions = Enumerable.Range(0, 7).Select(x => (double)x).ToArray();
 
-                Array.Copy(recieved.ToArray(), 0, recieved_array, 0, days.Count());
-                Array.Copy(recieved.ToArray(), 0, recieved_array, 0, days.Count());
+                try
+                {
+                    Array.Copy(recieved.ToArray(), 0, recieved_array, 0, days.Count());
+                    Array.Copy(sent.ToArray(), 0, sent_array, 0, days.Count());
+                }
+                catch (ArgumentException)
+                {
+                    Array.Copy(recieved.ToArray(), 0, recieved_array, 0, 7);
+                    Array.Copy(sent.ToArray(), 0, sent_array, 0, 7);
+                }
+
+                
 
                 if (mailTypeDropdown.SelectedIndex == 0)
                 {
