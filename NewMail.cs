@@ -130,7 +130,7 @@ namespace Email_Client_01
             bool show = Attachments.Count > 0; 
             AttachmentLabel.Visible = show;
             AttachmentsListBox.Visible = show;
-            RemoveAttachmentButton.Visible = show;
+            RemoveAttachment1.Visible = show;
         }
 
         // When hovering over the recipients field, a helpful message is displayed.
@@ -423,6 +423,7 @@ namespace Email_Client_01
 
         private void RemoveAttachment(Attachment attachment)
         {
+            if (attachment == null) return;
             Attachments.Remove(attachment);
         }
 

@@ -233,6 +233,7 @@ namespace Email_Client_01
                 this.Cursor = Cursors.Default;
                 Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;
                 ClientInUse = false;
+                RetrieveMessagesFromFolder();
             }
 
         }
