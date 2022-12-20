@@ -228,16 +228,11 @@ namespace Email_Client_01
         }
 
         // Method for getting the subject. If there is no subject, it prompts the user if this is fine. 
-        private string? GetSubject()
+        private string GetSubject()
         {
             if (string.IsNullOrEmpty(SubjectTextBox.Text))
             {
-                DialogResult result = MessageBox.Show("No subject. Do you want to send the email anyway?", "Fault", MessageBoxButtons.YesNo);
-                if (result == DialogResult.Yes)
-                {
-                    return "<no subject>";
-                }
-                return null;
+                return "";
             }
             else
             {
@@ -295,7 +290,6 @@ namespace Email_Client_01
         private async void Send_mail(object sender, EventArgs e)
         {
 
-            this.Cursor = Cursors.WaitCursor;
 
             var To = GetRecipients();
 
@@ -310,11 +304,17 @@ namespace Email_Client_01
             var CC = GetCCs();
             var Subject = GetSubject();
 
-
-            if(Subject == null) // another gaurd 
+            if(Subject == "")
             {
-                MessageBox.Show("Invalid subject");
-                return;
+                DialogResult result = MessageBox.Show("No subject. Do you want to send the email anyway?", "Fault", MessageBoxButtons.YesNo);
+                if (result == DialogResult.No)
+                {
+                    return;
+                }
+                else
+                {
+                    Subject = "<no subject>";
+                }
             }
 
             var Content = MessageBodyTextBox.Text;
@@ -322,13 +322,16 @@ namespace Email_Client_01
 
             List<string?> attachmentFilepaths = Attachments.Select(a => a.filepath).ToList();
             attachmentFilepaths.RemoveAll(fp => string.IsNullOrEmpty(fp)); // remove all the null cases, and empty cases that corresponds to the nonlocal attachments.
-            
-            
+
+
+            this.Cursor = Cursors.WaitCursor;
 
             // Construct an email and send that email.
             Email email = new Email(To, CC, Subject, Content, attachmentFilepaths, nonlocalAttachments);
             IEmailSender s = new EmailSender();
             s.sendEmail(email);
+
+            this.Cursor = Cursors.Default;
 
             // If the mail was a mail from the drafts folder, we must delete it.
             // To do this, we must use IMAP connection. 

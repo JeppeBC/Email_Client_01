@@ -121,7 +121,6 @@ namespace Email_Client_01
 
                     await FolderToFilter.MoveToAsync(listUIDs, TargetFolder);
                     // update the unread count on folder f. We are moving (unread) mails to f
-
                     MovedMailCount.Add(key: TargetFolder, value: listUIDs.Count());
                 }
 
@@ -132,10 +131,6 @@ namespace Email_Client_01
                 if (ex is ImapProtocolException || ex is IOException)
                 {
                     await Utility.ReconnectAsync(client);
-                }
-                else
-                {
-                    MessageBox.Show(ex.Message);
                 }
                 return null;
             }
