@@ -12,11 +12,12 @@ using System.Threading.Tasks;
 
 namespace Email_Client_01
 {
-    // Class that does the filtering of emails. 
+    // Class that does the filtering of emails.
+    
     internal class Filterer
     {
         private List<Filter> filters;               // container for filters
-        private HashSet<string> filteredMails = new();  // For bookkeeping which mails have already been moved.
+        static private HashSet<string> filteredMails = new();  // For bookkeeping which mails have already been moved.
                                                     // Can imagine scenarios where filters are conflicting (moving mails back and forth)
                                                     // We need to deal with this as the user would never be able to read such a mail. 
                         
@@ -96,21 +97,22 @@ namespace Email_Client_01
                     var query = GetSearchQueryFromFilter(filter);
                     if (query == null) continue;
 
+
                     // find all the mails to be moved
                     // takes like 150-200 ms per filter, slightly (almost negligible) extra ammount from moving the mail.
                     var listUIDs = await FolderToFilter.SearchAsync(query.And(SearchQuery.DeliveredAfter(Properties.Time.Default.Date)));
-
-
-
-                    // The following code deals with filter collisions by levearing the hashset.
-                    // Unfortunately the unique IDs are not globally unique but only to their respective folders, so we must fetch
-                    // the globally unique "EmailId". The call to do this takes 100-200ms per filter,
                     if (listUIDs.ToList().Count <= 0) continue; // if nothing to move we should not do expensive calls to folder.fetch or folder.movetoasync
-                    var summaries = FolderToFilter.Fetch(listUIDs, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId);
-                    foreach (var sum in summaries)
+                    // Get message descriptions.  The call to do this takes 100-200ms per filter,
+                    var summaries = await FolderToFilter.FetchAsync(listUIDs, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+
+                    // IMAP query delivered after only compares by date, so we need to filter by time also.
+                    IList<IMessageSummary> sums = summaries.Where(sum => DateTime.Compare(sum.Date.DateTime, Properties.Time.Default.Date) > 0).ToList();
+                    listUIDs = sums.Select(sum => sum.UniqueId).ToList();
+
+                    foreach (var sum in sums)
                     {
                         // if the email is already in the filterset
-                        if (!filteredMails.Add(sum.EmailId))
+                        if (!filteredMails.Add(TextFormatter.FormatInboxText(sum)))
                         {
                             // remove the corresponding uid from the list of uids to be moved.
                             listUIDs.Remove(listUIDs.Where(uid => uid == sum.UniqueId).FirstOrDefault());

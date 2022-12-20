@@ -28,6 +28,7 @@ namespace Email_Client_01
         public static readonly int ImapPort = 993;
 
 
+
         // Method to get an ImapClient. This uses the credentials stored in utility and immediately tries to connect and authorize.
         public static ImapClient GetImapClient()
         {

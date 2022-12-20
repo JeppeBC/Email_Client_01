@@ -131,6 +131,8 @@ namespace Email_Client_01
             // Setup the idle client, attach the inbox as subscriber. 
             idle = new IdleClient(Utility.ImapServer, Utility.ImapPort, MailKit.Security.SecureSocketOptions.Auto, Utility.username!, Utility.password!);
             idle.reciever.Attach(this);
+            idle.RunAsync(); // idle client starts empty initially, so it immediately detects changes and loads everything in for us by invoking reload()
+
 
             // Load in all the folders
             RetrieveFolders();
@@ -230,7 +232,6 @@ namespace Email_Client_01
                 this.Cursor = Cursors.Default;
                 Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;
                 ClientInUse = false;
-                idle.RunAsync(); // idle client starts empty initially, so it immediately detects changes and loads everything in for us by invoking reload()
 
             }
 
@@ -307,7 +308,7 @@ namespace Email_Client_01
 
 
                 // load in the mails after filtering
-                this.messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                this.messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
                 int unreadCount = 0;
 
 
@@ -467,7 +468,7 @@ namespace Email_Client_01
             if (loadingMessages) return;
 
             // Get the actual messages from list of uids. 
-            messageSummaries = folder.Fetch(uids, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+            messageSummaries = folder.Fetch(uids, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
 
             if (messageSummaries.Count <= 0)
@@ -751,7 +752,7 @@ namespace Email_Client_01
                         }*/
 
                         // update messageSummaries so futuure operations without loading all messages work as intended
-                        messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                        messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
 
                         // Update current folder count
@@ -887,7 +888,7 @@ namespace Email_Client_01
                 // Instead of calling RefreshCurrentFolder() or RetrieveMessagesFromFolder(), we just remove the one mail from the view as this is faster
                 // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
                 InboxGrid.Rows.Remove(InboxGrid.SelectedRows[0]);
-                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
                 // if the message is unread, we update the unread count of the folder
                 if (msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen) && !SpecialFolders.isFolderUnreadBlacklisted(folder))
@@ -965,7 +966,7 @@ namespace Email_Client_01
                 // we just manually forcefully update that one element in the listbox (this will automatically happen on refresh)
 
                 // To prevent us from prefixing (UNREAD) multiple times we need to update the messagesummaries however
-                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
                 InboxGrid.Rows[InboxGrid.SelectedRows[0].Index].Cells[0].Value = "(UNREAD) " + InboxGrid.Rows[InboxGrid.SelectedRows[0].Index].Cells[0].Value;
 
@@ -1050,7 +1051,7 @@ namespace Email_Client_01
                 // and the next time we load the messages in, then it wont be there anyway as it is gone on the IMAP server side. 
 
                 InboxGrid.Rows.Remove(InboxGrid.SelectedRows[0]);
-                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
                 // if the message is unread, we update the unread count of the folder
                 if (msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen) && !SpecialFolders.isFolderUnreadBlacklisted(folder))
@@ -1132,7 +1133,7 @@ namespace Email_Client_01
                     InboxGrid.SelectedRows[0].Cells[0].Value = "(FLAGGED) " + FlagCell;
                 }
 
-                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                messageSummaries = await folder.FetchAsync(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
             }
             catch (Exception ex)
             {
@@ -1287,7 +1288,7 @@ namespace Email_Client_01
             // If folder is null, get current folder
             if (folder == null) folder = GetCurrentFolder();
             // If no messageSummaries locally, load in the messageSummaries of the current folder
-            if (messageSummaries == null) messageSummaries = folder.Fetch(0, -1, MessageSummaryItems.EmailId | MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+            if (messageSummaries == null) messageSummaries = folder.Fetch(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
 
             // find all the unread mails.
             var unreadMails = messageSummaries.Where(msg => msg.Flags != null && !msg.Flags.Value.HasFlag(MessageFlags.Seen));
@@ -1497,7 +1498,7 @@ namespace Email_Client_01
                             if (folder.Exists && folder.Attributes.HasFlag(FolderAttributes.Sent))
                             {
                                 folder.Open(FolderAccess.ReadOnly);
-                                var test = folder.Fetch(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                                var test = folder.Fetch(0, -1,  MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
                                 messages_sorted.AddRange(test.ToList());
                             }
                         }
