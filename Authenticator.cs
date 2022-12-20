@@ -27,6 +27,11 @@ namespace Email_Client_01
         // Function to validate the username/email 
         private bool isUsernameInvalid(string username)
         {
+            if(username.Length > 254)
+            {
+                ErrorMessage = "The Email Address must be shorter than 255 characters";
+                return true;
+            }
             if (!EmailValidator.Validate(username))
             {
                 ErrorMessage = "Please enter a valid email address";
@@ -56,10 +61,16 @@ namespace Email_Client_01
             // Check if the combination of username + password is valid. If we can establish and authorize an IMAP
             // client connection, we accept the user credentials.
             var client = Utility.GetImapClient();
+
+            if(client == null)
+            {
+                ErrorMessage = "Unable to login with username/password combination.";
+                return null;
+            }
             if (client.IsConnected && client.IsAuthenticated) return client;
 
-            // Failed to connect/authorize to the IMAP client, timed out. 
-            ErrorMessage = "Could not authorize the given credentials";
+            // In case something unexpected goes wrong.  
+            ErrorMessage = "Something went wrong";
             return null;
         }
     }

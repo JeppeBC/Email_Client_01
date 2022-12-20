@@ -940,6 +940,10 @@ namespace Email_Client_01
 
         }
 
+
+
+
+
         // This method marks a given mail as unread if it is not already unread.
         private async void MarkAsUnread_handler(object? sender, EventArgs e)
         {
@@ -1330,8 +1334,26 @@ namespace Email_Client_01
             this.Cursor = Cursors.WaitCursor;
             IEmailReader reader = new EmailReader(client, folder);
             reader.ReadMessage(message);
+
             ClientInUse = false;
             this.Cursor = Cursors.Default;
+
+            
+            
+
+            // Add the seen flag to the message 
+            // As we are currently opening the mail this can run in the background, so we can just spin up a new client for this. 
+            // Adds the seen flag on the imap server.
+            Task.Run(() =>
+            {
+                ImapClient? clientFlags = Utility.GetImapClient();
+                if (clientFlags != null)
+                {
+                    folder.AddFlags(message.UniqueId, MessageFlags.Seen, false);
+                    messageSummaries = folder.Fetch(0, -1, MessageSummaryItems.UniqueId | MessageSummaryItems.Envelope | MessageSummaryItems.BodyStructure | MessageSummaryItems.Flags);
+                }
+            });
+
         }
 
 
@@ -1348,6 +1370,8 @@ namespace Email_Client_01
 
             OpenMessage(Mail);
 
+
+
             // if unread mail
             if (Mail.Flags != null && !Mail.Flags.Value.HasFlag(MessageFlags.Seen))
             {
@@ -1360,6 +1384,7 @@ namespace Email_Client_01
                 // Update the unread count
                 IncrementFolderCount(folder, decrement: true);
             }
+            
 
 
         }

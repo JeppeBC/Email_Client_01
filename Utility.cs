@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices; // for the known folder stuff.
 using System.Windows.Forms.VisualStyles;
+using MailKit.Security;
 
 namespace Email_Client_01
 {
@@ -30,12 +31,23 @@ namespace Email_Client_01
 
 
         // Method to get an ImapClient. This uses the credentials stored in utility and immediately tries to connect and authorize.
-        public static ImapClient GetImapClient()
+        public static ImapClient? GetImapClient()
         {
             var client = new ImapClient();
 
             client.Connect(ImapServer, ImapPort, MailKit.Security.SecureSocketOptions.Auto);
-            client.Authenticate(username, password);
+            try
+            {
+                client.Authenticate(username, password);
+
+            }
+            catch(Exception ex)
+            {
+                if(ex is AuthenticationException)
+                {
+                    return null;
+                }
+            }
             return client;
         }
 
