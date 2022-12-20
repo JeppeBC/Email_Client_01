@@ -112,7 +112,8 @@ namespace Email_Client_01
             aTimer.Interval = 120000; // every 2 min, unit is milliseconds. 
             aTimer.Enabled = true;
 
-            folder = null;
+            folder = client.Inbox;
+            folder.Open(FolderAccess.ReadWrite);
 
             // Make columns in datagridview (inbox) not sortable.
             foreach (DataGridViewColumn column in InboxGrid.Columns)
@@ -163,7 +164,7 @@ namespace Email_Client_01
 
         // retrives all the folder names and add to the folder listbox
         // Finally this loads in the messages of the default client.Inbox
-        private async void RetrieveFolders()
+        private async Task RetrieveFolders()
         {
             if (ClientInUse) return;
             this.Cursor = Cursors.WaitCursor;
@@ -232,7 +233,6 @@ namespace Email_Client_01
                 this.Cursor = Cursors.Default;
                 Folders.SelectedIndexChanged += Folders_SelectedIndexChanged;
                 ClientInUse = false;
-
             }
 
         }
@@ -762,7 +762,8 @@ namespace Email_Client_01
                         }
                         else if (!SpecialFolders.isFolderUnreadBlacklisted(folder))
                         {
-                            var unseenMessages = MessagesToMove.Select(m => m.Flags != null && !m.Flags.Value.HasFlag(MessageFlags.Seen)).ToList();
+                            List<MessageFlags?> flags = MessagesToMove.Select(msg => msg.Flags).ToList();
+                            var unseenMessages = flags.Where(flag => flag != null && !flag.Value.HasFlag(MessageFlags.Seen)).ToList();
                             IncrementFolderCount(folder, decrement: true, value: unseenMessages.Count);
                         }
 
@@ -773,7 +774,8 @@ namespace Email_Client_01
                         }
                         else if (!SpecialFolders.isFolderUnreadBlacklisted(f))
                         {
-                            var unseenMessages = MessagesToMove.Select(m => m.Flags != null && !m.Flags.Value.HasFlag(MessageFlags.Seen)).ToList();
+                            List<MessageFlags?> flags = MessagesToMove.Select(msg => msg.Flags).ToList();
+                            var unseenMessages = flags.Where(flag => flag != null && !flag.Value.HasFlag(MessageFlags.Seen)).ToList();
                             IncrementFolderCount(f, value: unseenMessages.Count);
                         }
 
@@ -1174,6 +1176,7 @@ namespace Email_Client_01
         // Finally the folder is loaded in immediately. 
         private async void CreateFolderButton_Click(object sender, EventArgs e)
         {
+            string FolderName = "";
             if (ClientInUse) return;
             try
             {
@@ -1181,7 +1184,6 @@ namespace Email_Client_01
                 await Utility.ReconnectAsync(client);
 
                 // Let the user specify the name of the folder.
-                string FolderName = "";
                 if (!(Utility.InputBox("Create New Folder", "Name of Folder: ", ref FolderName) == DialogResult.OK))
                 {
                     return;
@@ -1189,6 +1191,13 @@ namespace Email_Client_01
 
                 // Could add waitcursors here but the call to create a toplevel folder is really fast...
                 await CreateFolder(FolderName);
+
+                FolderList.Add(new Folder()
+                {
+                    FullName = FolderName,
+                    ListBoxName = FolderName,
+                });
+
             }
             catch (Exception ex)
             {
@@ -1205,7 +1214,8 @@ namespace Email_Client_01
             finally
             {
                 ClientInUse = false;
-                RetrieveFolders(); // Load in all folders again, this function is quite slow but how often do you create new folders...
+                await RetrieveFolders(); // Load in all folders again, this function is quite slow but how often do you create new folders...
+                Folders.SelectedItem = FolderList.Where(folder => folder.FullName == FolderName).FirstOrDefault();
             }
         }
 
