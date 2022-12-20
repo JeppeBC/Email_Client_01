@@ -56,6 +56,7 @@ namespace Email_Client_01
                 AttachmentsLabel.Visible = true;
                 AttachmentListBox.Visible = true;
                 DownloadAttachmentButton.Visible = true;
+                DownloadAllAttachmentsButton.Visible = true;
 
                 foreach(var attachment in message.Attachments)
                 {
@@ -220,6 +221,7 @@ namespace Email_Client_01
                 await Utility.ReconnectAsync(client);
                 // Get the attachment index
                 var idx = AttachmentListBox.SelectedIndex;
+                if (AttachmentListBox.SelectedItem == null) return;
                 var filename = AttachmentListBox.SelectedItem.ToString();
 
                 if (string.IsNullOrEmpty(filename)) return; 
